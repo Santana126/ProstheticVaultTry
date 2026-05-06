@@ -41,18 +41,11 @@ export class Player {
             case 'KeyD': this.moveRight = state; break;
         }
     }
-
-    // The core function to swap gear
-    equip(slot, item) {
-        this.equipment.set(slot, item);
-
-        if (slot === 'LEFT_ARM' || slot === 'RIGHT_ARM') {
-            this.loadArmModel(item.modelPath);
-        }
-        console.log(`Equipped ${item.name} to ${slot}`);
-    }
-
-    loadArmModel(path) {
+    
+    
+    loadArmModel(item) { // Change 'path' to 'item'
+        const path = item.modelPath;
+        
         this.loader.load(path, (gltf) => {
             const model = gltf.scene;
             
@@ -64,17 +57,50 @@ export class Player {
             model.position.y += (model.position.y - center.y);
             model.position.z += (model.position.z - center.z);
 
-            // Apply Configs
+
+
             model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
             model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
             model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
 
-            // Swap model in view
+            // --- NEW: COLOR OVERRIDE ---
+            model.traverse((node) => {
+                if (node.isMesh) {
+                    if (item.id === 'plasma_arm') {
+                        node.material = new THREE.MeshStandardMaterial({ 
+                            color: 0x00ffff, 
+                            emissive: 0x00ffff, 
+                            emissiveIntensity: 1 
+                        });
+                    } else {
+                        node.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+                    }
+                }
+            });
+
             if (this.currentArmModel) this.armGroup.remove(this.currentArmModel);
             this.currentArmModel = model;
             this.armGroup.add(this.currentArmModel);
         });
+        if (this.currentArmModel) {
+            this.currentArmModel.traverse((node) => {
+                if (node.isMesh) {
+                    node.geometry.dispose(); // Delete geometry from RAM
+                    node.material.dispose(); // Delete material from RAM
+                }
+            });
+            this.armGroup.remove(this.currentArmModel);
+        }
     }
+
+    // Update the equip method to pass the whole item
+    equip(slot, item) {
+        this.equipment.set(slot, item);
+        if (slot === 'LEFT_ARM' || slot === 'RIGHT_ARM') {
+            this.loadArmModel(item); // Pass the item object, not just the path
+        }
+    }
+
 
     update(delta) {
         if (!this.controls.isLocked) return;
@@ -125,19 +151,31 @@ export class Player {
     }
 
     checkCollision() {
-        // 1. Create a bounding box for the player
-        // The player is represented as a small box (0.4m wide, 2m tall)
+        // 1. Define the Body Collider
+        // Instead of centering on the camera, we create a box that:
+        // - X: centered on camera
+        // - Y: starts at 0 (floor) and goes up to camera.position.y
+        // - Z: centered on camera, but slightly extended forward to account for the arm
+        
+        const playerHeight = this.camera.position.y;
+        const playerWidth = 0.6; 
+        const playerDepth = 1.0; // Increased from 0.4 to account for the arm's presence
+
         const playerBox = new THREE.Box3().setFromCenterAndSize(
-            this.camera.position, 
-            new THREE.Vector3(0.4, 2, 0.4)
+            new THREE.Vector3(
+                this.camera.position.x, 
+                playerHeight / 2, // Center the box halfway between floor and eyes
+                this.camera.position.z - 0.2 // Shift the box slightly forward
+            ), 
+            new THREE.Vector3(playerWidth, playerHeight, playerDepth)
         );
 
-        // 2. Check if this box intersects with any wall in the level
+        // 2. Check intersection with walls
         for (let wall of this.level.walls) {
             if (playerBox.intersectsBox(wall.userData.boundingBox)) {
-                return true; // Collision detected!
+                return true; 
             }
         }
-        return false; // No collision
+        return false;
     }
 }

@@ -17,3 +17,35 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
 #instructions {
     pointer-events: none;
 }
+
+#inventory-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    padding: 20px;
+    background: rgba(20, 20, 40, 0.9);
+    border: 2px solid #4444ff;
+    color: white;
+    text-align: center;
+    z-index: 20;
+    font-family: 'Courier New', Courier, monospace;
+    box-shadow: 0 0 20px rgba(68, 68, 255, 0.5);
+}
+
+#arm-options button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #4444ff;
+    cursor: pointer;
+}
+
+#arm-options button:hover {
+    background: #4444ff;
+    color: #000;
+}

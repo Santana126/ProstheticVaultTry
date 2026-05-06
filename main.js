@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Player } from './src/Player.js';
 import { Arm } from './src/Arm.js';
 import { Level } from './src/Level.js';
+import { ITEM_DATABASE } from './src/Database.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -35,11 +36,27 @@ scene.add(gridHelper);
 
 // Initialize Level
 const level = new Level(scene);
-level.createRoom(0, 0, 20);
-level.addWall(5, 2, -5, 2, 4, 2, 0xff0000); // Add a random red pillar to test collision
+level.buildVaultLayout(); // One line to build the whole world!
+
 
 // Initialize Player
 const player = new Player(scene, camera, level);
+
+
+// --- INVENTORY LOGIC ---
+const invMenu = document.getElementById('inventory-menu');
+let isInventoryOpen = false;
+
+function toggleInventory() {
+    isInventoryOpen = !isInventoryOpen;
+    invMenu.style.display = isInventoryOpen ? 'block' : 'none';
+    
+    if (isInventoryOpen) {
+        player.controls.unlock(); // Release mouse to click buttons
+    } else {
+        player.controls.lock();   // Re-lock mouse for FPS
+    }
+}
 
 // CREATE AN ARM ITEM AND EQUIP IT
 const steelArm = new Arm(
@@ -52,6 +69,7 @@ const steelArm = new Arm(
     { damage: 20, attackSpeed: 0.8, attackType: 'melee' }
 );
 
+
 player.equip('LEFT_ARM', steelArm);
 
 // Controls
@@ -62,6 +80,23 @@ player.controls.addEventListener('unlock', () => blocker.style.display = 'flex')
 
 document.addEventListener('keydown', (e) => player.setMoveState(e.code, true));
 document.addEventListener('keyup', (e) => player.setMoveState(e.code, false));
+
+// Add 'I' key to input listeners
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyI') {
+        toggleInventory();
+    } else {
+        player.setMoveState(e.code, true);
+    }
+});
+// We attach a "game" object to the window so the HTML buttons can find the player
+window.game = {
+    swapArm: (armId) => {
+        const armItem = ITEM_DATABASE.arms[armId];
+        player.equip('LEFT_ARM', armItem);
+    }
+};
+
 
 // Game Loop
 let prevTime = performance.now();
