@@ -18,9 +18,20 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 1);
 sunLight.position.set(5, 10, 7.5);
 scene.add(sunLight);
 
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+// --- 3. THE ENVIRONMENT (The Floor) ---
+const floorGeometry = new THREE.PlaneGeometry(100, 100);
+const floorMaterial = new THREE.MeshStandardMaterial({ 
+    color: 0x1a1a2e, // Deep Midnight Blue
+    roughness: 0.8 
+});
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
+
+// ADD A GRID HELPER: This creates the "technical" look
+// Parameters: (size, divisions, centerColor, gridColor)
+const gridHelper = new THREE.GridHelper(100, 50, 0x4444ff, 0x222244);
+scene.add(gridHelper);
 
 // Initialize Level
 const level = new Level(scene);

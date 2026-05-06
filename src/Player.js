@@ -8,6 +8,8 @@ export class Player {
         this.scene = scene;
         this.camera = camera;
         this.level = level;
+
+        this.camera.position.y = GAME_CONFIG.PLAYER.height; // Set initial eye level
         
         // Movement state
         this.velocity = new THREE.Vector3();

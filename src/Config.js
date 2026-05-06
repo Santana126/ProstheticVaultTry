@@ -1,8 +1,8 @@
 export const GAME_CONFIG = {
     PLAYER: {
-        moveSpeed: 400.0,
+        moveSpeed: 200.0,
         friction: 10.0,
-        height: 1.8, // Eye level
+        height: 5.5, // Eye level
     },
     ARM: {
         basePos: { x: 1.5, y: 0.5, z: -6 },
