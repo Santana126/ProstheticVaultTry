@@ -271,6 +271,9 @@ export class Player {
                 // If mouse is released, instantly delete the beam
                 equippedArm.stopFiring(this.scene);
             }
+            if (typeof equippedArm.update === 'function') {
+                equippedArm.update(delta);
+            }
         }
 
         // 2. Process Arm Bobbing
