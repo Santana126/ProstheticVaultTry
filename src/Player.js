@@ -8,6 +8,8 @@ export class Player {
         this.scene = scene;
         this.camera = camera;
         this.level = level;
+        this.isAttacking = false;
+        this.fireCooldown = 0;
 
         this.camera.position.y = GAME_CONFIG.PLAYER.height; // Set initial eye level
         
@@ -40,12 +42,13 @@ export class Player {
         document.addEventListener('keydown', (e) => this.setMoveState(e.code, true));
         document.addEventListener('keyup', (e) => this.setMoveState(e.code, false));
 
-        // Handle Attack click with left mouse button
+        // NEW: Handle Attack hold with left mouse button
         document.addEventListener('mousedown', (e) => {
-            if (e.button === 0) { // Left click
-                this.performAttack();
-            }
+            if (e.button === 0) this.isAttacking = true;
         });
+        document.addEventListener('mouseup', (e) => {
+            if (e.button === 0) this.isAttacking = false;
+        })
     }
 
     // Handle input updates
@@ -226,6 +229,50 @@ export class Player {
             this.controls.moveForward(-nextZ); // Undo movement if hit wall
         }
 
+        // // --- NEW: WEAPON FIRING & COOLDOWN LOGIC ---
+        // const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
+        
+        // // 1. Decrease the cooldown timer
+        // if (this.fireCooldown > 0) {
+        //     this.fireCooldown -= delta;
+        // }
+
+        // // 2. If holding the trigger and cooldown is ready, shoot!
+        // if (this.isAttacking && this.fireCooldown <= 0 && equippedArm) {
+        //     this.performAttack();
+        //     this.fireCooldown = equippedArm.attackSpeed; // Reset timer based on weapon stats
+        // }
+
+        // // 3. Tell the arm to animate its flying projectiles
+        // if (equippedArm && typeof equippedArm.update === 'function') {
+        //     equippedArm.update(delta);
+        // }
+
+        // --- CONTINUOUS WEAPON FIRING LOGIC ---
+        const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
+        
+        // 1. Calculate the exact Muzzle/Wrist position continuously
+        let muzzlePosition = new THREE.Vector3();
+        if (this.muzzlePoint) {
+            this.muzzlePoint.getWorldPosition(muzzlePosition);
+        } else {
+            muzzlePosition.copy(this.camera.position);
+        }
+
+        // 2. Fire or Stop based on mouse input
+        if (equippedArm) {
+            if (this.isAttacking) {
+                // If holding left click, fire and animate the beam!
+                equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls, delta);
+                
+                // Optional: You could trigger damage to the wall/enemy here 
+                // using a timer so it damages them every 0.5 seconds while held.
+            } else {
+                // If mouse is released, instantly delete the beam
+                equippedArm.stopFiring(this.scene);
+            }
+        }
+
         // 2. Process Arm Bobbing
         if (this.currentArmModel) {
             if (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
@@ -240,6 +287,9 @@ export class Player {
                 this.currentArmModel.position.x = THREE.MathUtils.lerp(this.currentArmModel.position.x, GAME_CONFIG.ARM.basePos.x, 0.1);
             }
         }
+
+
+
     }
 
     checkCollision() {
