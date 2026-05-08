@@ -54,6 +54,10 @@ export class Level {
         this.addWall(vaultCenterX + 5, 2, vaultCenterZ, 0.5, 10, 10, vaultColor);
         this.addWall(vaultCenterX - 5, 2, vaultCenterZ - 3, 0.5, 10, 3, vaultColor);
         this.addWall(vaultCenterX - 5, 2, vaultCenterZ + 3, 0.5, 10, 3, vaultColor);
+
+
+        // Add a tall central pillar in the side of the map for visual interest
+        this.addWall(0, 5, -20, 2, 10, 2, 0x888888);
         
         console.log("Vault Layout generated successfully.");
     }

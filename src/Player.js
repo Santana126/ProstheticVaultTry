@@ -30,6 +30,22 @@ export class Player {
 
         this.controls = new PointerLockControls(this.camera, document.body);
         this.loader = new GLTFLoader();
+        this.raycaster = new THREE.Raycaster();
+
+        this.initInput();
+    }
+
+    initInput() {
+        // Handle movement keys
+        document.addEventListener('keydown', (e) => this.setMoveState(e.code, true));
+        document.addEventListener('keyup', (e) => this.setMoveState(e.code, false));
+
+        // Handle Attack click with left mouse button
+        document.addEventListener('mousedown', (e) => {
+            if (e.button === 0) { // Left click
+                this.performAttack();
+            }
+        });
     }
 
     // Handle input updates
@@ -48,6 +64,10 @@ export class Player {
         
         this.loader.load(path, (gltf) => {
             const model = gltf.scene;
+            model.traverse((node) => {
+                // This will print the name and type (Mesh, Bone, Object3D, etc.) of every part
+                console.log("Found part:", node.name, "| Type:", node.type); 
+            });
             
             // Center the model
             const box = new THREE.Box3().setFromObject(model);
@@ -57,11 +77,47 @@ export class Player {
             model.position.y += (model.position.y - center.y);
             model.position.z += (model.position.z - center.z);
 
-
-
             model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
             model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
             model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
+
+
+            const hardcodedWristName = 'hand__02'; // Change this to the actual name of the wrist node in your 3D model
+            // Try to find the node inside the 3D file
+            const foundWristNode = model.getObjectByName(hardcodedWristName);
+
+            if (foundWristNode) {
+                console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
+                this.muzzlePoint = foundWristNode;
+
+                // --- DEBUG: ADD A RED BALL TO THE FOUND NODE ---
+                // The geometry size is 2. Since your arm is scaled down by 0.1, 
+                // the final visual size will be 0.2. Change the '2' if it's too big or small.
+                const debugGeo = new THREE.SphereGeometry(256, 16, 16); 
+                
+                const debugMat = new THREE.MeshBasicMaterial({ 
+                    color: 0xff0000, 
+                    depthTest: false, // This is the "X-ray" trick! It draws through the arm.
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const debugSphere = new THREE.Mesh(debugGeo, debugMat);
+                
+                // Ensure it renders last so it overlaps the arm mesh
+                debugSphere.renderOrder = 999; 
+                
+                // By adding it to the muzzlePoint, its local position (0,0,0) 
+                // is perfectly locked to the exact center of the node!
+                this.muzzlePoint.add(debugSphere);
+                // -----------------------------------------------
+            } else {
+                console.warn(`Could not find '${hardcodedWristName}', falling back to manual offset.`);
+                // Fallback: Our manual attachment from the previous step
+                this.muzzlePoint = new THREE.Object3D();
+                this.muzzlePoint.position.set(0, 0, -60); // Adjust as needed
+                model.add(this.muzzlePoint); 
+            }
 
             // --- NEW: COLOR OVERRIDE ---
             model.traverse((node) => {
@@ -91,7 +147,43 @@ export class Player {
             });
             this.armGroup.remove(this.currentArmModel);
         }
+        
     }
+
+    performAttack() {
+        console.log("Attack performed!");
+        if (!this.controls.isLocked) return;
+
+        const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
+        if (!equippedArm) return;
+
+        // --- NEW: GET THE EXACT WRIST POSITION ---
+        let muzzlePosition = new THREE.Vector3();
+        if (this.muzzlePoint) {
+            // This calculates the exact world coordinates of our attached point!
+            this.muzzlePoint.getWorldPosition(muzzlePosition);
+        } else {
+            muzzlePosition.copy(this.camera.position); // Fallback
+        }
+        // Execute the attack using the true wrist position
+        equippedArm.attack(this.camera, muzzlePosition, this.scene, this.level.walls);
+
+        // // Get the direction the camera is currently facing
+        // const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+        // const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
+        // const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
+
+        // // Offset the starting point so it looks like it comes from the bottom right of the screen.
+        // // You can fine-tune these three numbers until the laser lines up perfectly with your model's wrist!
+        // muzzlePosition.add(right.multiplyScalar(0.8));   // Move 0.8 units Right
+        // muzzlePosition.add(up.multiplyScalar(-0.4));     // Move 0.4 units Down
+        // muzzlePosition.add(forward.multiplyScalar(1.0)); // Move 1.0 unit Forward
+
+        // // --- STEP 2: EXECUTE THE ATTACK ---
+        // // Pass our new calculated muzzlePosition instead of the model's position
+        // equippedArm.attack(this.camera, muzzlePosition, this.scene, this.level.walls);
+    }
+
 
     // Update the equip method to pass the whole item
     equip(slot, item) {

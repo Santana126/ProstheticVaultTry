@@ -81,14 +81,16 @@ player.controls.addEventListener('unlock', () => blocker.style.display = 'flex')
 document.addEventListener('keydown', (e) => player.setMoveState(e.code, true));
 document.addEventListener('keyup', (e) => player.setMoveState(e.code, false));
 
-// Add 'I' key to input listeners
+// Add 'E' key to input listeners
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyI') {
+    if (e.code === 'KeyE') {
         toggleInventory();
     } else {
         player.setMoveState(e.code, true);
     }
 });
+
+
 // We attach a "game" object to the window so the HTML buttons can find the player
 window.game = {
     swapArm: (armId) => {
