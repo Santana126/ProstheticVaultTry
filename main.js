@@ -42,14 +42,13 @@ level.buildVaultLayout(); // One line to build the whole world!
 // Initialize Player
 const player = new Player(scene, camera, level);
 
-
 // --- INVENTORY LOGIC ---
-const invMenu = document.getElementById('inventory-menu');
+const invMenu = document.getElementById('inventory-overlay');
 let isInventoryOpen = false;
 
 function toggleInventory() {
     isInventoryOpen = !isInventoryOpen;
-    invMenu.style.display = isInventoryOpen ? 'block' : 'none';
+    invMenu.style.display = isInventoryOpen ? 'flex' : 'none';
     
     if (isInventoryOpen) {
         player.controls.unlock(); // Release mouse to click buttons
@@ -60,7 +59,7 @@ function toggleInventory() {
 
 // CREATE AN ARM ITEM AND EQUIP IT
 const steelArm = new Arm(
-    'steel_arm_01', 
+    'steel_arm', // Set to match the database ID
     'Steel Arm', 
     'A heavy industrial prosthetic', 
     'LEFT_ARM', 
@@ -68,8 +67,6 @@ const steelArm = new Arm(
     { strength: 15 }, 
     { damage: 20, attackSpeed: 0.8, attackType: 'melee' }
 );
-
-
 player.equip('LEFT_ARM', steelArm);
 
 // Controls
@@ -97,9 +94,124 @@ globalThis.game = {
     }
 };
 
+// --- INVENTORY UI CONTROLLER (THE BRAINS) ---
+const playerOwnedItems = ['steel_arm', 'plasma_arm']; 
+let currentlySelectedSlot = null; 
+let currentlySelectedSlotElement = null;
 
-// Game Loop
+const stashGrid = document.getElementById('stash-grid');
+const mainEquipSlots = document.querySelectorAll('.equip-slot');
+
+const tooltip = document.getElementById('item-tooltip');
+const ttName = document.getElementById('tt-name');
+const ttType = document.getElementById('tt-type');
+const ttStats = document.getElementById('tt-stats');
+const ttDesc = document.getElementById('tt-desc');
+
+function renderStash() {
+    stashGrid.innerHTML = ''; 
+
+    playerOwnedItems.forEach(itemId => {
+        const itemData = ITEM_DATABASE.arms[itemId]; 
+        if (!itemData) return;
+
+        const stashElement = document.createElement('div');
+        stashElement.className = 'stash-item';
+        stashElement.setAttribute('data-item-id', itemId);
+        stashElement.setAttribute('data-slot-type', itemData.slot); 
+        
+        stashElement.innerHTML = `<strong>${itemData.name}</strong>`;
+        
+        // Tooltip logic for stash items
+        stashElement.addEventListener('mouseenter', () => showTooltip(itemData));
+        stashElement.addEventListener('mouseleave', hideTooltip);
+        stashElement.addEventListener('mousemove', moveTooltip);
+
+        // Click logic for stash items (Swap!)
+        stashElement.addEventListener('click', () => {
+            if (currentlySelectedSlot && currentlySelectedSlot === itemData.slot) {
+                performSwap(itemId, itemData);
+            }
+        });
+
+        stashGrid.appendChild(stashElement);
+    });
+}
+
+mainEquipSlots.forEach(slotElement => {
+    // Tooltip logic for equipped slots
+    slotElement.addEventListener('mouseenter', () => {
+        const itemId = slotElement.getAttribute('data-item-id');
+        if (itemId && ITEM_DATABASE.arms[itemId]) {
+            showTooltip(ITEM_DATABASE.arms[itemId]);
+        }
+    });
+    slotElement.addEventListener('mouseleave', hideTooltip);
+    slotElement.addEventListener('mousemove', moveTooltip);
+
+    // Click logic for equipped slots (Select!)
+    slotElement.addEventListener('click', () => {
+        mainEquipSlots.forEach(s => s.classList.remove('selected'));
+        slotElement.classList.add('selected');
+        
+        currentlySelectedSlot = slotElement.getAttribute('data-slot');
+        currentlySelectedSlotElement = slotElement;
+
+        const stashItems = document.querySelectorAll('.stash-item');
+        stashItems.forEach(stashEl => {
+            if (stashEl.getAttribute('data-slot-type') === currentlySelectedSlot) {
+                stashEl.classList.remove('incompatible');
+            } else {
+                stashEl.classList.add('incompatible');
+            }
+        });
+    });
+});
+
+function performSwap(newItemId, itemData) {
+    // Update HTML Visuals
+    currentlySelectedSlotElement.setAttribute('data-item-id', newItemId);
+    currentlySelectedSlotElement.querySelector('.slot-icon').innerText = itemData.name;
+    
+    // Clear selection
+    currentlySelectedSlotElement.classList.remove('selected');
+    currentlySelectedSlot = null;
+    currentlySelectedSlotElement = null;
+
+    document.querySelectorAll('.stash-item').forEach(el => el.classList.remove('incompatible'));
+
+    // Trigger the 3D model swap
+    if (globalThis.game && globalThis.game.swapArm) {
+        globalThis.game.swapArm(newItemId);
+    }
+}
+
+function showTooltip(item) {
+    ttName.innerText = item.name;
+    ttType.innerText = `Tipo: Protesi (${item.attackType || 'Standard'})`;
+    ttStats.innerHTML = `Danno: ${item.damage || 0}<br>Forza: +${item.stats.strength || 0}`;
+    ttDesc.innerText = item.description;
+    tooltip.style.display = 'block';
+}
+
+function moveTooltip(e) {
+    if (tooltip.style.display === 'block') {
+        tooltip.style.left = (e.clientX + 15) + 'px';
+        tooltip.style.top = (e.clientY + 15) + 'px';
+    }
+}
+
+function hideTooltip() {
+    tooltip.style.display = 'none';
+}
+
+// Build the UI
+renderStash();
+
+
+// --- GAME LOOP ---
 let prevTime = performance.now();
+
 function animate() {
     requestAnimationFrame(animate);
     const time = performance.now();
@@ -110,4 +222,5 @@ function animate() {
     prevTime = time;
     renderer.render(scene, camera);
 }
+
 animate();

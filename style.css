@@ -49,3 +49,196 @@ body { margin: 0; overflow: hidden; font-family: sans-serif; }
     background: #4444ff;
     color: #ffffff;
 }
+
+/* 1. The Overlay: Locks it to the absolute center of the viewport */
+#inventory-overlay {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85); /* Slightly darker back-dim */
+    display: flex;
+    justify-content: center; /* Horizontally center */
+    align-items: center;     /* Vertically center */
+    z-index: 100;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    color: #e0e0e0;
+    margin: 0; 
+    padding: 0;
+}
+
+/* 2. The Window: Forces it to be huge (90% of screen) */
+.inv-window {
+    width: 90vw;          /* 90% of the screen width */
+    max-width: 1600px;    /* Increased from 1000px so it spans wide monitors */
+    height: 85vh;         /* 85% of the screen height */
+    background: #0a1014; 
+    border: 2px solid #007b8f;
+    box-shadow: 0 0 25px rgba(0, 180, 216, 0.4); /* Stronger glow */
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Ensure your game body has no weird white borders */
+body { margin: 0; overflow: hidden; }
+
+
+/* Header */
+.inv-header {
+    background: linear-gradient(90deg, #051821 0%, #004d61 50%, #051821 100%);
+    border-bottom: 2px solid #00d4ff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.inv-header h2 { margin: 0; color: #00d4ff; font-weight: normal; letter-spacing: 2px;}
+.close-btn { background: none; border: none; color: #00d4ff; font-size: 20px; cursor: pointer; }
+
+/* 3. The Content: Forces the inner panels to stretch and fill the new height */
+.inv-content {
+    display: flex;
+    padding: 30px;        /* Slightly more padding for the larger window */
+    gap: 30px;
+    flex: 1;              /* CRITICAL: Makes this section expand to fill the 85vh height */
+}
+
+/* Left Panel (Character) */
+.inv-left-panel {
+    flex: 1;
+    border: 1px solid #1a3a4a;
+    border-radius: 8px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, #102530 0%, #050a0f 100%);
+}
+.character-preview { max-height: 400px; object-fit: contain; }
+.panel-label { position: absolute; top: 10px; left: 10px; color: #88aab8; }
+
+/* Right Panel (Grid) */
+.inv-right-panel {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 15px;
+    align-items: center;
+    justify-items: center;
+}
+
+/* Specific Grid Placements to match your image */
+.torso-slot { grid-column: 2; grid-row: 1; }
+.right-arm-slot { grid-column: 1; grid-row: 2; }
+.left-arm-slot { grid-column: 3; grid-row: 2; }
+.legs-slot { grid-column: 2; grid-row: 3; }
+.module-slot { grid-column: 3; grid-row: 3; } /* Adjusted based on your pic */
+
+/* Individual Item Slots */
+/* Make the equipped slots bigger */
+.equip-slot {
+    width: 130px;  /* Increased */
+    height: 160px; /* Increased */
+    background: rgba(10, 20, 30, 0.8);
+    border: 2px solid #005f73; /* Thicker border */
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+/* NEW: Highlight state when a slot is clicked */
+.equip-slot.selected {
+    border-color: #ffaa00; /* Gold/Orange highlight */
+    box-shadow: 0 0 15px rgba(255, 170, 0, 0.5) inset, 0 0 10px rgba(255, 170, 0, 0.8);
+    transform: scale(1.05);
+}
+
+/* NEW: Stash Area Styles */
+.inv-stash-area {
+    background: rgba(0, 20, 30, 0.6);
+    border-top: 2px solid #005f73;
+    padding: 15px 30px;
+    height: 250px; /* Fixed height for the bottom section */
+    display: flex;
+    flex-direction: column;
+}
+
+.stash-title {
+    color: #88aab8;
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stash-grid {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto; /* Allows scrolling if you have many items */
+    padding-bottom: 10px;
+}
+
+/* Items inside the stash */
+.stash-item {
+    width: 100px;
+    height: 120px;
+    background: rgba(5, 15, 20, 0.9);
+    border: 1px solid #446677;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #00d4ff;
+    font-size: 12px;
+    text-align: center;
+    padding: 5px;
+}
+
+.stash-item:hover {
+    border-color: #00d4ff;
+    background: rgba(0, 100, 150, 0.3);
+}
+
+/* Dim items that don't match the currently selected slot */
+.stash-item.incompatible {
+    opacity: 0.3;
+    filter: grayscale(100%);
+    pointer-events: none; /* Make them unclickable */
+}
+
+.equip-slot:hover {
+    border-color: #00d4ff;
+    box-shadow: 0 0 10px #00d4ff inset;
+}
+.slot-label { font-size: 12px; color: #a0c0d0; padding: 4px; text-align: center; background: rgba(0,0,0,0.5); width: 100%; box-sizing: border-box;}
+.slot-icon { width: 80%; height: 80%; object-fit: contain; margin-top: auto; margin-bottom: auto;}
+
+
+/* --- 2. THE FLOATING TOOLTIP FIX --- */
+#item-tooltip {
+    position: fixed; /* Floats over the entire screen */
+    background: rgba(5, 10, 15, 0.95);
+    border: 1px solid #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+    padding: 15px;
+    border-radius: 4px;
+    width: 250px;
+    z-index: 999; /* Always on top */
+    pointer-events: none; /* CRITICAL: Prevents the tooltip from blocking mouse hovers! */
+    display: none; /* Hidden by default */
+}
+
+/* Tooltip text styling */
+#item-tooltip h3 { margin: 0 0 5px 0; color: #ffaa00; font-size: 16px; }
+#tt-type { margin: 0 0 10px 0; color: #a0c0d0; font-size: 12px; font-style: italic; }
+.tt-stats { margin-bottom: 10px; color: #00d4ff; font-size: 14px; line-height: 1.4; }
+#tt-desc { margin: 0; color: #cccccc; font-size: 12px; }

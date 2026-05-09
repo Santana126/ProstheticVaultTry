@@ -14,13 +14,53 @@
             <p>(W,A,S,D = Move | Mouse = Look | E = Inventory)</p>
         </div>
     </div>
-    <div id="inventory-menu" style="display: none;">
-        <h2>PROSTHETIC VAULT</h2>
-        <div id="arm-options">
-            <button onclick="window.game.swapArm('steel_arm')">Equip Steel Arm</button>
-            <button onclick="window.game.swapArm('plasma_arm')">Equip Plasma Arm</button>
+
+    <div id="inventory-overlay" style="display: none;">
+        <div class="inv-window">
+            <div class="inv-header">
+                <h2>Prosthetic Vault</h2>
+                <button class="close-btn" onclick="toggleInventory()">X</button>
+            </div>
+
+            <div class="inv-content">
+                <div class="inv-left-panel">
+                    <div class="panel-label">Equipaggiamento</div>
+                    <img src="assets/mech_preview.png" alt="Character Preview" class="character-preview">
+                </div>
+
+                <div class="inv-right-panel">
+                    <div class="equip-slot torso-slot" data-slot="TORSO">
+                        <span class="slot-label">Torso</span><div class="slot-icon empty"></div>
+                    </div>
+                    
+                    <div class="equip-slot right-arm-slot" id="equip-right-arm" data-slot="RIGHT_ARM" data-item-id="steel_arm">
+                        <span class="slot-label">Braccio Destro</span>
+                        <div class="slot-icon has-item">Steel Arm</div> </div>
+                    
+                    <div class="equip-slot left-arm-slot" data-slot="LEFT_ARM">
+                        <span class="slot-label">Braccio Sinistro</span><div class="slot-icon empty"></div>
+                    </div>
+                    <div class="equip-slot legs-slot" data-slot="LEGS">
+                        <span class="slot-label">Gambe</span><div class="slot-icon empty"></div>
+                    </div>
+                    <div class="equip-slot module-slot" data-slot="MODULE">
+                        <span class="slot-label">Modulo</span><div class="slot-icon empty"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="inv-stash-area">
+                <h3 class="stash-title">Componenti Disponibili</h3>
+                <div class="stash-grid" id="stash-grid"></div>
+            </div>
         </div>
-        <p>Press 'E' to Close</p>
+
+        <div id="item-tooltip" class="tooltip-hidden">
+            <h3 id="tt-name">Nome</h3>
+            <p id="tt-type">Tipo</p>
+            <div class="tt-stats" id="tt-stats">Stats</div>
+            <p id="tt-desc">Descrizione</p>
+        </div>
     </div>
 
     <script type="importmap">
