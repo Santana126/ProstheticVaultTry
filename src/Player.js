@@ -9,7 +9,6 @@ export class Player {
     constructor(scene, camera, physicsManager, vfxManager) {
         this.scene = scene;
         this.camera = camera;
-        // this.level = level;
         this.physicsManager = physicsManager;
         this.vfxManager = vfxManager;
         this.isAttacking = false;
@@ -21,32 +20,9 @@ export class Player {
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
 
-
-
-        // this.moveForward = false;
-        // this.moveBackward = false;
-        // this.moveLeft = false;
-        // this.moveRight = false;
-
-        // // Equipment management
-        // this.equipment = new Map(); // Stores { 'LEFT_ARM': ArmObject, ... }
-        // this.armGroup = new THREE.Group();
-        // this.camera.add(this.armGroup);
-        // this.scene.add(this.camera);
-
-        // this.currentArmModel = null;
-        // this.bobTimer = 0;
-
-        // this.controls = new PointerLockControls(this.camera, document.body);
-        // this.loader = new GLTFLoader();
-        // this.raycaster = new THREE.Raycaster();
-
-        // this.initInput();
-
         this.controls = new PointerLockControls(this.camera, document.body);
         this.input = new InputManager();
         this.inventory = new InventoryManager(this.camera, this.scene);
-
 
     }
 
@@ -98,7 +74,6 @@ export class Player {
             model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
             model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
             model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
-
 
             const hardcodedWristName = 'hand__02'; // Change this to the actual name of the wrist node in your 3D model
             // Try to find the node inside the 3D file
@@ -189,7 +164,6 @@ export class Player {
         equippedArm.attack(this.camera, muzzlePosition, this.scene, this.level.walls);
     }
 
-
     // Update the equip method to pass the whole item
     equip(slot, item) {
         this.equipment.set(slot, item);
@@ -197,71 +171,6 @@ export class Player {
             this.loadArmModel(item); // Pass the item object, not just the path
         }
     }
-
-
-    // update(delta) {
-    //     if (!this.controls.isLocked) return;
-
-    //     // 1. Process Movement
-    //     this.velocity.x -= this.velocity.x * GAME_CONFIG.PLAYER.friction * delta;
-    //     this.velocity.z -= this.velocity.z * GAME_CONFIG.PLAYER.friction * delta;
-
-    //     this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
-    //     this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
-    //     this.direction.normalize();
-
-    //     if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * GAME_CONFIG.PLAYER.moveSpeed * delta;
-    //     if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * GAME_CONFIG.PLAYER.moveSpeed * delta;
-
-    //     // --- COLLISION DETECTION (AABB) ---
-        
-    //     // We check X and Z movement separately so you can "slide" along walls
-        
-    //     // Check X movement
-    //     const nextX = -this.velocity.x * delta;
-    //     this.controls.moveRight(nextX);
-    //     if (this.checkCollision()) {
-    //         this.controls.moveRight(-nextX); // Undo movement if hit wall
-    //     }
-
-    //     // Check Z movement
-    //     const nextZ = -this.velocity.z * delta;
-    //     this.controls.moveForward(nextZ);
-    //     if (this.checkCollision()) {
-    //         this.controls.moveForward(-nextZ); // Undo movement if hit wall
-    //     }
-
-    //     // --- CONTINUOUS WEAPON FIRING LOGIC ---
-    //     const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
-        
-    //     // 1. Calculate the exact Muzzle/Wrist position continuously
-    //     let muzzlePosition = new THREE.Vector3();
-    //     if (this.muzzlePoint) {
-    //         this.muzzlePoint.getWorldPosition(muzzlePosition);
-    //     } else {
-    //         muzzlePosition.copy(this.camera.position);
-    //     }
-
-    //     // 2. Fire or Stop based on mouse input
-    //     if (equippedArm) {
-    //         if (this.isAttacking) {
-    //             // If holding left click, fire and animate the beam!
-    //             equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls, delta);
-                
-    //             // Optional: You could trigger damage to the wall/enemy here 
-    //             // using a timer so it damages them every 0.5 seconds while held.
-    //         } else {
-    //             // If mouse is released, instantly delete the beam
-    //             equippedArm.stopFiring(this.scene);
-    //         }
-    //         if (typeof equippedArm.update === 'function') {
-    //             equippedArm.update(delta);
-    //         }
-    //     }
-
-    //     // 2. Process Arm Bobbing
-    //     this.armBobbing(delta);
-    // }
 
 
     //Refactored update method
@@ -341,38 +250,6 @@ export class Player {
             }
         }
     }
-
-    // checkCollision() {
-    //     // 1. Define the Body Collider
-    //     // Instead of centering on the camera, we create a box that:
-    //     // - X: centered on camera
-    //     // - Y: starts at 0 (floor) and goes up to camera.position.y
-    //     // - Z: centered on camera, but slightly extended forward to account for the arm
-        
-    //     const playerHeight = this.camera.position.y;
-    //     const playerWidth = 0.6; 
-    //     const playerDepth = 1; // Increased from 0.4 to account for the arm's presence
-
-    //     const playerBox = new THREE.Box3().setFromCenterAndSize(
-    //         new THREE.Vector3(
-    //             this.camera.position.x, 
-    //             playerHeight / 2, // Center the box halfway between floor and eyes
-    //             this.camera.position.z - 0.2 // Shift the box slightly forward
-    //         ), 
-    //         new THREE.Vector3(playerWidth, playerHeight, playerDepth)
-    //     );
-
-    //     // // 2. Check intersection with walls
-    //     // for (let wall of this.level.walls) {
-    //     //     if (playerBox.intersectsBox(wall.userData.boundingBox)) {
-    //     //         return true; 
-    //     //     }
-    //     // }
-    //     // return false;
-    //     // We completely removed the `for` loop! Just ask the referee:
-    //     return this.physicsManager.checkCollision(playerBox);
-
-    // }
 
     checkCollision() {
         const playerHeight = this.camera.position.y;
