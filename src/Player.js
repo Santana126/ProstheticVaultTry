@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GAME_CONFIG } from './Config.js';
+import { InputManager } from './InputManager.js';
+import { InventoryManager } from './InventoryManager.js';
 
 export class Player {
     constructor(scene, camera, level) {
@@ -16,25 +18,34 @@ export class Player {
         // Movement state
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
-        this.moveForward = false;
-        this.moveBackward = false;
-        this.moveLeft = false;
-        this.moveRight = false;
 
-        // Equipment management
-        this.equipment = new Map(); // Stores { 'LEFT_ARM': ArmObject, ... }
-        this.armGroup = new THREE.Group();
-        this.camera.add(this.armGroup);
-        this.scene.add(this.camera);
 
-        this.currentArmModel = null;
-        this.bobTimer = 0;
+
+        // this.moveForward = false;
+        // this.moveBackward = false;
+        // this.moveLeft = false;
+        // this.moveRight = false;
+
+        // // Equipment management
+        // this.equipment = new Map(); // Stores { 'LEFT_ARM': ArmObject, ... }
+        // this.armGroup = new THREE.Group();
+        // this.camera.add(this.armGroup);
+        // this.scene.add(this.camera);
+
+        // this.currentArmModel = null;
+        // this.bobTimer = 0;
+
+        // this.controls = new PointerLockControls(this.camera, document.body);
+        // this.loader = new GLTFLoader();
+        // this.raycaster = new THREE.Raycaster();
+
+        // this.initInput();
 
         this.controls = new PointerLockControls(this.camera, document.body);
-        this.loader = new GLTFLoader();
-        this.raycaster = new THREE.Raycaster();
+        this.input = new InputManager();
+        this.inventory = new InventoryManager(this.camera, this.scene);
 
-        this.initInput();
+
     }
 
     initInput() {
@@ -186,68 +197,126 @@ export class Player {
     }
 
 
+    // update(delta) {
+    //     if (!this.controls.isLocked) return;
+
+    //     // 1. Process Movement
+    //     this.velocity.x -= this.velocity.x * GAME_CONFIG.PLAYER.friction * delta;
+    //     this.velocity.z -= this.velocity.z * GAME_CONFIG.PLAYER.friction * delta;
+
+    //     this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
+    //     this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
+    //     this.direction.normalize();
+
+    //     if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * GAME_CONFIG.PLAYER.moveSpeed * delta;
+    //     if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * GAME_CONFIG.PLAYER.moveSpeed * delta;
+
+    //     // --- COLLISION DETECTION (AABB) ---
+        
+    //     // We check X and Z movement separately so you can "slide" along walls
+        
+    //     // Check X movement
+    //     const nextX = -this.velocity.x * delta;
+    //     this.controls.moveRight(nextX);
+    //     if (this.checkCollision()) {
+    //         this.controls.moveRight(-nextX); // Undo movement if hit wall
+    //     }
+
+    //     // Check Z movement
+    //     const nextZ = -this.velocity.z * delta;
+    //     this.controls.moveForward(nextZ);
+    //     if (this.checkCollision()) {
+    //         this.controls.moveForward(-nextZ); // Undo movement if hit wall
+    //     }
+
+    //     // --- CONTINUOUS WEAPON FIRING LOGIC ---
+    //     const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
+        
+    //     // 1. Calculate the exact Muzzle/Wrist position continuously
+    //     let muzzlePosition = new THREE.Vector3();
+    //     if (this.muzzlePoint) {
+    //         this.muzzlePoint.getWorldPosition(muzzlePosition);
+    //     } else {
+    //         muzzlePosition.copy(this.camera.position);
+    //     }
+
+    //     // 2. Fire or Stop based on mouse input
+    //     if (equippedArm) {
+    //         if (this.isAttacking) {
+    //             // If holding left click, fire and animate the beam!
+    //             equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls, delta);
+                
+    //             // Optional: You could trigger damage to the wall/enemy here 
+    //             // using a timer so it damages them every 0.5 seconds while held.
+    //         } else {
+    //             // If mouse is released, instantly delete the beam
+    //             equippedArm.stopFiring(this.scene);
+    //         }
+    //         if (typeof equippedArm.update === 'function') {
+    //             equippedArm.update(delta);
+    //         }
+    //     }
+
+    //     // 2. Process Arm Bobbing
+    //     this.armBobbing(delta);
+    // }
+
+
+    //Refactored update method
     update(delta) {
         if (!this.controls.isLocked) return;
-
-        // 1. Process Movement
+        // --- 1. MOVEMENT ---
         this.velocity.x -= this.velocity.x * GAME_CONFIG.PLAYER.friction * delta;
         this.velocity.z -= this.velocity.z * GAME_CONFIG.PLAYER.friction * delta;
 
-        this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
-        this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
+        // Ask InputManager for the keys!
+        const moveForward = this.input.isPressed('KeyW');
+        const moveBackward = this.input.isPressed('KeyS');
+        const moveLeft = this.input.isPressed('KeyA');
+        const moveRight = this.input.isPressed('KeyD');
+
+        this.direction.z = Number(moveForward) - Number(moveBackward);
+        this.direction.x = Number(moveRight) - Number(moveLeft);
         this.direction.normalize();
 
-        if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * GAME_CONFIG.PLAYER.moveSpeed * delta;
-        if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * GAME_CONFIG.PLAYER.moveSpeed * delta;
+        if (moveForward || moveBackward) this.velocity.z -= this.direction.z * GAME_CONFIG.PLAYER.moveSpeed * delta;
+        if (moveLeft || moveRight) this.velocity.x -= this.direction.x * GAME_CONFIG.PLAYER.moveSpeed * delta;
 
-        // --- COLLISION DETECTION (AABB) ---
-        
-        // We check X and Z movement separately so you can "slide" along walls
-        
-        // Check X movement
+        // --- 2. COLLISION ---
         const nextX = -this.velocity.x * delta;
         this.controls.moveRight(nextX);
-        if (this.checkCollision()) {
-            this.controls.moveRight(-nextX); // Undo movement if hit wall
-        }
+        if (this.checkCollision()) this.controls.moveRight(-nextX);
 
-        // Check Z movement
         const nextZ = -this.velocity.z * delta;
         this.controls.moveForward(nextZ);
-        if (this.checkCollision()) {
-            this.controls.moveForward(-nextZ); // Undo movement if hit wall
-        }
+        if (this.checkCollision()) this.controls.moveForward(-nextZ);
 
-        // --- CONTINUOUS WEAPON FIRING LOGIC ---
-        const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
+        // --- 3. WEAPON LOGIC ---
+        const equippedArm = this.inventory.getActiveArm();
         
-        // 1. Calculate the exact Muzzle/Wrist position continuously
         let muzzlePosition = new THREE.Vector3();
-        if (this.muzzlePoint) {
-            this.muzzlePoint.getWorldPosition(muzzlePosition);
+        if (this.inventory.muzzlePoint) {
+            this.inventory.muzzlePoint.getWorldPosition(muzzlePosition);
         } else {
             muzzlePosition.copy(this.camera.position);
         }
 
-        // 2. Fire or Stop based on mouse input
         if (equippedArm) {
-            if (this.isAttacking) {
-                // If holding left click, fire and animate the beam!
+            // Ask InputManager if the mouse is clicking!
+            if (this.input.isAttacking) {
                 equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls, delta);
-                
-                // Optional: You could trigger damage to the wall/enemy here 
-                // using a timer so it damages them every 0.5 seconds while held.
             } else {
-                // If mouse is released, instantly delete the beam
                 equippedArm.stopFiring(this.scene);
             }
+
             if (typeof equippedArm.update === 'function') {
                 equippedArm.update(delta);
             }
         }
 
-        // 2. Process Arm Bobbing
-        this.armBobbing(delta);
+        // Update visual weapon bobbing
+        const isMoving = moveForward || moveBackward || moveLeft || moveRight;
+        this.inventory.updateBobbing(isMoving, delta);
     }
 
     armBobbing(delta) {

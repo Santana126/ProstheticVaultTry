@@ -68,7 +68,7 @@ const steelArm = new Arm(
     { strength: 15 }, 
     { damage: 20, attackSpeed: 0.8, attackType: 'melee' }
 );
-player.equip('LEFT_ARM', steelArm);
+player.inventory.equip('LEFT_ARM', steelArm);
 
 
 const uiManager = new UIManager();
@@ -84,7 +84,7 @@ document.addEventListener('inventoryToggled', (e) => {
 document.addEventListener('equipItem', (e) => {
     const slotToEquip = e.detail.slot;
     const itemToEquip = ITEM_DATABASE.arms[e.detail.itemId];
-    player.equip(slotToEquip, itemToEquip);
+    player.inventory.equip(slotToEquip, itemToEquip);
 });
 
 // Controls
@@ -94,14 +94,25 @@ player.controls.addEventListener('lock', () => blocker.style.display = 'none');
 player.controls.addEventListener('unlock', () => blocker.style.display = 'flex');
 
 // document.addEventListener('keydown', (e) => player.setMoveState(e.code, true));
+// document.addEventListener('keydown', (e) => {
+//     if (e.code === 'KeyE') {
+//         uiManager.toggleInventory(); // Call the UI Manager instead of a local function!
+//     } else {
+//         player.setMoveState(e.code, true);
+//     }
+// });
+// document.addEventListener('keyup', (e) => player.setMoveState(e.code, false));
+
+
+// Keep 'E' for inventory in main.js, InputManager handles the rest!
 document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyE') {
-        uiManager.toggleInventory(); // Call the UI Manager instead of a local function!
-    } else {
-        player.setMoveState(e.code, true);
+        uiManager.toggleInventory(); 
     }
 });
-document.addEventListener('keyup', (e) => player.setMoveState(e.code, false));
+
+
+
 
 // // Add 'E' key to input listeners
 // document.addEventListener('keydown', (e) => {
