@@ -38,149 +38,6 @@ export class Arm extends Prosthetic {
         };
     }
 
-    // // NEW: The Arm is now responsible for the visual effect
-    // createVisualEffect(scene, startPoint, endPoint) {
-    //     const params = this.getAttackParameters();
-
-    //     // Create the laser line
-    //     const points = [startPoint, endPoint];
-    //     const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    //     const material = new THREE.LineBasicMaterial({ 
-    //         color: params.color, 
-    //         linewidth: 2 
-    //     });
-    //     const line = new THREE.Line(geometry, material);
-
-    //     scene.add(line);
-
-    //     // Memory Management: Clean up the line after 100ms
-    //     setTimeout(() => {
-    //         scene.remove(line);
-    //         geometry.dispose();
-    //         material.dispose();
-    //     }, 100);
-    // }
-
-
-    // createVisualEffect(scene, startPoint, endPoint, color) {
-    //     // 1. Create a glowing cylinder for the laser bolt
-    //     const length = 1.5; 
-    //     const geometry = new THREE.CylinderGeometry(0.04, 0.04, length, 8);
-        
-    //     // Crucial: Cylinders point UP (Y) by default. We rotate it so it points FORWARD (Z)
-    //     geometry.rotateX(Math.PI / 2);
-
-    //     const material = new THREE.MeshBasicMaterial({ color: color });
-    //     const laserMesh = new THREE.Mesh(geometry, material);
-
-    //     // 2. Position it at the wrist and point it at the wall
-    //     laserMesh.position.copy(startPoint);
-    //     laserMesh.lookAt(endPoint);
-    //     scene.add(laserMesh);
-
-    //     // 3. Calculate distance and direction for the animation
-    //     const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
-    //     const totalDistance = startPoint.distanceTo(endPoint);
-
-    //     // 4. Save it to our array so it can be animated in the update loop
-    //     this.activeLasers.push({
-    //         mesh: laserMesh,
-    //         direction: direction,
-    //         speed: 150, // Velocity: Higher means the laser travels faster
-    //         distanceTraveled: 0,
-    //         maxDistance: totalDistance
-    //     });
-    // }
-
-    
-    // attack(camera, handPosition, scene, solidObjects) {
-    //     console.log(`${this.name} attacks with ${this.attackType}! Dealing ${this.damage} damage.`);
-    //     // Future: Add animation and raycasting here
-
-    //     //Call the shootLaser method to handle the actual shooting logic and visual effect
-    //     // Note: We will need to pass the camera, hand position, scene, and solid objects for raycasting
-    //     // This is a placeholder and should be replaced with actual references from your game context
-    //     this.shootLaser(camera, handPosition, scene, solidObjects);
-
-    // }
-
-
-    // attack(camera, handPosition, scene, solidObjects) {
-    //     console.log(`${this.name} attacks with ${this.attackType}! Dealing ${this.damage} damage.`);
-    //     const params = this.getAttackParameters();
-
-    //     // 1. Raycast to find the exact target from the center of the screen
-    //     this.raycaster.setFromCamera(this.centerScreen, camera);
-    //     const intersects = this.raycaster.intersectObjects(solidObjects, true);
-
-    //     let hitPoint = new THREE.Vector3();
-
-    //     // 2. Check if we hit a wall within our weapon's range
-    //     if (intersects.length > 0 && intersects[0].distance <= params.range) {
-    //         hitPoint.copy(intersects[0].point);
-            
-    //         // (Future code: Deal damage to intersects[0].object here)
-    //     } else {
-    //         // If we missed or it's out of range, shoot the laser into the distance
-    //         this.raycaster.ray.at(params.range, hitPoint);
-    //     }
-
-    //     // 3. Spawn the flying projectile!
-    //     // This calls the cylinder logic we just wrote
-    //     this.createVisualEffect(scene, handPosition, hitPoint, params.color);
-    // }
-
-
-    /**
-     * Fires a laser from the hand to whatever is in the center of the screen.
-     * @param {THREE.PerspectiveCamera} camera - The player's POV
-     * @param {THREE.Vector3} handPosition - The world coordinates of the gun/hand
-     * @param {THREE.Scene} scene - Your Three.js scene
-     * @param {Array<THREE.Object3D>} solidObjects - Array of walls/enemies to hit
-     */
-
-    shootLaser(camera, handPosition, scene, solidObjects) {
-        this.raycaster.setFromCamera(this.centerScreen, camera);
-        const intersects = this.raycaster.intersectObjects(solidObjects, true);
-
-        if (intersects.length > 0) {
-            // We hit something! Get the exact 3D coordinate of the impact
-            const hitPoint = intersects[0].point; 
-
-            // 4. Draw the visual laser
-            this.renderLaserBeam(handPosition, hitPoint, scene);
-            
-            // (Optional) Add a decal, spark, or explosion at the 'hitPoint' here!
-        } else {
-            // Optional: If they shoot into the sky, draw a really long line anyway
-            const maxDistance = new THREE.Vector3().copy(camera.position).add(this.raycaster.ray.direction.multiplyScalar(1000));
-            this.renderLaserBeam(handPosition, maxDistance, scene);
-        }
-    }
-
-    renderLaserBeam(startPoint, endPoint, scene) {
-        // Create the material for the laser (make it emissive if you use post-processing/bloom!)
-        const material = new THREE.LineBasicMaterial({ 
-            color: 0xff0000 // Red laser
-        });
-
-        // Create the geometry using our two points
-        const points = [startPoint, endPoint];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        
-        // Create the mesh and add to scene
-        const laserLine = new THREE.Line(geometry, material);
-        scene.add(laserLine);
-
-        // 5. Cleanup: Remove the laser after a split second so it flashes
-        setTimeout(() => {
-            scene.remove(laserLine);
-            geometry.dispose();
-            material.dispose();
-        }, 100); // 100 milliseconds duration
-    }
-
-
     fireContinuous(camera, muzzlePosition, scene, solidObjects, delta) {
         const params = this.getAttackParameters();
 
@@ -241,7 +98,6 @@ export class Arm extends Prosthetic {
         this.beamMesh.position.copy(muzzlePosition); // Lock base to the wrist
         this.beamMesh.lookAt(targetPoint);           // Point at the crosshair
         this.beamMesh.scale.set(1, 1, this.currentBeamLength); // Stretch it!
-        // console.log(`Beam length: ${this.currentBeamLength.toFixed(2)} / ${maxDistance.toFixed(2)}`);
     
         // --- SPAWN BURN DECALS & SPARKS ---
         if (targetNormal && this.currentBeamLength >= maxDistance) {
@@ -353,7 +209,6 @@ export class Arm extends Prosthetic {
     }
 
     update(delta) {
-        console.log(`Entering Arm update loop with ${this.particles.length} active sparks...`);
         // Loop backwards to safely delete particles without breaking the array index
         for (let i = this.particles.length - 1; i >= 0; i--) {
             let p = this.particles[i];
@@ -380,34 +235,4 @@ export class Arm extends Prosthetic {
             p.mesh.scale.set(scale, scale, scale);
         }
     }
-        
-
-    // // NEW: Handles moving the projectiles every frame
-    // update(delta) {
-    //     console.log(`Updating ${this.activeLasers.length} active lasers...`);
-    //     // We loop backwards so we can safely delete lasers from the array as they hit walls
-    //     for (let i = this.activeLasers.length - 1; i >= 0; i--) {
-    //         let laser = this.activeLasers[i];
-            
-    //         // Calculate how far it should move this frame
-    //         const distanceToMove = laser.speed * delta;
-            
-    //         // Move the mesh physically forward
-    //         laser.mesh.position.add(laser.direction.clone().multiplyScalar(distanceToMove));
-    //         laser.distanceTraveled += distanceToMove;
-
-    //         // Did it hit the target?
-    //         if (laser.distanceTraveled >= laser.maxDistance) {
-    //             // Remove from the 3D scene
-    //             laser.mesh.parent.remove(laser.mesh); 
-                
-    //             // Free up computer memory
-    //             laser.mesh.geometry.dispose();
-    //             laser.mesh.material.dispose();
-                
-    //             // Remove from our tracking array
-    //             this.activeLasers.splice(i, 1); 
-    //         }
-    //     }
-    // }
 }

@@ -69,7 +69,7 @@ export class Player {
             const model = gltf.scene;
             model.traverse((node) => {
                 // This will print the name and type (Mesh, Bone, Object3D, etc.) of every part
-                console.log("Found part:", node.name, "| Type:", node.type); 
+                // console.log("Found part:", node.name, "| Type:", node.type); 
             });
             
             // Center the model
@@ -90,7 +90,7 @@ export class Player {
             const foundWristNode = model.getObjectByName(hardcodedWristName);
 
             if (foundWristNode) {
-                console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
+                // console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
                 this.muzzlePoint = foundWristNode;
 
                 // --- DEBUG: ADD A RED BALL TO THE FOUND NODE ---
@@ -170,21 +170,6 @@ export class Player {
         }
         // Execute the attack using the true wrist position
         equippedArm.attack(this.camera, muzzlePosition, this.scene, this.level.walls);
-
-        // // Get the direction the camera is currently facing
-        // const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
-        // const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.camera.quaternion);
-        // const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
-
-        // // Offset the starting point so it looks like it comes from the bottom right of the screen.
-        // // You can fine-tune these three numbers until the laser lines up perfectly with your model's wrist!
-        // muzzlePosition.add(right.multiplyScalar(0.8));   // Move 0.8 units Right
-        // muzzlePosition.add(up.multiplyScalar(-0.4));     // Move 0.4 units Down
-        // muzzlePosition.add(forward.multiplyScalar(1.0)); // Move 1.0 unit Forward
-
-        // // --- STEP 2: EXECUTE THE ATTACK ---
-        // // Pass our new calculated muzzlePosition instead of the model's position
-        // equippedArm.attack(this.camera, muzzlePosition, this.scene, this.level.walls);
     }
 
 
@@ -228,25 +213,6 @@ export class Player {
         if (this.checkCollision()) {
             this.controls.moveForward(-nextZ); // Undo movement if hit wall
         }
-
-        // // --- NEW: WEAPON FIRING & COOLDOWN LOGIC ---
-        // const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
-        
-        // // 1. Decrease the cooldown timer
-        // if (this.fireCooldown > 0) {
-        //     this.fireCooldown -= delta;
-        // }
-
-        // // 2. If holding the trigger and cooldown is ready, shoot!
-        // if (this.isAttacking && this.fireCooldown <= 0 && equippedArm) {
-        //     this.performAttack();
-        //     this.fireCooldown = equippedArm.attackSpeed; // Reset timer based on weapon stats
-        // }
-
-        // // 3. Tell the arm to animate its flying projectiles
-        // if (equippedArm && typeof equippedArm.update === 'function') {
-        //     equippedArm.update(delta);
-        // }
 
         // --- CONTINUOUS WEAPON FIRING LOGIC ---
         const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
