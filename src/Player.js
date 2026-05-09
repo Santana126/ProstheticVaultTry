@@ -25,30 +25,6 @@ export class Player {
         this.inventory = new InventoryManager(this.camera, this.scene);
 
     }
-
-    initInput() {
-        // Handle movement keys
-        document.addEventListener('keydown', (e) => this.setMoveState(e.code, true));
-        document.addEventListener('keyup', (e) => this.setMoveState(e.code, false));
-
-        // NEW: Handle Attack hold with left mouse button
-        document.addEventListener('mousedown', (e) => {
-            if (e.button === 0) this.isAttacking = true;
-        });
-        document.addEventListener('mouseup', (e) => {
-            if (e.button === 0) this.isAttacking = false;
-        })
-    }
-
-    // Handle input updates
-    setMoveState(key, state) {
-        switch (key) {
-            case 'KeyW': this.moveForward = state; break;
-            case 'KeyA': this.moveLeft = state; break;
-            case 'KeyS': this.moveBackward = state; break;
-            case 'KeyD': this.moveRight = state; break;
-        }
-    }
     
     
     loadArmModel(item) { // Change 'path' to 'item'
@@ -145,34 +121,6 @@ export class Player {
         
     }
 
-    performAttack() {
-        console.log("Attack performed!");
-        if (!this.controls.isLocked) return;
-
-        const equippedArm = this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
-        if (!equippedArm) return;
-
-        // --- NEW: GET THE EXACT WRIST POSITION ---
-        let muzzlePosition = new THREE.Vector3();
-        if (this.muzzlePoint) {
-            // This calculates the exact world coordinates of our attached point!
-            this.muzzlePoint.getWorldPosition(muzzlePosition);
-        } else {
-            muzzlePosition.copy(this.camera.position); // Fallback
-        }
-        // Execute the attack using the true wrist position
-        equippedArm.attack(this.camera, muzzlePosition, this.scene, this.level.walls);
-    }
-
-    // Update the equip method to pass the whole item
-    equip(slot, item) {
-        this.equipment.set(slot, item);
-        if (slot === 'LEFT_ARM' || slot === 'RIGHT_ARM') {
-            this.loadArmModel(item); // Pass the item object, not just the path
-        }
-    }
-
-
     //Refactored update method
     update(delta) {
         if (!this.controls.isLocked) return;
@@ -233,22 +181,6 @@ export class Player {
         // Update visual weapon bobbing
         const isMoving = moveForward || moveBackward || moveLeft || moveRight;
         this.inventory.updateBobbing(isMoving, delta);
-    }
-
-    armBobbing(delta) {
-        if (this.currentArmModel) {
-            if (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
-                this.bobTimer += delta * GAME_CONFIG.ARM.bobSpeed;
-                const bobY = Math.sin(this.bobTimer) * GAME_CONFIG.ARM.bobAmountY;
-                const bobX = Math.cos(this.bobTimer * 0.5) * GAME_CONFIG.ARM.bobAmountX;
-                this.currentArmModel.position.y = GAME_CONFIG.ARM.basePos.y + bobY;
-                this.currentArmModel.position.x = GAME_CONFIG.ARM.basePos.x + bobX;
-            } else {
-                this.bobTimer = 0;
-                this.currentArmModel.position.y = THREE.MathUtils.lerp(this.currentArmModel.position.y, GAME_CONFIG.ARM.basePos.y, 0.1);
-                this.currentArmModel.position.x = THREE.MathUtils.lerp(this.currentArmModel.position.x, GAME_CONFIG.ARM.basePos.x, 0.1);
-            }
-        }
     }
 
     checkCollision() {
