@@ -40,11 +40,12 @@ export class Arm extends Prosthetic {
         };
     }
 
-    fireContinuous(camera, muzzlePosition, scene, solidObjects,vfxManager, delta) {
+    fireContinuous(camera, muzzlePosition, scene, physicsManager, delta, vfxManager) {
         const params = this.getAttackParameters();
 
         // 1. Raycast to find what the player is aiming at right now
         this.raycaster.setFromCamera(this.centerScreen, camera);
+        const solidObjects = physicsManager.getSolidMeshes();
         const intersects = this.raycaster.intersectObjects(solidObjects, true);
 
         let targetPoint = new THREE.Vector3();

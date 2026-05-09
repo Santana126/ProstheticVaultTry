@@ -5,6 +5,7 @@ import { Level } from './src/Level.js';
 import { ITEM_DATABASE } from './src/Database.js';
 import { UIManager } from './src/UIManager.js';
 import { VFXManager } from './src/VFXManager.js';
+import { PhysicsManager } from './src/PhysicsManager.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -40,10 +41,12 @@ scene.add(gridHelper);
 const level = new Level(scene);
 level.buildVaultLayout(); // One line to build the whole world!
 
-
+const physicsManager = new PhysicsManager();
+physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
 const vfxManager = new VFXManager(scene);
 // Add it as the 4th argument!
-const player = new Player(scene, camera, level, vfxManager);
+// const player = new Player(scene, camera, level, vfxManager);
+const player = new Player(scene, camera, physicsManager, vfxManager);
 
 // // Initialize Player
 // const player = new Player(scene, camera, level);

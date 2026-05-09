@@ -6,11 +6,12 @@ import { InputManager } from './InputManager.js';
 import { InventoryManager } from './InventoryManager.js';
 
 export class Player {
-    constructor(scene, camera, level, vfxManager) {
+    constructor(scene, camera, physicsManager, vfxManager) {
         this.scene = scene;
         this.camera = camera;
-        this.level = level;
-        this.vfxManager = vfxManager; 
+        // this.level = level;
+        this.physicsManager = physicsManager;
+        this.vfxManager = vfxManager;
         this.isAttacking = false;
         this.fireCooldown = 0;
 
@@ -298,21 +299,26 @@ export class Player {
         let muzzlePosition = new THREE.Vector3();
         if (this.inventory.muzzlePoint) {
             this.inventory.muzzlePoint.getWorldPosition(muzzlePosition);
+        } else if (this.inventory.currentArmModel) {
+            this.inventory.currentArmModel.getWorldPosition(muzzlePosition);
         } else {
             muzzlePosition.copy(this.camera.position);
         }
 
         if (equippedArm) {
-            // Ask InputManager if the mouse is clicking!
             if (this.input.isAttacking) {
-                equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls,this.vfxManager, delta);
+                // FIXED: Pass the physicsManager directly!
+                equippedArm.fireContinuous(
+                    this.camera, 
+                    muzzlePosition, 
+                    this.scene, 
+                    this.physicsManager, // <-- Replaced this.level.walls
+                    delta, 
+                    this.vfxManager
+                );
             } else {
                 equippedArm.stopFiring(this.scene);
             }
-
-            // if (typeof equippedArm.update === 'function') {
-            //     equippedArm.update(delta);
-            // }
         }
 
         // Update visual weapon bobbing
@@ -336,32 +342,46 @@ export class Player {
         }
     }
 
-    checkCollision() {
-        // 1. Define the Body Collider
-        // Instead of centering on the camera, we create a box that:
-        // - X: centered on camera
-        // - Y: starts at 0 (floor) and goes up to camera.position.y
-        // - Z: centered on camera, but slightly extended forward to account for the arm
+    // checkCollision() {
+    //     // 1. Define the Body Collider
+    //     // Instead of centering on the camera, we create a box that:
+    //     // - X: centered on camera
+    //     // - Y: starts at 0 (floor) and goes up to camera.position.y
+    //     // - Z: centered on camera, but slightly extended forward to account for the arm
         
-        const playerHeight = this.camera.position.y;
-        const playerWidth = 0.6; 
-        const playerDepth = 1; // Increased from 0.4 to account for the arm's presence
+    //     const playerHeight = this.camera.position.y;
+    //     const playerWidth = 0.6; 
+    //     const playerDepth = 1; // Increased from 0.4 to account for the arm's presence
 
+    //     const playerBox = new THREE.Box3().setFromCenterAndSize(
+    //         new THREE.Vector3(
+    //             this.camera.position.x, 
+    //             playerHeight / 2, // Center the box halfway between floor and eyes
+    //             this.camera.position.z - 0.2 // Shift the box slightly forward
+    //         ), 
+    //         new THREE.Vector3(playerWidth, playerHeight, playerDepth)
+    //     );
+
+    //     // // 2. Check intersection with walls
+    //     // for (let wall of this.level.walls) {
+    //     //     if (playerBox.intersectsBox(wall.userData.boundingBox)) {
+    //     //         return true; 
+    //     //     }
+    //     // }
+    //     // return false;
+    //     // We completely removed the `for` loop! Just ask the referee:
+    //     return this.physicsManager.checkCollision(playerBox);
+
+    // }
+
+    checkCollision() {
+        const playerHeight = this.camera.position.y;
         const playerBox = new THREE.Box3().setFromCenterAndSize(
-            new THREE.Vector3(
-                this.camera.position.x, 
-                playerHeight / 2, // Center the box halfway between floor and eyes
-                this.camera.position.z - 0.2 // Shift the box slightly forward
-            ), 
-            new THREE.Vector3(playerWidth, playerHeight, playerDepth)
+            new THREE.Vector3(this.camera.position.x, playerHeight / 2, this.camera.position.z - 0.2), 
+            new THREE.Vector3(0.6, playerHeight, 1.0)
         );
 
-        // 2. Check intersection with walls
-        for (let wall of this.level.walls) {
-            if (playerBox.intersectsBox(wall.userData.boundingBox)) {
-                return true; 
-            }
-        }
-        return false;
+        // We completely removed the `for` loop! Just ask the referee:
+        return this.physicsManager.checkCollision(playerBox);
     }
 }
