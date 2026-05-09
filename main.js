@@ -4,6 +4,7 @@ import { Arm } from './src/Arm.js';
 import { Level } from './src/Level.js';
 import { ITEM_DATABASE } from './src/Database.js';
 import { UIManager } from './src/UIManager.js';
+import { VFXManager } from './src/VFXManager.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -40,8 +41,12 @@ const level = new Level(scene);
 level.buildVaultLayout(); // One line to build the whole world!
 
 
-// Initialize Player
-const player = new Player(scene, camera, level);
+const vfxManager = new VFXManager(scene);
+// Add it as the 4th argument!
+const player = new Player(scene, camera, level, vfxManager);
+
+// // Initialize Player
+// const player = new Player(scene, camera, level);
 
 // // --- INVENTORY LOGIC ---
 // const invMenu = document.getElementById('inventory-overlay');
@@ -254,6 +259,8 @@ function animate() {
     const delta = (time - prevTime) / 1000;
 
     player.update(delta);
+
+    vfxManager.update(delta);
 
     prevTime = time;
     renderer.render(scene, camera);

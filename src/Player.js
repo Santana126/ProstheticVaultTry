@@ -6,10 +6,11 @@ import { InputManager } from './InputManager.js';
 import { InventoryManager } from './InventoryManager.js';
 
 export class Player {
-    constructor(scene, camera, level) {
+    constructor(scene, camera, level, vfxManager) {
         this.scene = scene;
         this.camera = camera;
         this.level = level;
+        this.vfxManager = vfxManager; 
         this.isAttacking = false;
         this.fireCooldown = 0;
 
@@ -304,14 +305,14 @@ export class Player {
         if (equippedArm) {
             // Ask InputManager if the mouse is clicking!
             if (this.input.isAttacking) {
-                equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls, delta);
+                equippedArm.fireContinuous(this.camera, muzzlePosition, this.scene, this.level.walls,this.vfxManager, delta);
             } else {
                 equippedArm.stopFiring(this.scene);
             }
 
-            if (typeof equippedArm.update === 'function') {
-                equippedArm.update(delta);
-            }
+            // if (typeof equippedArm.update === 'function') {
+            //     equippedArm.update(delta);
+            // }
         }
 
         // Update visual weapon bobbing
