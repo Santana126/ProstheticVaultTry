@@ -92,7 +92,9 @@ export class Player {
             const foundWristNode = model.getObjectByName(hardcodedWristName);
 
             if (foundWristNode) {
-                // console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
+                if (GAME_CONFIG.DEBUG.showModelBounds) {
+                    console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
+                }
                 this.muzzlePoint = foundWristNode;
 
                 // --- DEBUG: ADD A RED BALL TO THE FOUND NODE ---
@@ -245,9 +247,8 @@ export class Player {
         }
 
         // 2. Process Arm Bobbing
-        armBobbing(delta);
+        this.armBobbing(delta);
     }
-
 
     armBobbing(delta) {
         if (this.currentArmModel) {
