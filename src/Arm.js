@@ -7,7 +7,7 @@ export class Arm extends Prosthetic {
         
         // Weapon specific characteristics
         this.damage = weaponData.damage || 10;
-        this.attackSpeed = weaponData.attackSpeed || 1.0;
+        this.attackSpeed = weaponData.attackSpeed || 1;
         this.attackType = weaponData.attackType || 'laser'; // 'melee', 'laser', 'electric'
         this.raycaster = new THREE.Raycaster();
         this.centerScreen = new THREE.Vector2(0, 0); // Center of the screen for raycasting

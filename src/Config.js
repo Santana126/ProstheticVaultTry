@@ -1,7 +1,7 @@
 export const GAME_CONFIG = {
     PLAYER: {
-        moveSpeed: 200.0,
-        friction: 10.0,
+        moveSpeed: 200,
+        friction: 10,
         height: 5.5, // Eye level
     },
     ARM: {
@@ -11,5 +11,8 @@ export const GAME_CONFIG = {
         bobSpeed: 10,
         bobAmountY: 0.02,
         bobAmountX: 0.01,
+    },
+    DEBUG: {
+        showModelBounds: false
     }
 };

@@ -67,10 +67,12 @@ export class Player {
         
         this.loader.load(path, (gltf) => {
             const model = gltf.scene;
-            model.traverse((node) => {
-                // This will print the name and type (Mesh, Bone, Object3D, etc.) of every part
-                // console.log("Found part:", node.name, "| Type:", node.type); 
-            });
+            if (GAME_CONFIG.DEBUG.showModelBounds) {
+                model.traverse((node) => {
+                    // This will print the name and type (Mesh, Bone, Object3D, etc.) of every part
+                    console.log("Found part:", node.name, "| Type:", node.type); 
+                });
+            }
             
             // Center the model
             const box = new THREE.Box3().setFromObject(model);
@@ -243,6 +245,11 @@ export class Player {
         }
 
         // 2. Process Arm Bobbing
+        armBobbing(delta);
+    }
+
+
+    armBobbing(delta) {
         if (this.currentArmModel) {
             if (this.moveForward || this.moveBackward || this.moveLeft || this.moveRight) {
                 this.bobTimer += delta * GAME_CONFIG.ARM.bobSpeed;
@@ -256,9 +263,6 @@ export class Player {
                 this.currentArmModel.position.x = THREE.MathUtils.lerp(this.currentArmModel.position.x, GAME_CONFIG.ARM.basePos.x, 0.1);
             }
         }
-
-
-
     }
 
     checkCollision() {
@@ -270,7 +274,7 @@ export class Player {
         
         const playerHeight = this.camera.position.y;
         const playerWidth = 0.6; 
-        const playerDepth = 1.0; // Increased from 0.4 to account for the arm's presence
+        const playerDepth = 1; // Increased from 0.4 to account for the arm's presence
 
         const playerBox = new THREE.Box3().setFromCenterAndSize(
             new THREE.Vector3(

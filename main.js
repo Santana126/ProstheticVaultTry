@@ -90,9 +90,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-
-// We attach a "game" object to the window so the HTML buttons can find the player
-window.game = {
+globalThis.game = {
     swapArm: (armId) => {
         const armItem = ITEM_DATABASE.arms[armId];
         player.equip('LEFT_ARM', armItem);
