@@ -30,6 +30,8 @@ export class Arm extends Prosthetic {
         };
     }
 
+
+    // This should be changed into a generic performAttack
     fireContinuous(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager) {
         const params = this.getAttackParameters();
 
@@ -40,12 +42,12 @@ export class Arm extends Prosthetic {
 
         let targetPoint = new THREE.Vector3();
         let targetNormal = null;
-        let hitObject = null; // NEW: Track the specific mesh we hit!
+        let hitObject = null; // Track the specific mesh we hit!
         
         if (intersects.length > 0 && intersects[0].distance <= params.range) {
             targetPoint.copy(intersects[0].point);
             targetNormal = intersects[0].face.normal;
-            hitObject = intersects[0].object; // NEW: Store the hit object
+            hitObject = intersects[0].object; // Store the hit object
         } else {
             this.raycaster.ray.at(params.range, targetPoint);
         }
@@ -58,7 +60,7 @@ export class Arm extends Prosthetic {
             // Create a cylinder with a length of exactly 1 unit
             const geometry = new THREE.CylinderGeometry(0.04, 0.04, 1, 8);
             
-            // THE MAGIC TRICK: Shift the geometry up by half its length. 
+            // Shift the geometry up by half its length. 
             // Now its pivot point is at the bottom base, not the center!
             geometry.translate(0, 0.5, 0); 
             
@@ -94,7 +96,7 @@ export class Arm extends Prosthetic {
         this.beamMesh.lookAt(targetPoint);           // Point at the crosshair
         this.beamMesh.scale.set(1, 1, this.currentBeamLength); // Stretch it!
 
-        // --- NEW: USE THE VFX MANAGER ---
+        // --- USE THE VFX MANAGER ---
         if (targetNormal && this.currentBeamLength >= maxDistance) {
             this.burnTimer += delta;
             

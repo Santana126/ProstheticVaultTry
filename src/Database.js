@@ -25,10 +25,10 @@ export const ITEM_DATABASE = {
             { strength: 5 }, 
             { damage: 40, attackSpeed: 0.2, projectileSpeed: 30 },
             {
-                scale: 1, // Change this if it's too big/small
-                position: { x: 1, y: -0.5, z: -1.25 }, // Move it around
-                rotation: { x: Math.PI/2, y: Math.PI/2 + Math.PI/4, z: -Math.PI /2}, // Rotate it to face forward
-                muzzleNode: 'mesh_0', // Change this to the bone name in plasma_arm.glb
+                scale: 1, 
+                position: { x: 1, y: -0.5, z: -1.25 }, 
+                rotation: { x: Math.PI/2, y: Math.PI/2 + Math.PI/4, z: -Math.PI /2},
+                muzzleNode: 'mesh_0', 
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),

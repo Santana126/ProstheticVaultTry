@@ -58,15 +58,6 @@ export class InventoryManager {
                 model.rotation.set(vData.rotation.x, vData.rotation.y, vData.rotation.z);
             }
 
-            // model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
-            // model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
-            // model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
-
-            // Find Muzzle
-            // const hardcodedWristName = 'hand__02'; 
-            // const hardcodedWristName = 'mesh_0';
-            // const foundWristNode = model.getObjectByName(hardcodedWristName);
-
             const targetNodeName = vData ? vData.muzzleNode : null;
             const foundWristNode = targetNodeName ? model.getObjectByName(targetNodeName) : null;
 
@@ -105,19 +96,4 @@ export class InventoryManager {
             this.armGroup.add(this.currentArmModel);
         });
     }
-
-    // // Handles the weapon bobbing animation while walking
-    // updateBobbing(isMoving, delta, vData) {
-    //     if (!this.currentArmModel) return;
-
-    //     if (isMoving) {
-    //         this.bobTimer = (this.bobTimer || 0) + delta * GAME_CONFIG.PLAYER.bobSpeed;
-    //         this.currentArmModel.position.y = GAME_CONFIG.ARM.basePos.y + Math.sin(this.bobTimer) * GAME_CONFIG.ARM.bobAmountY;
-    //         this.currentArmModel.position.x = GAME_CONFIG.ARM.basePos.x + Math.cos(this.bobTimer * 0.5) * GAME_CONFIG.ARM.bobAmountX;
-    //     } else {
-    //         this.bobTimer = 0;
-    //         this.currentArmModel.position.y = THREE.MathUtils.lerp(this.currentArmModel.position.y, GAME_CONFIG.ARM.basePos.y, 0.1);
-    //         this.currentArmModel.position.x = THREE.MathUtils.lerp(this.currentArmModel.position.x, GAME_CONFIG.ARM.basePos.x, 0.1);
-    //     }
-    // }
 }

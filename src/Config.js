@@ -7,22 +7,6 @@ export const GAME_CONFIG = {
         bobAmountY: 0.02,
         bobAmountX: 0.01,
     },
-    // ARM: {
-    //     basePos: { x: 1.5, y: 0.5, z: -6 },
-    //     scale: 0.1,
-    //     rotation: { x: Math.PI / 2, y: -Math.PI / 3, z: Math.PI / 6 },
-    //     bobSpeed: 10,
-    //     bobAmountY: 0.02,
-    //     bobAmountX: 0.01,
-    // },
-    // ARM: {
-    //     basePos: { x: 1, y: -0.5, z: -1.25 },
-    //     scale: 1,
-    //     rotation: { x: Math.PI/2, y: Math.PI/2 + Math.PI/4, z: -Math.PI /2},
-    //     bobSpeed: 10,
-    //     bobAmountY: 0.02,
-    //     bobAmountX: 0.01,
-    // },
     DEBUG: {
         showModelBounds: true
     }
