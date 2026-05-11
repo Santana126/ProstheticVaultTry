@@ -31,6 +31,10 @@ export class InventoryManager {
         return this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
     }
 
+    getActiveArmModel() {
+        return this.currentArmModel;
+    }
+
     loadArmModel(item) { 
         this.loader.load(item.modelPath, (gltf) => {
             if (GAME_CONFIG.DEBUG.showModelBounds) {
@@ -45,32 +49,54 @@ export class InventoryManager {
             const center = new THREE.Vector3();
             box.getCenter(center);
             model.position.sub(center);
+            
 
-            model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
-            model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
-            model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
+            const vData = item.visualData;
+            if (vData) {
+                model.scale.set(vData.scale, vData.scale, vData.scale);
+                model.position.set(vData.position.x, vData.position.y, vData.position.z);
+                model.rotation.set(vData.rotation.x, vData.rotation.y, vData.rotation.z);
+            }
+
+            // model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
+            // model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
+            // model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
 
             // Find Muzzle
-            const hardcodedWristName = 'hand__02'; 
+            // const hardcodedWristName = 'hand__02'; 
             // const hardcodedWristName = 'mesh_0';
-            const foundWristNode = model.getObjectByName(hardcodedWristName);
+            // const foundWristNode = model.getObjectByName(hardcodedWristName);
+
+            const targetNodeName = vData ? vData.muzzleNode : null;
+            const foundWristNode = targetNodeName ? model.getObjectByName(targetNodeName) : null;
 
             if (foundWristNode) {
                 this.muzzlePoint = foundWristNode;
             } else {
+                // Use the custom fallback offset if the bone is missing!
                 this.muzzlePoint = new THREE.Object3D();
-                this.muzzlePoint.position.set(0, 0, 10); 
-                model.add(this.muzzlePoint); 
+                if (vData && vData.muzzleFallbackOffset) {
+                    this.muzzlePoint.position.set(
+                        vData.muzzleFallbackOffset.x, 
+                        vData.muzzleFallbackOffset.y, 
+                        vData.muzzleFallbackOffset.z
+                    );
+                } else {
+                    this.muzzlePoint.position.set(0, 0, -10); // Ultimate fallback
+                }
+                model.add(this.muzzlePoint);
             }
 
-            // Apply Materials
+            // --- NATIVE MATERIAL HANDLING ---
             model.traverse((node) => {
                 if (node.isMesh) {
-                    if (item.id === 'plasma_arm') {
-                        node.material = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 1 });
-                    } else {
+                    // GLTFLoader automatically loads the materials from your 3D software!
+                    // We only intervene if the mesh somehow has NO material attached to it.
+                    if (!node.material) {
                         node.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
                     }
+                    node.castShadow = true;
+                    node.receiveShadow = true;
                 }
             });
 
@@ -80,18 +106,18 @@ export class InventoryManager {
         });
     }
 
-    // Handles the weapon bobbing animation while walking
-    updateBobbing(isMoving, delta) {
-        if (!this.currentArmModel) return;
+    // // Handles the weapon bobbing animation while walking
+    // updateBobbing(isMoving, delta, vData) {
+    //     if (!this.currentArmModel) return;
 
-        if (isMoving) {
-            this.bobTimer = (this.bobTimer || 0) + delta * GAME_CONFIG.ARM.bobSpeed;
-            this.currentArmModel.position.y = GAME_CONFIG.ARM.basePos.y + Math.sin(this.bobTimer) * GAME_CONFIG.ARM.bobAmountY;
-            this.currentArmModel.position.x = GAME_CONFIG.ARM.basePos.x + Math.cos(this.bobTimer * 0.5) * GAME_CONFIG.ARM.bobAmountX;
-        } else {
-            this.bobTimer = 0;
-            this.currentArmModel.position.y = THREE.MathUtils.lerp(this.currentArmModel.position.y, GAME_CONFIG.ARM.basePos.y, 0.1);
-            this.currentArmModel.position.x = THREE.MathUtils.lerp(this.currentArmModel.position.x, GAME_CONFIG.ARM.basePos.x, 0.1);
-        }
-    }
+    //     if (isMoving) {
+    //         this.bobTimer = (this.bobTimer || 0) + delta * GAME_CONFIG.PLAYER.bobSpeed;
+    //         this.currentArmModel.position.y = GAME_CONFIG.ARM.basePos.y + Math.sin(this.bobTimer) * GAME_CONFIG.ARM.bobAmountY;
+    //         this.currentArmModel.position.x = GAME_CONFIG.ARM.basePos.x + Math.cos(this.bobTimer * 0.5) * GAME_CONFIG.ARM.bobAmountX;
+    //     } else {
+    //         this.bobTimer = 0;
+    //         this.currentArmModel.position.y = THREE.MathUtils.lerp(this.currentArmModel.position.y, GAME_CONFIG.ARM.basePos.y, 0.1);
+    //         this.currentArmModel.position.x = THREE.MathUtils.lerp(this.currentArmModel.position.x, GAME_CONFIG.ARM.basePos.x, 0.1);
+    //     }
+    // }
 }

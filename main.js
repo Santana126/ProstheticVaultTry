@@ -7,6 +7,8 @@ import { UIManager } from './src/UIManager.js';
 import { VFXManager } from './src/VFXManager.js';
 import { PhysicsManager } from './src/PhysicsManager.js';
 import { Dummy } from './src/Dummy.js';
+import { ProjectileManager } from './src/ProjectileManager.js';
+import { AnimationManager } from './src/AnimationManager.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -45,9 +47,11 @@ level.buildVaultLayout(); // One line to build the whole world!
 const physicsManager = new PhysicsManager();
 physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
 const vfxManager = new VFXManager(scene);
+const projectileManager = new ProjectileManager(scene);
+const animationManager = new AnimationManager();
 // Add it as the 4th argument!
 // const player = new Player(scene, camera, level, vfxManager);
-const player = new Player(scene, camera, physicsManager, vfxManager);
+const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager);
 
 // NEW: Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
 const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
@@ -108,7 +112,7 @@ function animate() {
     player.update(delta);
 
     vfxManager.update(delta);
-
+    projectileManager.update(delta, physicsManager, vfxManager);
     prevTime = time;
     renderer.render(scene, camera);
 }

@@ -4,8 +4,8 @@ import { VFXManager } from './VFXManager.js';
 
 
 export class Arm extends Prosthetic {
-    constructor(id, name, description, slot, modelPath, stats, weaponData) {
-        super(id, name, description, slot, modelPath, stats);
+    constructor(id, name, description, slot, modelPath, stats, weaponData, visualData) {
+        super(id, name, description, slot, modelPath, stats, visualData);
         
         // Weapon specific characteristics
         this.damage = weaponData.damage || 10;
@@ -30,7 +30,7 @@ export class Arm extends Prosthetic {
         };
     }
 
-    fireContinuous(camera, muzzlePosition, scene, physicsManager, delta, vfxManager) {
+    fireContinuous(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager) {
         const params = this.getAttackParameters();
 
         // 1. Raycast to find what the player is aiming at right now

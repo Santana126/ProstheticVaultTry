@@ -4,13 +4,16 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GAME_CONFIG } from './Config.js';
 import { InputManager } from './InputManager.js';
 import { InventoryManager } from './InventoryManager.js';
+import { AnimationManager } from './AnimationManager.js';
 
 export class Player {
-    constructor(scene, camera, physicsManager, vfxManager) {
+    constructor(scene, camera, physicsManager, vfxManager, projectileManager, animationManager) {
         this.scene = scene;
         this.camera = camera;
         this.physicsManager = physicsManager;
         this.vfxManager = vfxManager;
+        this.projectileManager = projectileManager;
+        this.animationManager = animationManager;
         this.isAttacking = false;
         this.fireCooldown = 0;
 
@@ -27,99 +30,99 @@ export class Player {
     }
     
     
-    loadArmModel(item) { // Change 'path' to 'item'
-        const path = item.modelPath;
+    // loadArmModel(item) { // Change 'path' to 'item'
+    //     const path = item.modelPath;
         
-        this.loader.load(path, (gltf) => {
-            const model = gltf.scene;
-            if (GAME_CONFIG.DEBUG.showModelBounds) {
-                model.traverse((node) => {
-                    // This will print the name and type (Mesh, Bone, Object3D, etc.) of every part
-                    console.log("Found part:", node.name, "| Type:", node.type); 
-                });
-            }
+    //     this.loader.load(path, (gltf) => {
+    //         const model = gltf.scene;
+    //         if (GAME_CONFIG.DEBUG.showModelBounds) {
+    //             model.traverse((node) => {
+    //                 // This will print the name and type (Mesh, Bone, Object3D, etc.) of every part
+    //                 console.log("Found part:", node.name, "| Type:", node.type); 
+    //             });
+    //         }
             
-            // Center the model
-            const box = new THREE.Box3().setFromObject(model);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            model.position.x += (model.position.x - center.x);
-            model.position.y += (model.position.y - center.y);
-            model.position.z += (model.position.z - center.z);
+    //         // Center the model
+    //         const box = new THREE.Box3().setFromObject(model);
+    //         const center = new THREE.Vector3();
+    //         box.getCenter(center);
+    //         model.position.x += (model.position.x - center.x);
+    //         model.position.y += (model.position.y - center.y);
+    //         model.position.z += (model.position.z - center.z);
 
-            model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
-            model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
-            model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
+    //         model.scale.set(GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale, GAME_CONFIG.ARM.scale);
+    //         model.position.set(GAME_CONFIG.ARM.basePos.x, GAME_CONFIG.ARM.basePos.y, GAME_CONFIG.ARM.basePos.z);
+    //         model.rotation.set(GAME_CONFIG.ARM.rotation.x, GAME_CONFIG.ARM.rotation.y, GAME_CONFIG.ARM.rotation.z);
 
-            const hardcodedWristName = 'hand__02'; // Change this to the actual name of the wrist node in your 3D model
-            // Try to find the node inside the 3D file
-            const foundWristNode = model.getObjectByName(hardcodedWristName);
+    //         const hardcodedWristName = 'hand__02'; // Change this to the actual name of the wrist node in your 3D model
+    //         // Try to find the node inside the 3D file
+    //         const foundWristNode = model.getObjectByName(hardcodedWristName);
 
-            if (foundWristNode) {
-                if (GAME_CONFIG.DEBUG.showModelBounds) {
-                    console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
-                }
-                this.muzzlePoint = foundWristNode;
+    //         if (foundWristNode) {
+    //             if (GAME_CONFIG.DEBUG.showModelBounds) {
+    //                 console.log(`Success: Found native wrist node '${hardcodedWristName}'!`);
+    //             }
+    //             this.muzzlePoint = foundWristNode;
 
-                // --- DEBUG: ADD A RED BALL TO THE FOUND NODE ---
-                // The geometry size is 2. Since your arm is scaled down by 0.1, 
-                // the final visual size will be 0.2. Change the '2' if it's too big or small.
-                const debugGeo = new THREE.SphereGeometry(256, 16, 16); 
+    //             // --- DEBUG: ADD A RED BALL TO THE FOUND NODE ---
+    //             // The geometry size is 2. Since your arm is scaled down by 0.1, 
+    //             // the final visual size will be 0.2. Change the '2' if it's too big or small.
+    //             const debugGeo = new THREE.SphereGeometry(256, 16, 16); 
                 
-                const debugMat = new THREE.MeshBasicMaterial({ 
-                    color: 0xff0000, 
-                    depthTest: false, // This is the "X-ray" trick! It draws through the arm.
-                    transparent: true,
-                    opacity: 0.8
-                });
+    //             const debugMat = new THREE.MeshBasicMaterial({ 
+    //                 color: 0xff0000, 
+    //                 depthTest: false, // This is the "X-ray" trick! It draws through the arm.
+    //                 transparent: true,
+    //                 opacity: 0.8
+    //             });
                 
-                const debugSphere = new THREE.Mesh(debugGeo, debugMat);
+    //             const debugSphere = new THREE.Mesh(debugGeo, debugMat);
                 
-                // Ensure it renders last so it overlaps the arm mesh
-                debugSphere.renderOrder = 999; 
+    //             // Ensure it renders last so it overlaps the arm mesh
+    //             debugSphere.renderOrder = 999; 
                 
-                // By adding it to the muzzlePoint, its local position (0,0,0) 
-                // is perfectly locked to the exact center of the node!
-                this.muzzlePoint.add(debugSphere);
-                // -----------------------------------------------
-            } else {
-                console.warn(`Could not find '${hardcodedWristName}', falling back to manual offset.`);
-                // Fallback: Our manual attachment from the previous step
-                this.muzzlePoint = new THREE.Object3D();
-                this.muzzlePoint.position.set(0, 0, -60); // Adjust as needed
-                model.add(this.muzzlePoint); 
-            }
+    //             // By adding it to the muzzlePoint, its local position (0,0,0) 
+    //             // is perfectly locked to the exact center of the node!
+    //             this.muzzlePoint.add(debugSphere);
+    //             // -----------------------------------------------
+    //         } else {
+    //             console.warn(`Could not find '${hardcodedWristName}', falling back to manual offset.`);
+    //             // Fallback: Our manual attachment from the previous step
+    //             this.muzzlePoint = new THREE.Object3D();
+    //             this.muzzlePoint.position.set(0, 0, -60); // Adjust as needed
+    //             model.add(this.muzzlePoint); 
+    //         }
 
-            // --- NEW: COLOR OVERRIDE ---
-            model.traverse((node) => {
-                if (node.isMesh) {
-                    if (item.id === 'plasma_arm') {
-                        node.material = new THREE.MeshStandardMaterial({ 
-                            color: 0x00ffff, 
-                            emissive: 0x00ffff, 
-                            emissiveIntensity: 1 
-                        });
-                    } else {
-                        node.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
-                    }
-                }
-            });
+    //         // --- NEW: COLOR OVERRIDE ---
+    //         model.traverse((node) => {
+    //             if (node.isMesh) {
+    //                 if (item.id === 'plasma_arm') {
+    //                     node.material = new THREE.MeshStandardMaterial({ 
+    //                         color: 0x00ffff, 
+    //                         emissive: 0x00ffff, 
+    //                         emissiveIntensity: 1 
+    //                     });
+    //                 } else {
+    //                     node.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+    //                 }
+    //             }
+    //         });
 
-            if (this.currentArmModel) this.armGroup.remove(this.currentArmModel);
-            this.currentArmModel = model;
-            this.armGroup.add(this.currentArmModel);
-        });
-        if (this.currentArmModel) {
-            this.currentArmModel.traverse((node) => {
-                if (node.isMesh) {
-                    node.geometry.dispose(); // Delete geometry from RAM
-                    node.material.dispose(); // Delete material from RAM
-                }
-            });
-            this.armGroup.remove(this.currentArmModel);
-        }
+    //         if (this.currentArmModel) this.armGroup.remove(this.currentArmModel);
+    //         this.currentArmModel = model;
+    //         this.armGroup.add(this.currentArmModel);
+    //     });
+    //     if (this.currentArmModel) {
+    //         this.currentArmModel.traverse((node) => {
+    //             if (node.isMesh) {
+    //                 node.geometry.dispose(); // Delete geometry from RAM
+    //                 node.material.dispose(); // Delete material from RAM
+    //             }
+    //         });
+    //         this.armGroup.remove(this.currentArmModel);
+    //     }
         
-    }
+    // }
 
     //Refactored update method
     update(delta) {
@@ -171,16 +174,32 @@ export class Player {
                     this.scene, 
                     this.physicsManager, // <-- Replaced this.level.walls
                     delta, 
-                    this.vfxManager
+                    this.vfxManager,
+                    this.projectileManager
                 );
             } else {
                 equippedArm.stopFiring(this.scene);
+            }
+            if (typeof equippedArm.update === 'function') {
+                equippedArm.update(delta);
             }
         }
 
         // Update visual weapon bobbing
         const isMoving = moveForward || moveBackward || moveLeft || moveRight;
-        this.inventory.updateBobbing(isMoving, delta);
+        
+        const activeModel = this.inventory.getActiveArmModel();
+        const activeItem = this.inventory.getActiveArm();
+
+        if (activeModel && activeItem && activeItem.visualData) {
+            // Hand the model, its database position, and the movement state to the Animator!
+            this.animationManager.updateWeaponBobbing(
+                activeModel, 
+                activeItem.visualData.position, 
+                isMoving, 
+                delta
+            );
+        }
     }
 
     checkCollision() {
