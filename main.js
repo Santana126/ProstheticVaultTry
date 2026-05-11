@@ -6,6 +6,7 @@ import { ITEM_DATABASE } from './src/Database.js';
 import { UIManager } from './src/UIManager.js';
 import { VFXManager } from './src/VFXManager.js';
 import { PhysicsManager } from './src/PhysicsManager.js';
+import { Dummy } from './src/Dummy.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -47,6 +48,9 @@ const vfxManager = new VFXManager(scene);
 // Add it as the 4th argument!
 // const player = new Player(scene, camera, level, vfxManager);
 const player = new Player(scene, camera, physicsManager, vfxManager);
+
+// NEW: Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
+const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
 
 
 // CREATE AN ARM ITEM AND EQUIP IT

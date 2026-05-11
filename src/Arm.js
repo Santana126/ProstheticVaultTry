@@ -40,10 +40,12 @@ export class Arm extends Prosthetic {
 
         let targetPoint = new THREE.Vector3();
         let targetNormal = null;
+        let hitObject = null; // NEW: Track the specific mesh we hit!
         
         if (intersects.length > 0 && intersects[0].distance <= params.range) {
             targetPoint.copy(intersects[0].point);
             targetNormal = intersects[0].face.normal;
+            hitObject = intersects[0].object; // NEW: Store the hit object
         } else {
             this.raycaster.ray.at(params.range, targetPoint);
         }
@@ -97,8 +99,16 @@ export class Arm extends Prosthetic {
             this.burnTimer += delta;
             
             if (this.burnTimer >= 0.1) { 
-                // Ask the manager to do it!
-                vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
+                // Check if we hit a living entity!
+                if (hitObject && hitObject.userData && hitObject.userData.entity) {
+                    // Deal damage (e.g., 10% of total damage every 0.1 seconds)
+                    const damageTick = params.damage * 0.1;
+                    hitObject.userData.entity.takeDamage(damageTick, targetPoint, targetNormal, vfxManager);
+                } else {
+                    // We hit a wall! Spawn a burn decal and sparks
+                    vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
+                    vfxManager.spawnSparks(targetPoint, targetNormal);
+                }
                 this.burnTimer = 0; 
             }
 
