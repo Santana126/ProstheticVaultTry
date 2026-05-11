@@ -33,6 +33,11 @@ export class InventoryManager {
 
     loadArmModel(item) { 
         this.loader.load(item.modelPath, (gltf) => {
+            if (GAME_CONFIG.DEBUG.showModelBounds) {
+                gltf.scene.traverse((node) => {
+                    console.log("Found part:", node.name, "| Type:", node.type);
+                });
+            }
             const model = gltf.scene;
             
             // Center the model
@@ -47,6 +52,7 @@ export class InventoryManager {
 
             // Find Muzzle
             const hardcodedWristName = 'hand__02'; 
+            // const hardcodedWristName = 'mesh_0';
             const foundWristNode = model.getObjectByName(hardcodedWristName);
 
             if (foundWristNode) {
