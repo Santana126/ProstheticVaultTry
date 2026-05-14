@@ -9,6 +9,8 @@ import { PhysicsManager } from './src/PhysicsManager.js';
 import { Dummy } from './src/Dummy.js';
 import { ProjectileManager } from './src/ProjectileManager.js';
 import { AnimationManager } from './src/AnimationManager.js';
+import { WorldItem } from './src/WorldItem.js';
+import { InteractionManager } from './src/InteractionManager.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -49,12 +51,18 @@ physicsManager.addColliders(level.walls); // Tell the physics manager about the 
 const vfxManager = new VFXManager(scene);
 const projectileManager = new ProjectileManager(scene);
 const animationManager = new AnimationManager();
+const uiManager = new UIManager();
+const interactionManager = new InteractionManager(scene, camera, uiManager);
+
 // Add it as the 4th argument!
 // const player = new Player(scene, camera, level, vfxManager);
-const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager);
+const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager);
 
-// NEW: Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
+//Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
 const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
+
+const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
+interactionManager.addInteractable(groundLoot.mesh);
 
 
 // CREATE AN ARM ITEM AND EQUIP IT
@@ -70,7 +78,6 @@ const steelArm = new Arm(
 player.inventory.equip('LEFT_ARM', steelArm);
 
 
-const uiManager = new UIManager();
 
 document.addEventListener('inventoryToggled', (e) => {
     if (e.detail.isOpen) {
@@ -113,6 +120,9 @@ function animate() {
 
     vfxManager.update(delta);
     projectileManager.update(delta, physicsManager, vfxManager);
+
+    groundLoot.update(delta);
+
     prevTime = time;
     renderer.render(scene, camera);
 }

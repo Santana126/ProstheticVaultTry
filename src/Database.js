@@ -32,5 +32,18 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),
+        'laser_arm': new LauncherArm(
+            'laser_arm', 'Laser Cannon', 'Fires high-energy laser beams.', 'RIGHT_ARM', 
+            'assets/laser_arm.glb', 
+            { strength: 10 }, 
+            { damage: 10, attackSpeed: 0.5, projectileSpeed: 50 },
+            {
+                scale: 1, 
+                position: { x: 1, y: -0.5, z: -1.25 }, 
+                rotation: { x: Math.PI/2, y: Math.PI/2 + Math.PI/4, z: -Math.PI /2},
+                muzzleNode: 'mesh_0', 
+                muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
+            }
+        ),
     }
 };

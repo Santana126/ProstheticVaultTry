@@ -27,6 +27,11 @@ export class InventoryManager {
         }
     }
 
+    unlockItem(itemId) {
+        
+        console.log(`Inventory received: ${itemId}`);
+    }
+
     getActiveArm() {
         return this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
     }

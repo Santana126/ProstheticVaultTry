@@ -5,15 +5,17 @@ import { GAME_CONFIG } from './Config.js';
 import { InputManager } from './InputManager.js';
 import { InventoryManager } from './InventoryManager.js';
 import { AnimationManager } from './AnimationManager.js';
+import { InteractionManager } from './InteractionManager.js';
 
 export class Player {
-    constructor(scene, camera, physicsManager, vfxManager, projectileManager, animationManager) {
+    constructor(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager) {
         this.scene = scene;
         this.camera = camera;
         this.physicsManager = physicsManager;
         this.vfxManager = vfxManager;
         this.projectileManager = projectileManager;
         this.animationManager = animationManager;
+        this.interactionManager = interactionManager;
         this.isAttacking = false;
         this.fireCooldown = 0;
 
@@ -26,13 +28,23 @@ export class Player {
         this.controls = new PointerLockControls(this.camera, document.body);
         this.input = new InputManager();
         this.inventory = new InventoryManager(this.camera, this.scene);
-
     }
 
 
     //Refactored update method
     update(delta) {
         if (!this.controls.isLocked) return;
+        this.interactionManager.update();
+
+        if (this.input.isPressed('KeyF')) {
+            if (!this.fKeyPressed) {
+                this.interactionManager.tryInteract(this.inventory);
+                this.fKeyPressed = true;
+            }
+        } else {
+            this.fKeyPressed = false;
+        }
+
         // --- 1. MOVEMENT ---
         this.velocity.x -= this.velocity.x * GAME_CONFIG.PLAYER.friction * delta;
         this.velocity.z -= this.velocity.z * GAME_CONFIG.PLAYER.friction * delta;

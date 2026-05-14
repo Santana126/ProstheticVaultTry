@@ -242,3 +242,24 @@ body { margin: 0; overflow: hidden; }
 #tt-type { margin: 0 0 10px 0; color: #a0c0d0; font-size: 12px; font-style: italic; }
 .tt-stats { margin-bottom: 10px; color: #00d4ff; font-size: 14px; line-height: 1.4; }
 #tt-desc { margin: 0; color: #cccccc; font-size: 12px; }
+
+
+#interaction-prompt {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    background: rgba(0,0,0,0.7);
+    padding: 10px 20px;
+    border: 1px solid #00d4ff;
+    border-radius: 4px;
+    font-family: sans-serif;
+    pointer-events: none; /* Prevents it from blocking clicks */
+    z-index: 5;
+}
+
+.interact-name {
+    color: #00d4ff;
+    font-weight: bold;
+}

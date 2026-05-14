@@ -14,6 +14,13 @@
             <p>(W,A,S,D = Move | Mouse = Look | E = Inventory)</p>
         </div>
     </div>
+<div id="crosshair" style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255, 255, 255, 0.5); transform: translate(-50%, -50%); border-radius: 50%; z-index: 5; pointer-events: none;"></div>
+
+    <div id="interaction-prompt" style="display: none; position: absolute; top: 60%; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.7); padding: 10px 20px; border: 1px solid #00d4ff; border-radius: 4px; font-family: sans-serif; pointer-events: none; z-index: 5;">
+        Press [F] to pick up <span id="interact-name" style="color: #00d4ff; font-weight: bold;">Item</span>
+    </div>
+
+
 
     <div id="inventory-overlay" style="display: none;">
         <div class="inv-window">

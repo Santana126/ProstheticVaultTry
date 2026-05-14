@@ -7,7 +7,7 @@ export class UIManager {
         this.isInventoryOpen = false;
 
         // Player Data (This will move to InventoryManager in Phase 2)
-        this.playerOwnedItems = ['steel_arm', 'plasma_arm'];
+        this.playerOwnedItems = ['steel_arm', 'plasma_arm', 'laser_arm'];
         this.currentlySelectedSlot = null;
         this.currentlySelectedSlotElement = null;
 
@@ -134,5 +134,15 @@ export class UIManager {
 
     hideTooltip() {
         this.tooltip.style.display = 'none';
+    }
+
+    // --- Interaction Prompt Helpers ---
+    showInteractionPrompt(itemName) {
+        document.getElementById('interact-name').innerText = itemName;
+        document.getElementById('interaction-prompt').style.display = 'block';
+    }
+
+    hideInteractionPrompt() {
+        document.getElementById('interaction-prompt').style.display = 'none';
     }
 }
