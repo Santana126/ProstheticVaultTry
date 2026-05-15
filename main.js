@@ -58,6 +58,9 @@ const interactionManager = new InteractionManager(scene, camera, uiManager);
 // const player = new Player(scene, camera, level, vfxManager);
 const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager);
 
+const steelArm = ITEM_DATABASE.arms['steel_arm'];
+player.inventory.equip('RIGHT_ARM', steelArm);
+uiManager.renderStash(player.inventory.getOwnedItems());
 //Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
 const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
 
@@ -66,16 +69,16 @@ interactionManager.addInteractable(groundLoot.mesh);
 
 
 // CREATE AN ARM ITEM AND EQUIP IT
-const steelArm = new Arm(
-    'steel_arm', // Set to match the database ID
-    'Steel Arm', 
-    'A heavy industrial prosthetic', 
-    'LEFT_ARM', 
-    'assets/arm.glb', 
-    { strength: 15 }, 
-    { damage: 20, attackSpeed: 0.8, attackType: 'melee' }
-);
-player.inventory.equip('LEFT_ARM', steelArm);
+// const steelArm = new Arm(
+//     'steel_arm', // Set to match the database ID
+//     'Steel Arm', 
+//     'A heavy industrial prosthetic', 
+//     'LEFT_ARM', 
+//     'assets/arm.glb', 
+//     { strength: 15 }, 
+//     { damage: 20, attackSpeed: 0.8, attackType: 'melee' }
+// );
+// player.inventory.equip('LEFT_ARM', steelArm);
 
 
 

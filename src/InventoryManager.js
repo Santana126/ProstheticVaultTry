@@ -8,8 +8,11 @@ export class InventoryManager {
         this.scene = scene;
         this.loader = new GLTFLoader();
 
-        // State
-        this.equipment = new Map();
+        // --- STATE ---
+        this.equipment = new Map(); // What is currently worn
+        
+        // NEW: The player's actual backpack! We start them with just the steel arm.
+        this.ownedItems = new Set(['steel_arm']); 
         
         // 3D Groups
         this.armGroup = new THREE.Group();
@@ -20,16 +23,43 @@ export class InventoryManager {
         this.muzzlePoint = null;
     }
 
-    equip(slot, item) {
-        this.equipment.set(slot, item);
-        if (slot === 'LEFT_ARM' || slot === 'RIGHT_ARM') {
-            this.loadArmModel(item); 
+    // --- PROGRESSION API ---
+
+    // Called by the InteractionManager when you pick something off the floor!
+    unlockItem(itemId) {
+        if (!this.ownedItems.has(itemId)) {
+            this.ownedItems.add(itemId);
+            console.log(`Unlocked new item: ${itemId}`);
+            
+            // Tell the UI to redraw the stash!
+            document.dispatchEvent(new CustomEvent('inventoryUpdated', {
+                detail: { ownedItems: Array.from(this.ownedItems) }
+            }));
         }
     }
 
-    unlockItem(itemId) {
+    // Returns an array of IDs for the UI to read
+    getOwnedItems() {
+        console.log("Getting owned items:", this.ownedItems);
+        return Array.from(this.ownedItems);
+    }
+
+    // --- EQUIPMENT API ---
+
+    equip(slot, item) {
+        // Security check: Make sure they actually own it before equipping!
+        if (!this.ownedItems.has(item.id)) {
+            console.warn(`Cannot equip ${item.id}, player does not own it!`);
+            return;
+        }
+
+        this.equipment.set(slot, item);
         
-        console.log(`Inventory received: ${itemId}`);
+        // If it's an arm, load the 3D model.
+        // Later, if slot === 'LEGS', you might update the player's movement speed instead!
+        if (slot === 'LEFT_ARM' || slot === 'RIGHT_ARM') {
+            this.loadArmModel(item); 
+        }
     }
 
     getActiveArm() {

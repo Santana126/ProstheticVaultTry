@@ -14,7 +14,8 @@ export class WorldItem {
         
         // 1. CREATE THE INVISIBLE HITBOX
         // A 2x2x2 box is huge and very forgiving for the player to look at!
-        const hitBoxGeometry = new THREE.BoxGeometry(2, 2, 2); 
+        // Use a ball 
+        const hitBoxGeometry = new THREE.SphereGeometry(2, 32, 32); 
         const hitBoxMaterial = new THREE.MeshBasicMaterial({ 
             color: 0x00ff00, 
             wireframe: true, 

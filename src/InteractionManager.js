@@ -10,7 +10,7 @@ export class InteractionManager {
         
         this.raycaster = new THREE.Raycaster();
         this.centerScreen = new THREE.Vector2(0, 0);
-        this.interactionDistance = 8; // How close you have to be (in meters)
+        this.interactionDistance = 6; // How close you have to be (in meters)
 
         this.currentLookTarget = null; // What are we currently looking at?
     }

@@ -2,33 +2,34 @@ import { ITEM_DATABASE } from './Database.js';
 
 export class UIManager {
     constructor() {
-        // Overlay and State
         this.invOverlay = document.getElementById('inventory-overlay');
         this.isInventoryOpen = false;
 
-        // Player Data (This will move to InventoryManager in Phase 2)
-        this.playerOwnedItems = ['steel_arm', 'plasma_arm', 'laser_arm'];
         this.currentlySelectedSlot = null;
         this.currentlySelectedSlotElement = null;
 
-        // Grid Elements
         this.stashGrid = document.getElementById('stash-grid');
         this.mainEquipSlots = document.querySelectorAll('.equip-slot');
 
-        // Tooltip Elements
         this.tooltip = document.getElementById('item-tooltip');
         this.ttName = document.getElementById('tt-name');
         this.ttType = document.getElementById('tt-type');
         this.ttStats = document.getElementById('tt-stats');
         this.ttDesc = document.getElementById('tt-desc');
 
-        // Initialize the UI on creation
-        this.init();
+        // Clean architecture: Call setup functions, don't run renderStash empty!
+        this.setupEquipSlots();
+        this.initListeners();
     }
 
-    init() {
-        this.renderStash();
-        this.setupEquipSlots();
+    initListeners() {
+        // Listen for the custom event fired by InventoryManager
+        document.addEventListener('inventoryUpdated', (e) => {
+            // Safety check: ensure the data actually exists before trying to render
+            if (e.detail && e.detail.ownedItems) {
+                this.renderStash(e.detail.ownedItems);
+            }
+        });
     }
 
     toggleInventory() {
@@ -41,11 +42,13 @@ export class UIManager {
         }));
     }
 
-    renderStash() {
+    renderStash(ownedItemIds) {
         this.stashGrid.innerHTML = ''; 
 
-        this.playerOwnedItems.forEach(itemId => {
-            const itemData = ITEM_DATABASE.arms[itemId]; 
+        if(!ownedItemIds) return;
+
+        ownedItemIds.forEach(itemId => {
+            const itemData = ITEM_DATABASE.arms[itemId] || ITEM_DATABASE.legs[itemId]; // Check all categories!
             if (!itemData) return;
 
             const stashElement = document.createElement('div');
