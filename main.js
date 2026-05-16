@@ -67,6 +67,9 @@ const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
 const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
 interactionManager.addInteractable(groundLoot.mesh);
 
+const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['saw_arm'], -15, 1, 35);
+interactionManager.addInteractable(groundLoot2.mesh);
+
 
 // CREATE AN ARM ITEM AND EQUIP IT
 // const steelArm = new Arm(
@@ -125,6 +128,7 @@ function animate() {
     projectileManager.update(delta, physicsManager, vfxManager);
 
     groundLoot.update(delta);
+    groundLoot2.update(delta);
 
     prevTime = time;
     renderer.render(scene, camera);

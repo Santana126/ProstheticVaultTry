@@ -45,5 +45,18 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),
+        'saw_arm': new Arm(
+            'saw_arm', 'Rotary Saw', 'Perfect for close combat and cutting through obstacles.', 'RIGHT_ARM',
+            'assets/saw_armv1.glb',
+            { strength: 20 },
+            { damage: 30, attackSpeed: 1.5, attackType: 'melee' },
+            {
+                scale: 1,
+                position: { x: 1, y: -0.75, z: -1.25 },
+                rotation: { x: Math.PI/2, y: -Math.PI/2, z: Math.PI /2},
+                muzzleNode: 'mesh_0',
+                muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
+            }
+        )
     }
 };

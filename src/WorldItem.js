@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export class WorldItem {
     constructor(scene, itemData, x, y, z) {
@@ -37,10 +38,13 @@ export class WorldItem {
         
         this.scene.add(this.mesh);
         this.loadModel();
+
     }
 
     loadModel() {
         const loader = new GLTFLoader();
+        loader.setMeshoptDecoder(MeshoptDecoder);
+
         loader.load(this.itemData.modelPath, (gltf) => {
             const model = gltf.scene;
             
@@ -60,8 +64,17 @@ export class WorldItem {
                     if (!node.material) {
                         node.material = new THREE.MeshStandardMaterial({ color: 0x888888 });
                     }
-                    node.castShadow = true;
-                    node.receiveShadow = true;
+
+
+                    // --- THE FIX ---
+                    // Completely disable raycasting math for this high-poly object!
+                    // The raycaster will pass right through it as if it were a ghost,
+                    // and only hit your invisible 2x2 green box!
+                    node.raycast = function() {}; 
+                    
+                    // Turn off shadows for ground loot (Shadows on high-poly models kill FPS)
+                    node.castShadow = false; 
+                    node.receiveShadow = false;
                     
                     // We REMOVED the userData tagging from here! 
                     // Now, the raycaster will ignore the complex 3D model completely.

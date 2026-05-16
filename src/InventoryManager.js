@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GAME_CONFIG } from './Config.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export class InventoryManager {
     constructor(camera, scene) {
         this.camera = camera;
         this.scene = scene;
         this.loader = new GLTFLoader();
-
+        this.loader.setMeshoptDecoder(MeshoptDecoder);
         // --- STATE ---
         this.equipment = new Map(); // What is currently worn
         
