@@ -11,6 +11,7 @@ import { ProjectileManager } from './src/ProjectileManager.js';
 import { AnimationManager } from './src/AnimationManager.js';
 import { WorldItem } from './src/WorldItem.js';
 import { InteractionManager } from './src/InteractionManager.js';
+import { Enemy } from './src/Enemy.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -69,6 +70,15 @@ interactionManager.addInteractable(groundLoot.mesh);
 
 const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['saw_arm'], -15, 1, 35);
 interactionManager.addInteractable(groundLoot2.mesh);
+
+const activeWorldItems = [];
+
+
+const activeEnemies = [];
+
+const zombie1 = new Enemy(scene, physicsManager, 0, 0, -35, player);
+activeEnemies.push(zombie1);
+
 
 
 // CREATE AN ARM ITEM AND EQUIP IT
@@ -131,6 +141,31 @@ function animate() {
     groundLoot2.update(delta);
 
     prevTime = time;
+
+
+    for (let i = activeEnemies.length - 1; i >= 0; i--) {
+        let enemy = activeEnemies[i];
+        enemy.update(delta);
+
+        // Check if it died this frame
+        if (enemy.isDead) {
+            const lootDrop = new WorldItem(
+                scene, 
+                ITEM_DATABASE.arms['plasma_arm'], // Drop a plasma cannon!
+                enemy.mesh.position.x, 
+                1, 
+                enemy.mesh.position.z
+            );
+            interactionManager.addInteractable(lootDrop.mesh);
+            activeWorldItems.push(lootDrop);
+
+            // Remove the dead enemy from the loop
+            activeEnemies.splice(i, 1);
+        }
+    }
+
+
+
     renderer.render(scene, camera);
 }
 

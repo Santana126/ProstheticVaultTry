@@ -31,6 +31,11 @@ export class Player {
     }
 
 
+    takeDamage(amount){
+        console.log(`Player took ${amount} damage! Ouch!`);
+    }
+
+
     //Refactored update method
     update(delta) {
         if (!this.controls.isLocked) return;
