@@ -12,6 +12,8 @@ export class VFXManager {
             transparent: true,
             opacity: 1
         });
+
+        this.damageNumbers = [];
     }
 
     spawnSparks(hitPoint, faceNormal) {
@@ -89,6 +91,57 @@ export class VFXManager {
         }, 20000); 
     }
 
+    spawnDamageNumber(position, damageAmount) {
+        // 1. Create an invisible 2D HTML Canvas
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 128;
+
+        // 2. Draw the text onto the canvas
+        context.font = 'bold 64px Arial';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        
+        // Draw a black outline for readability
+        context.strokeStyle = 'black';
+        context.lineWidth = 8;
+        context.strokeText(`-${damageAmount}`, 128, 64);
+        
+        // Draw the white text inside
+        context.fillStyle = 'white';
+        context.fillText(`-${damageAmount}`, 128, 64);
+
+        // 3. Turn the canvas into a Three.js Texture
+        const texture = new THREE.CanvasTexture(canvas);
+        
+        // 4. Create the Sprite Material (transparent and depth-tested)
+        const material = new THREE.SpriteMaterial({ 
+            map: texture, 
+            transparent: true,
+            depthTest: false // Renders on top of everything so it doesn't clip into the enemy
+        });
+        
+        const sprite = new THREE.Sprite(material);
+        
+        // Position it exactly where the enemy got hit, but lift it up a bit
+        sprite.position.copy(position);
+        sprite.position.y += 1.5; 
+        
+        // Scale it so it looks good in 3D space
+        sprite.scale.set(1.5, 0.75, 1); 
+
+        this.scene.add(sprite);
+
+        // 5. Save it to our array with a timer so we can animate it
+        this.damageNumbers.push({
+            sprite: sprite,
+            life: 1.0,    // Lives for 1 second
+            maxLife: 1.0,
+            velocityY: 2.0 // Floats upward at 2 meters per second
+        });
+    }
+
 
 
     // The physics loop for all visual effects
@@ -109,6 +162,28 @@ export class VFXManager {
 
             const scale = p.life / p.maxLife;
             p.mesh.scale.set(scale, scale, scale);
+        }
+
+        for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+            let dn = this.damageNumbers[i];
+            
+            dn.life -= delta;
+            
+            if (dn.life <= 0) {
+                // Time's up! Delete the sprite to save memory
+                this.scene.remove(dn.sprite);
+                dn.sprite.material.map.dispose(); // Always dispose textures!
+                dn.sprite.material.dispose();
+                this.damageNumbers.splice(i, 1);
+            } else {
+                // Move it up
+                dn.sprite.position.y += dn.velocityY * delta;
+                
+                // Fade it out smoothly over the second half of its life
+                if (dn.life < dn.maxLife * 0.5) {
+                    dn.sprite.material.opacity = dn.life / (dn.maxLife * 0.5);
+                }
+            }
         }
     }
 }

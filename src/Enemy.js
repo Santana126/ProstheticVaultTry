@@ -14,6 +14,9 @@ export class Enemy {
         this.attackCooldown = 0;
         this.isDead = false;
 
+        this.raycaster = new THREE.Raycaster();
+        this.raycaster.far = 1.5;
+
         // --- VISUALS ---
         // A simple, menacing red cylinder for the MVP
         const geometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
@@ -40,6 +43,9 @@ export class Enemy {
         
         this.health -= amount;
         console.log(`Enemy Health: ${this.health}`);
+        if(vfxManager){
+            vfxManager.spawnDamageNumber(this.mesh.position, amount);
+        }
 
         if (this.health <= 0) {
             this.die();
@@ -53,22 +59,48 @@ export class Enemy {
         // Tick down the attack cooldown
         if (this.attackCooldown > 0) this.attackCooldown -= delta;
 
-        // --- SIMPLE AI ---
-        // 1. Figure out where the player is (ignoring the Y-axis so the enemy doesn't try to fly up to your eyes)
+        
         const targetPos = this.player.camera.position.clone();
         targetPos.y = this.mesh.position.y; 
 
         const distanceToPlayer = this.mesh.position.distanceTo(targetPos);
 
         if (distanceToPlayer > this.attackRange) {
-            // 2. Move towards the player
-            const direction = new THREE.Vector3().subVectors(targetPos, this.mesh.position).normalize();
-            this.mesh.position.addScaledVector(direction, this.speed * delta);
+            // 1. Calculate where it WANTS to go
+            let desiredDirection = new THREE.Vector3().subVectors(targetPos, this.mesh.position).normalize();
             
-            // Look at the player
-            this.mesh.lookAt(targetPos); 
+            // 2. Prepare the Raycast (Lift the origin up 1 meter so it shoots from the chest, not the feet)
+            const rayOrigin = this.mesh.position.clone();
+            rayOrigin.y += 1.0; 
+            this.raycaster.set(rayOrigin, desiredDirection);
+
+            // 3. Ask the physics manager for solid walls (but filter out the enemy itself!)
+            const allColliders = this.physicsManager.getSolidMeshes();
+            const wallsOnly = allColliders.filter(mesh => mesh !== this.mesh && mesh.userData.type !== 'enemy');
+            
+            const intersects = this.raycaster.intersectObjects(wallsOnly, true);
+
+            // 4. THE SLIDE MATH
+            if (intersects.length > 0) {
+                // We are about to hit a wall! 
+                const wallNormal = intersects[0].face.normal;
+                
+                // Flatten our desired direction against the wall
+                desiredDirection.projectOnPlane(wallNormal);
+                
+                // If we are pushed perfectly flat, normalize the vector to keep speed consistent
+                if (desiredDirection.lengthSq() > 0) {
+                    desiredDirection.normalize();
+                }
+            }
+
+            // 5. Move the enemy!
+            this.mesh.position.addScaledVector(desiredDirection, this.speed * delta);
+            
+            // Keep the enemy's "eyes" locked on the player, even while sliding sideways
+            this.mesh.lookAt(targetPos);
         } else {
-            // 3. Attack the player!
+            
             if (this.attackCooldown <= 0) {
                 this.player.takeDamage(this.attackDamage);
                 this.attackCooldown = 1.0; // Wait 1 second before hitting again
