@@ -12,6 +12,7 @@ import { AnimationManager } from './src/AnimationManager.js';
 import { WorldItem } from './src/WorldItem.js';
 import { InteractionManager } from './src/InteractionManager.js';
 import { Enemy } from './src/Enemy.js';
+import { WaveManager } from './src/WaveManager.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -44,11 +45,11 @@ const gridHelper = new THREE.GridHelper(100, 50, 0x4444ff, 0x222244);
 scene.add(gridHelper);
 
 // Initialize Level
-const level = new Level(scene);
-level.buildVaultLayout(); // One line to build the whole world!
+// const level = new Level(scene, new PhysicsManager());
+// level.buildVaultLayout(); // One line to build the whole world!
 
 const physicsManager = new PhysicsManager();
-physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
+// physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
 const vfxManager = new VFXManager(scene);
 const projectileManager = new ProjectileManager(scene);
 const animationManager = new AnimationManager();
@@ -88,10 +89,13 @@ interactionManager.addInteractable(groundLoot2.mesh);
 const activeWorldItems = [];
 
 
-const activeEnemies = [];
+// Initialize the Wave Manager
+const waveManager = new WaveManager(scene, physicsManager, player, interactionManager, activeWorldItems);
 
-const zombie1 = new Enemy(scene, physicsManager, 0, 0, -35, player);
-activeEnemies.push(zombie1);
+// Start the first wave 2 seconds after the game loads!
+setTimeout(() => {
+    waveManager.startNextWave();
+}, 2000);
 
 
 
@@ -173,32 +177,20 @@ function animate() {
         groundLoot.update(delta);
         groundLoot2.update(delta);
 
-        for (let i = activeEnemies.length - 1; i >= 0; i--) {
-            let enemy = activeEnemies[i];
-            enemy.update(delta);
-
-            // Check if it died this frame
-            if (enemy.isDead) {
-                const lootDrop = new WorldItem(
-                    scene, 
-                    ITEM_DATABASE.arms['plasma_arm'], // Drop a plasma cannon!
-                    enemy.mesh.position.x, 
-                    1, 
-                    enemy.mesh.position.z
-                );
-                interactionManager.addInteractable(lootDrop.mesh);
-                activeWorldItems.push(lootDrop);
-
-                // Remove the dead enemy from the loop
-                activeEnemies.splice(i, 1);
-            }
-        }
+        waveManager.update(delta, vfxManager);
 
         // CHECK WIN CONDITION
         if (winBox.containsPoint(player.camera.position)) {
-            hasWon = true;
-            player.controls.unlock(); // Free the mouse
-            uiManager.showWinScreen(); // Show the gold screen!
+            const hasKey = interactionManager.inventoryManager.inventory.some(item => item.id === 'vault_key');
+            
+            if (hasKey) {
+                hasWon = true;
+                player.controls.unlock(); 
+                uiManager.showWinScreen(); 
+            } else {
+                // Optional: Show a temporary message to the player
+                console.log("The Vault is locked. Defeat the boss to get the key!");
+            }
         }
 
     }

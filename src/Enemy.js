@@ -1,16 +1,23 @@
 import * as THREE from 'three';
 
 export class Enemy {
-    constructor(scene, physicsManager, x, y, z, player) {
+    constructor(scene, physicsManager, x, y, z, player, isBoss = false) {
         this.scene = scene;
         this.physicsManager = physicsManager;
         this.player = player;
+        this.isBoss = isBoss;
 
         // --- STATS ---
-        this.health = 100;
-        this.speed = 3.5; // Meters per second
+        if (this.isBoss) {
+            this.health = 500;
+            this.speed = 2.5; // Slightly slower, more menacing
+            this.attackDamage = 40; // Hits like a truck
+        } else {
+            this.health = 100;
+            this.speed = 3.5; 
+            this.attackDamage = 15;
+        }
         this.attackRange = 1.5; // How close it needs to be to hit the player
-        this.attackDamage = 15;
         this.attackCooldown = 0;
         this.isDead = false;
 
@@ -21,11 +28,18 @@ export class Enemy {
         // A simple, menacing red cylinder for the MVP
         const geometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
         geometry.translate(0, 1, 0); // Pivot at the feet so it rests perfectly on the floor
-        const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const color = this.isBoss ? 0x8b0000 : 0xff0000;
+        const material = new THREE.MeshStandardMaterial({ color: color });
         
         this.mesh = new THREE.Mesh(geometry, material);
         this.mesh.position.set(x, y, z);
         this.mesh.castShadow = true;
+
+        // Scale up the boss 3x!
+        if (this.isBoss) {
+            this.mesh.scale.set(3, 3, 3);
+            this.attackRange = 4.0; // Needs a larger attack range because of its size
+        }
 
         // --- PHYSICS & HITBOX ---
         // Tag it exactly like we did the Dummy so bullets and lasers recognize it!

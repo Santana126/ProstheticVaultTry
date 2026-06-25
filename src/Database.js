@@ -1,6 +1,7 @@
 import { Prosthetic } from './Prosthetic.js';
 import { HitscanArm } from './HitscanArm.js';
 import { ProjectileArm } from './ProjectileArm.js';
+import { Item } from './Item.js';
 
 export const ITEM_DATABASE = {
     arms: {
@@ -58,6 +59,15 @@ export const ITEM_DATABASE = {
                 muzzleNode: 'mesh_0',
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
             }
+        )
+    },
+    keys: {
+        'vault_key': new Item(
+            'vault_key', 
+            'Gold Vault Key', 
+            'A heavy, glowing key. It looks like it fits the final vault.',
+            'KEY',
+            'assets/vault_key.glb'
         )
     }
 };

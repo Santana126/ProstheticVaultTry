@@ -1,64 +1,65 @@
 import * as THREE from 'three';
 
 export class Level {
-    constructor(scene) {
+    constructor(scene, physicsManager) {
         this.scene = scene;
-        this.walls = [];
-        this.defaultWallColor = 0x444444;
+        this.physicsManager = physicsManager;
+        
+        this.generateArena();
     }
 
-    // The fundamental building block
-    addWall(x, y, z, width, height, depth, color = this.defaultWallColor) {
-        const geometry = new THREE.BoxGeometry(width, height, depth);
-        const material = new THREE.MeshStandardMaterial({ color: color });
-        const wall = new THREE.Mesh(geometry, material);
+    generateArena() {
+        // 1. The Main Floor
+        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        this.scene.add(floor);
+        this.physicsManager.addColliders([floor]);
+
+        // 2. Invisible Boundary Walls (To keep the player inside)
+        const wallMat = new THREE.MeshBasicMaterial({ visible: false });
+        const wallGeo = new THREE.BoxGeometry(100, 20, 2);
         
-        wall.position.set(x, y, z);
-        this.scene.add(wall);
-
-        // Store the AABB for collision
-        wall.userData.boundingBox = new THREE.Box3().setFromObject(wall);
+        const northWall = new THREE.Mesh(wallGeo, wallMat);
+        northWall.position.set(0, 10, -50);
+        const southWall = new THREE.Mesh(wallGeo, wallMat);
+        southWall.position.set(0, 10, 50);
         
-        this.walls.push(wall);
-        return wall;
-    }
+        const eastWall = new THREE.Mesh(wallGeo, wallMat);
+        eastWall.rotation.y = Math.PI / 2;
+        eastWall.position.set(50, 10, 0);
+        const westWall = new THREE.Mesh(wallGeo, wallMat);
+        westWall.rotation.y = Math.PI / 2;
+        westWall.position.set(-50, 10, 0);
 
-    // The Layout Orchestrator
-    buildVaultLayout() {
-        // --- ROOM 1: THE STARTING CELL ---
-        this.addWall(0, 2, -5, 10, 10, 0.5); // North
-        this.addWall(0, 2, 5, 10, 10, 0.5);  // South
-        this.addWall(-5, 2, 0, 0.5, 10, 10); // West
-        this.addWall(5, 2, -3, 0.5, 10, 4);  // East North
-        this.addWall(5, 2, 3, 0.5, 10, 4);   // East South
+        this.scene.add(northWall, southWall, eastWall, westWall);
+        this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
 
-        // --- ROOM 2: THE CORRIDOR ---
-        this.addWall(2.5, 2, -15, 0.5, 10, 20); // Left
-        this.addWall(-2.5, 2, -15, 0.5, 10, 20); // Right
-        this.addWall(0, 2, -25, 5, 10, 0.5);     // End
+        // 3. Randomized Cover Blocks
+        // We will replace these with actual 3D environment models later!
+        const coverGeo = new THREE.BoxGeometry(6, 8, 6);
+        const coverMat = new THREE.MeshStandardMaterial({ color: 0x444455 });
 
-        // --- ROOM 3: THE COMBAT ARENA ---
-        const arenaCenterZ = -35;
-        this.addWall(0, 2, arenaCenterZ - 7.5, 15, 10, 0.5); // North
-        this.addWall(0, 2, arenaCenterZ + 7.5, 15, 10, 0.5); // South
-        this.addWall(-7.5, 2, arenaCenterZ, 0.5, 10, 15);    // West
-        this.addWall(7.5, 2, arenaCenterZ - 5, 0.5, 10, 5);  // East North
-        this.addWall(7.5, 2, arenaCenterZ + 5, 0.5, 10, 5);  // East South
+        for (let i = 0; i < 12; i++) {
+            const cover = new THREE.Mesh(coverGeo, coverMat);
+            
+            // Random position between -40 and +40
+            const randomX = (Math.random() - 0.5) * 80;
+            const randomZ = (Math.random() - 0.5) * 80;
+            
+            cover.position.set(randomX, 4, randomZ);
+            
+            // Don't spawn cover in the exact center where the player starts!
+            if (cover.position.distanceTo(new THREE.Vector3(0, 0, 0)) < 15) {
+                continue;
+            }
 
-        // --- THE FINAL VAULT ---
-        const vaultColor = 0xffd700; // Gold
-        const vaultCenterZ = -35;
-        const vaultCenterX = 15;
-        this.addWall(vaultCenterX, 2, vaultCenterZ - 5, 10, 10, 0.5, vaultColor);
-        this.addWall(vaultCenterX, 2, vaultCenterZ + 5, 10, 10, 0.5, vaultColor);
-        this.addWall(vaultCenterX + 5, 2, vaultCenterZ, 0.5, 10, 10, vaultColor);
-        this.addWall(vaultCenterX - 5, 2, vaultCenterZ - 3, 0.5, 10, 3, vaultColor);
-        this.addWall(vaultCenterX - 5, 2, vaultCenterZ + 3, 0.5, 10, 3, vaultColor);
-
-
-        // Add a tall central pillar in the side of the map for visual interest
-        this.addWall(0, 5, -20, 2, 10, 2, 0x888888);
-        
-        console.log("Vault Layout generated successfully.");
+            cover.castShadow = true;
+            cover.receiveShadow = true;
+            this.scene.add(cover);
+            this.physicsManager.addColliders([cover]);
+        }
     }
 }
