@@ -12,6 +12,8 @@ export class WorldItem {
         
         this.mesh = new THREE.Group(); 
         this.mesh.position.set(x, y, z);
+
+        this.mesh.userData = { entity: this };
         
         // 1. CREATE THE INVISIBLE HITBOX
         // A 2x2x2 box is huge and very forgiving for the player to look at!

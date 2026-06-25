@@ -127,6 +127,11 @@ document.addEventListener('equipItem', (e) => {
     player.inventory.equip(slotToEquip, itemToEquip);
 });
 
+document.addEventListener('currencyCollected', (e) => {
+    // This calls the gainBolts method we added to Player.js earlier!
+    player.gainBolts(e.detail.amount);
+});
+
 // Controls
 const blocker = document.getElementById('blocker');
 blocker.addEventListener('click', () => player.controls.lock());
@@ -189,7 +194,6 @@ function animate() {
                 player.controls.unlock(); 
                 uiManager.showWinScreen(); 
             } else {
-                // Optional: Show a temporary message to the player
                 console.log("The Vault is locked. Defeat the boss to get the key!");
             }
         }

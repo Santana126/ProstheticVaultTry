@@ -33,6 +33,17 @@ export class Player {
         this.maxHealth = 100;
         this.health = this.maxHealth;
         this.isDead = false;
+
+        this.level = 1;
+        this.exp = 0;
+        this.maxExp = 100; 
+        this.bolts = 0;
+
+        setTimeout(() => {
+            if (this.interactionManager && this.interactionManager.uiManager) {
+                this.interactionManager.uiManager.updateEconomy(this.level, this.exp, this.maxExp, this.bolts);
+            }
+        }, 100);
     }
 
 
@@ -60,6 +71,36 @@ export class Player {
         document.dispatchEvent(new Event('playerDied'));
     }
 
+    gainExp(amount) {
+        this.exp += amount;
+        console.log(`Gained ${amount} EXP! Total: ${this.exp}/${this.maxExp}`);
+
+        if (this.exp >= this.maxExp) {
+            this.exp -= this.maxExp;
+            this.level++;
+            this.maxExp = Math.floor(this.maxExp * 1.5); 
+            this.maxHealth += 20; 
+            this.health = this.maxHealth; 
+            
+            // Update the health bar because our max health increased!
+            if (this.interactionManager && this.interactionManager.uiManager) {
+                this.interactionManager.uiManager.updateHealthBar(this.health, this.maxHealth);
+            }
+        }
+
+        if (this.interactionManager && this.interactionManager.uiManager) {
+            this.interactionManager.uiManager.updateEconomy(this.level, this.exp, this.maxExp, this.bolts);
+        }
+    }
+
+    gainBolts(amount) {
+        this.bolts += amount;
+        console.log(`Picked up bolts! Total wealth: ${this.bolts}`);
+        
+        if (this.interactionManager && this.interactionManager.uiManager) {
+            this.interactionManager.uiManager.updateEconomy(this.level, this.exp, this.maxExp, this.bolts);
+        }
+    }
 
     //Refactored update method
     update(delta) {

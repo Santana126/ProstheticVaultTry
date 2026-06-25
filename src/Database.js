@@ -70,5 +70,15 @@ export const ITEM_DATABASE = {
             'assets/vault_key.glb',
             { scale: 0.3 }
         )
+    },
+    materials: {
+        'scrap_bolt': new Item(
+            'scrap_bolt', 
+            'Scrap Bolt', 
+            'Currency used for upgrading and buying gear.',
+            'CURRENCY',          // Type
+            'assets/bolt.glb',   // We will just use a cube if you don't have a bolt model yet!
+            { scale: 1 }       // Make them a bit smaller than the key
+        )
     }
 };

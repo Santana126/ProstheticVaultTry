@@ -28,27 +28,59 @@ export class InteractionManager {
     update() {
         if (this.interactables.length === 0) return;
 
-        // Cast a short ray from the center of the camera
-        this.raycaster.setFromCamera(this.centerScreen, this.camera);
-        
-        // Check against our specific list of interactable meshes
-        const intersects = this.raycaster.intersectObjects(this.interactables, true);
+        // --- 1. PROXIMITY CHECK (Auto-Pickup for Currency) ---
+        // We loop backwards because we might be deleting items from the array as we go!
+        for (let i = this.interactables.length - 1; i >= 0; i--) {
+            const hitBox = this.interactables[i];
+            const entity = hitBox.userData.entity;
 
-        // --- THE FIX ---
-        // Don't just look at the first polygon we hit. Search through everything the 
-        // raycast penetrated until we find the object with our special 'interactable' tag!
+            // Check if this item is currency
+            if (entity && entity.itemData.type === 'CURRENCY') {
+                
+                // Calculate 2D Distance (Ignore the Y axis height!)
+                const dx = this.camera.position.x - entity.mesh.position.x;
+                const dz = this.camera.position.z - entity.mesh.position.z;
+                const distance2D = Math.sqrt(dx * dx + dz * dz);
+
+                const magnetRadius = 3.5; // You can grab bolts from 3.5 meters away
+
+                if (distance2D <= magnetRadius) {
+                    // Pick it up! Dispatch an event so the Player script hears it.
+                    document.dispatchEvent(new CustomEvent('currencyCollected', { 
+                        detail: { amount: 15 } // Give 15 bolts per pickup!
+                    }));
+
+                    // Clean it up
+                    this.removeInteractable(hitBox);
+                    entity.destroy();
+                    
+                    // Clear the look target if we were accidentally staring at it while picking it up
+                    if (this.currentLookTarget === entity) {
+                        this.currentLookTarget = null;
+                        this.uiManager.hideInteractionPrompt();
+                    }
+                    continue; // Skip the raycast code below for this specific item
+                }
+            }
+        }
+
+        // --- 2. RAYCAST CHECK (Manual F-Pickup for Weapons/Keys) ---
+        this.raycaster.setFromCamera(this.centerScreen, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.interactables, true);
         const validHit = intersects.find(hit => hit.object.userData && hit.object.userData.interactable);
 
         if (validHit && validHit.distance <= this.interactionDistance) {
-            // We are looking at the hitbox!
             const hitNode = validHit.object;
+            const entity = hitNode.userData.entity;
             
-            if (this.currentLookTarget !== hitNode.userData.entity) {
-                this.currentLookTarget = hitNode.userData.entity;
-                this.uiManager.showInteractionPrompt(hitNode.userData.name);
+            // Only show the F prompt if it's NOT currency (just to be safe)
+            if (entity.itemData.type !== 'CURRENCY') {
+                if (this.currentLookTarget !== entity) {
+                    this.currentLookTarget = entity;
+                    this.uiManager.showInteractionPrompt(hitNode.userData.name);
+                }
             }
         } else {
-            // We are looking at nothing, or it's too far away. Hide the prompt.
             if (this.currentLookTarget !== null) {
                 this.currentLookTarget = null;
                 this.uiManager.hideInteractionPrompt();

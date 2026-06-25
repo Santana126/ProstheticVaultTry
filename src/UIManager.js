@@ -1,6 +1,7 @@
 import { ITEM_DATABASE } from './Database.js';
 import { UIHealthBar } from './UIHealthBar.js';
 import { UIWinScreen } from './UIWinScreen.js';
+import { UIEconomy } from './UIEconomy.js';
 
 export class UIManager {
     constructor() {
@@ -20,6 +21,7 @@ export class UIManager {
         this.ttDesc = document.getElementById('tt-desc');
 
         this.healthBar = new UIHealthBar();
+        this.economyUI = new UIEconomy();
 
         this.gameOverOverlay = document.getElementById('game-over-overlay');
         this.winScreen = new UIWinScreen();
@@ -185,6 +187,9 @@ export class UIManager {
     updateHealthBar(currentHealth, maxHealth) {
         this.healthBar.update(currentHealth, maxHealth);
     }
+    updateEconomy(level, exp, maxExp, bolts) {
+    this.economyUI.update(level, exp, maxExp, bolts);
+}
 
     showGameOver() {
         this.gameOverOverlay.style.display = 'flex';

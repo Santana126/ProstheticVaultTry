@@ -17,8 +17,8 @@ export class WaveManager {
 
         // Define waves
         this.waves = [
-            // { count: 3, isBossWave: false }, // Wave 1: 3 Enemies
-            // { count: 5, isBossWave: false }, // Wave 2: 5 Enemies
+            { count: 3, isBossWave: false }, // Wave 1: 3 Enemies
+            { count: 5, isBossWave: false }, // Wave 2: 5 Enemies
             { count: 1, isBossWave: true } // Wave 3: 1 Boss Enemy
         ];
     }
@@ -55,14 +55,18 @@ export class WaveManager {
             enemy.update(delta);
 
             if (enemy.isDead) {
-                // Drop Logic!
+
+                const expReward = enemy.isBoss ? 150 : 25;
+                this.player.gainExp(expReward);
+
+
+                // Drop Logic
                 let itemToDrop;
                 if (enemy.isBoss) {
                     itemToDrop = ITEM_DATABASE.keys['vault_key'];
                     console.log("THE BOSS HAS FALLEN! GRAB THE KEY!");
                 } else {
-                    const randomArm = Math.random() > 0.5 ? 'laser_arm' : 'plasma_arm';
-                    itemToDrop = ITEM_DATABASE.arms[randomArm];
+                    itemToDrop = ITEM_DATABASE.materials['scrap_bolt'];
                 }
                 
                 const lootDrop = new WorldItem(
