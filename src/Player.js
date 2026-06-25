@@ -85,18 +85,9 @@ export class Player {
 
         if (equippedArm) {
             if (this.input.isAttacking) {
-                // FIXED: Pass the physicsManager directly!
-                equippedArm.fireContinuous(
-                    this.camera, 
-                    muzzlePosition, 
-                    this.scene, 
-                    this.physicsManager, // <-- Replaced this.level.walls
-                    delta, 
-                    this.vfxManager,
-                    this.projectileManager
-                );
+                equippedArm.attack(this.camera, muzzlePosition, this.scene, this.physicsManager, delta, this.vfxManager, this.projectileManager);
             } else {
-                equippedArm.stopFiring(this.scene);
+                equippedArm.stopAttack(this.scene);
             }
             if (typeof equippedArm.update === 'function') {
                 equippedArm.update(delta);

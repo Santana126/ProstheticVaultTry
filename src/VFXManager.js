@@ -15,7 +15,7 @@ export class VFXManager {
     }
 
     spawnSparks(hitPoint, faceNormal) {
-        const numSparks = 1; 
+        const numSparks = 5; 
 
         for (let i = 0; i < numSparks; i++) {
             const spark = new THREE.Mesh(this.sparkGeometry, this.sparkMaterial);

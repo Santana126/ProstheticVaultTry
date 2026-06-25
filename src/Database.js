@@ -1,16 +1,17 @@
-import { Arm } from './Arm.js';
-import { LauncherArm } from './LauncherArm.js';
+import { Prosthetic } from './Prosthetic.js';
+import { HitscanArm } from './HitscanArm.js';
+import { ProjectileArm } from './ProjectileArm.js';
 
 export const ITEM_DATABASE = {
     arms: {
-        'steel_arm': new Arm(
+        'steel_arm': new Prosthetic(
             'steel_arm', 
             'Industrial Steel Arm', 
-            'Reliable and heavy.', 
+            'A heavy industrial prosthetic. Useful for grabbing things, but not meant for combat.', 
             'RIGHT_ARM', 
             'assets/arm.glb', 
-            { strength: 15 }, 
-            { damage: 20, attackSpeed: 0.8, attackType: 'melee' },
+            { strength: 0 }, 
+            
             {
                 scale: 0.1,
                 position: { x: 1.5, y: 0.5, z: -6 },
@@ -19,7 +20,7 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -60 } 
             }
         ),
-        'plasma_arm': new LauncherArm(
+        'plasma_arm': new ProjectileArm(
             'plasma_arm', 'Plasma Projector', 'Fires explosive plasma orbs.', 'RIGHT_ARM', 
             'assets/plasma_arm.glb', 
             { strength: 5 }, 
@@ -32,11 +33,11 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),
-        'laser_arm': new LauncherArm(
+        'laser_arm': new HitscanArm(
             'laser_arm', 'Laser Cannon', 'Fires high-energy laser beams.', 'RIGHT_ARM', 
             'assets/laser_arm.glb', 
             { strength: 10 }, 
-            { damage: 10, attackSpeed: 0.5, projectileSpeed: 50 },
+            { damage: 10, attackSpeed: 0.1, projectileSpeed: 50 },
             {
                 scale: 1, 
                 position: { x: 1, y: -0.5, z: -1.25 }, 
@@ -45,7 +46,7 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),
-        'saw_arm': new Arm(
+        'saw_arm': new MeleeArm(
             'saw_arm', 'Rotary Saw', 'Perfect for close combat and cutting through obstacles.', 'RIGHT_ARM',
             'assets/saw_armv1.glb',
             { strength: 20 },
