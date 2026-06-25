@@ -28,11 +28,36 @@ export class Player {
         this.controls = new PointerLockControls(this.camera, document.body);
         this.input = new InputManager();
         this.inventory = new InventoryManager(this.camera, this.scene);
+
+        // --- PLAYER STATS ---
+        this.maxHealth = 100;
+        this.health = this.maxHealth;
+        this.isDead = false;
     }
 
 
     takeDamage(amount){
-        console.log(`Player took ${amount} damage! Ouch!`);
+        if (this.isDead) return;
+
+        this.health -= amount;
+        console.log(`Player Health: ${this.health}`);
+
+        // This routes through the interactionManager to reach your UIManager!
+        if (this.interactionManager && this.interactionManager.uiManager) {
+            this.interactionManager.uiManager.updateHealthBar(this.health, this.maxHealth);
+        }
+
+        if (this.health <= 0) {
+            this.die();
+        }
+    }
+
+    die() {
+        this.isDead = true;
+        console.log("Player has died!");
+        
+        // Announce death to the main game loop
+        document.dispatchEvent(new Event('playerDied'));
     }
 
 

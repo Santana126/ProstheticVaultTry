@@ -1,4 +1,6 @@
 import { ITEM_DATABASE } from './Database.js';
+import { UIHealthBar } from './UIHealthBar.js';
+import { UIWinScreen } from './UIWinScreen.js';
 
 export class UIManager {
     constructor() {
@@ -16,6 +18,11 @@ export class UIManager {
         this.ttType = document.getElementById('tt-type');
         this.ttStats = document.getElementById('tt-stats');
         this.ttDesc = document.getElementById('tt-desc');
+
+        this.healthBar = new UIHealthBar();
+
+        this.gameOverOverlay = document.getElementById('game-over-overlay');
+        this.winScreen = new UIWinScreen();
 
         // Clean architecture: Call setup functions, don't run renderStash empty!
         this.setupEquipSlots();
@@ -173,5 +180,23 @@ export class UIManager {
 
     hideInteractionPrompt() {
         document.getElementById('interaction-prompt').style.display = 'none';
+    }
+
+    updateHealthBar(currentHealth, maxHealth) {
+        this.healthBar.update(currentHealth, maxHealth);
+    }
+
+    showGameOver() {
+        this.gameOverOverlay.style.display = 'flex';
+        // Hide crosshair and prompts so the screen looks clean
+        document.getElementById('crosshair').style.display = 'none';
+        this.hideInteractionPrompt(); 
+    }
+
+
+    showWinScreen() {
+        this.winScreen.show();
+        document.getElementById('crosshair').style.display = 'none';
+        this.hideInteractionPrompt();
     }
 }

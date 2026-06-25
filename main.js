@@ -59,6 +59,20 @@ const interactionManager = new InteractionManager(scene, camera, uiManager);
 // const player = new Player(scene, camera, level, vfxManager);
 const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager);
 
+
+let isGameOver = false;
+
+// Listen for the player's death
+document.addEventListener('playerDied', () => {
+    isGameOver = true;
+    
+    // Unlock the mouse so they can click "Try Again"
+    player.controls.unlock(); 
+    
+    // Show the red overlay
+    uiManager.showGameOver();
+});
+
 const steelArm = ITEM_DATABASE.arms['steel_arm'];
 player.inventory.equip('RIGHT_ARM', steelArm);
 uiManager.renderStash(player.inventory.getOwnedItems());
@@ -123,6 +137,24 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// --- THE FINISH LINE ---
+// Create a 5x5x5 invisible box
+const winGeometry = new THREE.BoxGeometry(5, 50, 5);
+const winMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x00ff00, 
+    wireframe: true, 
+    visible: true // Change to true if you want to see it for testing!
+});
+const winTrigger = new THREE.Mesh(winGeometry, winMaterial);
+
+// TODO: Change these coordinates to the center of your Gold Vault!
+winTrigger.position.set(0, 2.5, -80); 
+scene.add(winTrigger);
+
+// Create a mathematical bounding box so we can check for overlaps
+const winBox = new THREE.Box3().setFromObject(winTrigger);
+let hasWon = false;
+
 
 // --- GAME LOOP ---
 let prevTime = performance.now();
@@ -132,39 +164,46 @@ function animate() {
     const time = performance.now();
     const delta = (time - prevTime) / 1000;
 
-    player.update(delta);
+    if(!isGameOver && !hasWon) {
+        player.update(delta);
 
-    vfxManager.update(delta);
-    projectileManager.update(delta, physicsManager, vfxManager);
+        vfxManager.update(delta);
+        projectileManager.update(delta, physicsManager, vfxManager);
 
-    groundLoot.update(delta);
-    groundLoot2.update(delta);
+        groundLoot.update(delta);
+        groundLoot2.update(delta);
 
-    prevTime = time;
+        for (let i = activeEnemies.length - 1; i >= 0; i--) {
+            let enemy = activeEnemies[i];
+            enemy.update(delta);
 
+            // Check if it died this frame
+            if (enemy.isDead) {
+                const lootDrop = new WorldItem(
+                    scene, 
+                    ITEM_DATABASE.arms['plasma_arm'], // Drop a plasma cannon!
+                    enemy.mesh.position.x, 
+                    1, 
+                    enemy.mesh.position.z
+                );
+                interactionManager.addInteractable(lootDrop.mesh);
+                activeWorldItems.push(lootDrop);
 
-    for (let i = activeEnemies.length - 1; i >= 0; i--) {
-        let enemy = activeEnemies[i];
-        enemy.update(delta);
-
-        // Check if it died this frame
-        if (enemy.isDead) {
-            const lootDrop = new WorldItem(
-                scene, 
-                ITEM_DATABASE.arms['plasma_arm'], // Drop a plasma cannon!
-                enemy.mesh.position.x, 
-                1, 
-                enemy.mesh.position.z
-            );
-            interactionManager.addInteractable(lootDrop.mesh);
-            activeWorldItems.push(lootDrop);
-
-            // Remove the dead enemy from the loop
-            activeEnemies.splice(i, 1);
+                // Remove the dead enemy from the loop
+                activeEnemies.splice(i, 1);
+            }
         }
+
+        // CHECK WIN CONDITION
+        if (winBox.containsPoint(player.camera.position)) {
+            hasWon = true;
+            player.controls.unlock(); // Free the mouse
+            uiManager.showWinScreen(); // Show the gold screen!
+        }
+
     }
 
-
+    prevTime = time;
 
     renderer.render(scene, camera);
 }
