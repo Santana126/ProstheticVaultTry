@@ -17,8 +17,8 @@ export class WaveManager {
 
         // Define waves
         this.waves = [
-            { count: 3, isBossWave: false }, // Wave 1: 3 Enemies
-            { count: 5, isBossWave: false }, // Wave 2: 5 Enemies
+            // { count: 3, isBossWave: false }, // Wave 1: 3 Enemies
+            // { count: 5, isBossWave: false }, // Wave 2: 5 Enemies
             { count: 1, isBossWave: true } // Wave 3: 1 Boss Enemy
         ];
     }

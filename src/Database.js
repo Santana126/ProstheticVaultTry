@@ -67,7 +67,8 @@ export const ITEM_DATABASE = {
             'Gold Vault Key', 
             'A heavy, glowing key. It looks like it fits the final vault.',
             'KEY',
-            'assets/vault_key.glb'
+            'assets/vault_key.glb',
+            { scale: 0.3 }
         )
     }
 };

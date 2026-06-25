@@ -181,7 +181,8 @@ function animate() {
 
         // CHECK WIN CONDITION
         if (winBox.containsPoint(player.camera.position)) {
-            const hasKey = interactionManager.inventoryManager.inventory.some(item => item.id === 'vault_key');
+            const ownedItems = player.inventory.getOwnedItems();
+            const hasKey = ownedItems.includes('vault_key');
             
             if (hasKey) {
                 hasWon = true;
