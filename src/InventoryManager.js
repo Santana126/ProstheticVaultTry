@@ -55,6 +55,10 @@ export class InventoryManager {
         }
 
         this.equipment.set(slot, item);
+
+        document.dispatchEvent(new CustomEvent('equipmentUpdated', {
+            detail: { slot, itemId: item.id, item }
+        }));
         
         // If it's an arm, load the 3D model.
         // Later, if slot === 'LEGS', you might update the player's movement speed instead!

@@ -30,6 +30,12 @@ export class UIManager {
                 this.renderStash(e.detail.ownedItems);
             }
         });
+
+        document.addEventListener('equipmentUpdated', (e) => {
+            if (e.detail && e.detail.slot) {
+                this.updateEquipmentSlot(e.detail.slot, e.detail.itemId, e.detail.item);
+            }
+        });
     }
 
     toggleInventory() {
@@ -40,6 +46,26 @@ export class UIManager {
         document.dispatchEvent(new CustomEvent('inventoryToggled', {
             detail: { isOpen: this.isInventoryOpen }
         }));
+    }
+
+    updateEquipmentSlot(slot, itemId, itemData) {
+        const slotElement = document.querySelector(`.equip-slot[data-slot="${slot}"]`);
+        if (!slotElement) return;
+
+        const slotIcon = slotElement.querySelector('.slot-icon');
+        if (!slotIcon) return;
+
+        if (itemData) {
+            slotElement.setAttribute('data-item-id', itemId);
+            slotIcon.classList.remove('empty');
+            slotIcon.classList.add('has-item');
+            slotIcon.innerText = itemData.name;
+        } else {
+            slotElement.removeAttribute('data-item-id');
+            slotIcon.classList.remove('has-item');
+            slotIcon.classList.add('empty');
+            slotIcon.innerText = '';
+        }
     }
 
     renderStash(ownedItemIds) {

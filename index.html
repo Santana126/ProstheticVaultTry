@@ -26,7 +26,7 @@
         <div class="inv-window">
             <div class="inv-header">
                 <h2>Prosthetic Vault</h2>
-                <button class="close-btn" onclick="toggleInventory()">X</button>
+                <button class="close-btn" onclick="toggleInventory()"></button>
             </div>
 
             <div class="inv-content">
@@ -40,9 +40,10 @@
                         <span class="slot-label">Torso</span><div class="slot-icon empty"></div>
                     </div>
                     
-                    <div class="equip-slot right-arm-slot" id="equip-right-arm" data-slot="RIGHT_ARM" data-item-id="steel_arm">
+                    <div class="equip-slot right-arm-slot" id="equip-right-arm" data-slot="RIGHT_ARM">
                         <span class="slot-label">Braccio Destro</span>
-                        <div class="slot-icon has-item">Steel Arm</div> </div>
+                        <div class="slot-icon empty"></div>
+                    </div>
                     
                     <div class="equip-slot left-arm-slot" data-slot="LEFT_ARM">
                         <span class="slot-label">Braccio Sinistro</span><div class="slot-icon empty"></div>
@@ -74,7 +75,7 @@
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"                
             }
         }
     </script>
