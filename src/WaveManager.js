@@ -58,9 +58,7 @@ export class WaveManager {
                 // Drop Logic!
                 let itemToDrop;
                 if (enemy.isBoss) {
-                    // itemToDrop = ITEM_DATABASE.keys['vault_key'];
-                    const randomArm = Math.random() > 0.5 ? 'laser_arm' : 'plasma_arm';
-                    itemToDrop = ITEM_DATABASE.arms[randomArm];
+                    itemToDrop = ITEM_DATABASE.keys['vault_key'];
                     console.log("THE BOSS HAS FALLEN! GRAB THE KEY!");
                 } else {
                     const randomArm = Math.random() > 0.5 ? 'laser_arm' : 'plasma_arm';
