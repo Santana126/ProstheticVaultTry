@@ -77,11 +77,11 @@ export class InventoryManager {
 
     loadArmModel(item) { 
         this.loader.load(item.modelPath, (gltf) => {
-            if (GAME_CONFIG.DEBUG.showModelBounds) {
-                gltf.scene.traverse((node) => {
-                    console.log("Found part:", node.name, "| Type:", node.type);
-                });
-            }
+            // if (GAME_CONFIG.DEBUG.showModelBounds) {
+            //     gltf.scene.traverse((node) => {
+            //         console.log("Found part:", node.name, "| Type:", node.type);
+            //     });
+            // }
             const model = gltf.scene;
             
             // Center the model

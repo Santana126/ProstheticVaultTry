@@ -4,12 +4,13 @@ import { WorldItem } from './WorldItem.js';
 import { ITEM_DATABASE } from './Database.js';
 
 export class WaveManager {
-    constructor(scene, physicsManager, player, interactionManager, activeWorldItems) {
+    constructor(scene, physicsManager, player, interactionManager, activeWorldItems, ktx2Loader) {
         this.scene = scene;
         this.physicsManager = physicsManager;
         this.player = player;
         this.interactionManager = interactionManager;
         this.activeWorldItems = activeWorldItems; // So enemies can drop loot!
+        this.ktx2Loader = ktx2Loader;
 
         this.activeEnemies = [];
         this.currentWave = 0;
@@ -39,7 +40,7 @@ export class WaveManager {
             const spawnZ = Math.sin(angle) * radius;
 
             // Pass the isBossWave flag to the Enemy constructor
-            const enemy = new Enemy(this.scene, this.physicsManager, spawnX, 0, spawnZ, this.player, waveConfig.isBossWave);
+            const enemy = new Enemy(this.scene, this.physicsManager, spawnX, 0, spawnZ, this.player, waveConfig.isBossWave, this.ktx2Loader);
             this.activeEnemies.push(enemy);
         }
 

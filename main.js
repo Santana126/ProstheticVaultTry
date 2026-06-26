@@ -13,12 +13,20 @@ import { WorldItem } from './src/WorldItem.js';
 import { InteractionManager } from './src/InteractionManager.js';
 import { Enemy } from './src/Enemy.js';
 import { WaveManager } from './src/WaveManager.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 
 // Setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111111);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+const ktx2Loader = new KTX2Loader()
+    // We use a safe CDN to grab the complex transcoder files Three.js needs
+    .setTranscoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/')
+    .detectSupport(renderer);
+
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -90,7 +98,7 @@ const activeWorldItems = [];
 
 
 // Initialize the Wave Manager
-const waveManager = new WaveManager(scene, physicsManager, player, interactionManager, activeWorldItems);
+const waveManager = new WaveManager(scene, physicsManager, player, interactionManager, activeWorldItems, ktx2Loader);
 
 // Start the first wave 2 seconds after the game loads!
 setTimeout(() => {

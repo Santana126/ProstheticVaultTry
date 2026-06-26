@@ -1,59 +1,135 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+
 
 export class Enemy {
-    constructor(scene, physicsManager, x, y, z, player, isBoss = false) {
+    constructor(scene, physicsManager, x, y, z, player, isBoss = false, ktx2Loader) {
         this.scene = scene;
         this.physicsManager = physicsManager;
         this.player = player;
         this.isBoss = isBoss;
-
-        // --- STATS ---
-        if (this.isBoss) {
-            this.health = 500;
-            this.speed = 2.5; // Slightly slower, more menacing
-            this.attackDamage = 40; // Hits like a truck
-        } else {
-            this.health = 100;
-            this.speed = 3.5; 
-            this.attackDamage = 15;
-        }
-        this.attackRange = 1.5; // How close it needs to be to hit the player
-        this.attackCooldown = 0;
-        this.isDead = false;
-
-        this.raycaster = new THREE.Raycaster();
-        this.raycaster.far = 1.5;
-
-        // --- VISUALS ---
-        // A simple, menacing red cylinder for the MVP
-        const geometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
-        geometry.translate(0, 1, 0); // Pivot at the feet so it rests perfectly on the floor
-        const color = this.isBoss ? 0x8b0000 : 0xff0000;
-        const material = new THREE.MeshStandardMaterial({ color: color });
+        this.ktx2Loader = ktx2Loader;
         
-        this.mesh = new THREE.Mesh(geometry, material);
+        // Stats
+        this.health = this.isBoss ? 300 : 50; 
+        this.isDead = false;
+        this.speed = this.isBoss ? 2 : 4; 
+        this.attackRange = 3; 
+        this.damage = this.isBoss ? 20 : 10;
+        
+        // The container for the 3D model and the hitbox
+        this.mesh = new THREE.Group();
         this.mesh.position.set(x, y, z);
-        this.mesh.castShadow = true;
-
-        // Scale up the boss 3x!
-        if (this.isBoss) {
-            this.mesh.scale.set(3, 3, 3);
-            this.attackRange = 4.0; // Needs a larger attack range because of its size
-        }
-
-        // --- PHYSICS & HITBOX ---
-        // Tag it exactly like we did the Dummy so bullets and lasers recognize it!
-        this.mesh.userData = { 
-            entity: this, 
-            type: 'enemy' 
-        };
+        
+        // 1. CREATE THE HITBOX (Invisible)
+        const hitBoxGeometry = new THREE.CylinderGeometry(1, 1, 3, 16);
+        const hitBoxMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff0000, 
+            wireframe: true, 
+            visible: false // Set to true if you need to debug the hitbox!
+        });
+        this.hitBox = new THREE.Mesh(hitBoxGeometry, hitBoxMaterial);
+        this.hitBox.position.y = 1.5;
+        this.hitBox.userData = { isEnemy: true, entity: this };
+        this.mesh.add(this.hitBox);
         
         this.scene.add(this.mesh);
-        this.physicsManager.addColliders([this.mesh]);
+
+        // --- NEW: ANIMATION VARIABLES ---
+        this.mixer = null;
+        this.actions = {};
+        this.activeAction = null;
+        this.currentState = 'idle'; // 'walk', 'attack', 'dead'
+
+        // Load the 3D Model!
+        this.loadModel();
+    }
+
+    async loadModel() {
+        const loader = new GLTFLoader();
+        
+        // Keep your decoders if you are still using the compressed 1.4mb files!
+        if (this.ktx2Loader) loader.setKTX2Loader(this.ktx2Loader);
+        if (typeof MeshoptDecoder !== 'undefined') loader.setMeshoptDecoder(MeshoptDecoder);
+        
+        this.models = {};
+        this.mixers = {};
+        this.actions = {};
+
+        const scaleSize = 1; 
+
+        try {
+            // --- 1. LOAD THE WALK ALIEN ---
+            const walkGltf = await loader.loadAsync('assets/alien_walking.glb');
+            
+            this.models.walk = walkGltf.scene;
+            this.models.walk.scale.set(scaleSize, scaleSize, scaleSize);
+            this.models.walk.position.y = 0;
+            
+            this.models.walk.traverse((node) => {
+                if (node.isMesh) { node.castShadow = true; node.raycast = function() {}; }
+            });
+            this.mesh.add(this.models.walk);
+
+            this.mixers.walk = new THREE.AnimationMixer(this.models.walk);
+            const walkClip = THREE.AnimationClip.findByName(walkGltf.animations, 'mixamo.com') || walkGltf.animations[0];
+            if (walkClip) {
+                this.actions.walk = this.mixers.walk.clipAction(walkClip);
+                this.actions.walk.play();
+            }
+
+            // --- 2. LOAD THE ATTACK ALIEN ---
+            const attackGltf = await loader.loadAsync('assets/alien_attack.glb');
+            
+            this.models.attack = attackGltf.scene;
+            this.models.attack.scale.set(scaleSize, scaleSize, scaleSize);
+            this.models.attack.position.y = 0;
+            
+            // CRITICAL: Hide the attack model immediately!
+            this.models.attack.visible = false; 
+            
+            this.models.attack.traverse((node) => {
+                if (node.isMesh) { node.castShadow = true; node.raycast = function() {}; }
+            });
+            this.mesh.add(this.models.attack);
+
+            this.mixers.attack = new THREE.AnimationMixer(this.models.attack);
+            const attackClip = THREE.AnimationClip.findByName(attackGltf.animations, 'mixamo.com') || attackGltf.animations[0];
+            if (attackClip) {
+                this.actions.attack = this.mixers.attack.clipAction(attackClip);
+                this.actions.attack.play(); // Play it invisibly in the background
+            }
+
+            this.currentState = 'walk';
+            console.log("✅ Both alien animations loaded successfully!");
+
+        } catch (error) {
+            console.error("❌ Failed to load alien assets:", error);
+        }
+    }
+
+    // A helper function to smoothly transition between animations
+    fadeToAction(name, duration) {
+        const newAction = this.actions[name];
+        if (!newAction || this.activeAction === newAction) return;
+
+        if (this.activeAction) {
+            this.activeAction.fadeOut(duration);
+        }
+
+        newAction.reset()
+                 .setEffectiveTimeScale(1)
+                 .setEffectiveWeight(1)
+                 .fadeIn(duration)
+                 .play();
+
+        this.activeAction = newAction;
+        this.currentState = name;
     }
 
     takeDamage(amount, hitPoint, normal, vfxManager) {
-        if (this.isDead) return;
+        
         
         this.health -= amount;
         console.log(`Enemy Health: ${this.health}`);
@@ -62,7 +138,8 @@ export class Enemy {
         }
 
         if (this.health <= 0) {
-            this.die();
+            this.isDead = true;
+            this.scene.remove(this.mesh);
         }
     }
 
@@ -70,54 +147,51 @@ export class Enemy {
     update(delta) {
         if (this.isDead) return;
 
-        // Tick down the attack cooldown
-        if (this.attackCooldown > 0) this.attackCooldown -= delta;
+        // 1. Tick the correct animation mixer
+        if (this.currentState === 'walk' && this.mixers.walk) {
+            this.mixers.walk.update(delta);
+        } else if (this.currentState === 'attack' && this.mixers.attack) {
+            this.mixers.attack.update(delta);
+        }
 
-        
-        const targetPos = this.player.camera.position.clone();
-        targetPos.y = this.mesh.position.y; 
+        // 2. Distance Math
+        const dx = this.player.camera.position.x - this.mesh.position.x;
+        const dz = this.player.camera.position.z - this.mesh.position.z;
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        const targetAngle = Math.atan2(dx, dz);
+        this.mesh.rotation.y = targetAngle;
 
-        const distanceToPlayer = this.mesh.position.distanceTo(targetPos);
-
-        if (distanceToPlayer > this.attackRange) {
-            // 1. Calculate where it WANTS to go
-            let desiredDirection = new THREE.Vector3().subVectors(targetPos, this.mesh.position).normalize();
-            
-            // 2. Prepare the Raycast (Lift the origin up 1 meter so it shoots from the chest, not the feet)
-            const rayOrigin = this.mesh.position.clone();
-            rayOrigin.y += 1.0; 
-            this.raycaster.set(rayOrigin, desiredDirection);
-
-            // 3. Ask the physics manager for solid walls (but filter out the enemy itself!)
-            const allColliders = this.physicsManager.getSolidMeshes();
-            const wallsOnly = allColliders.filter(mesh => mesh !== this.mesh && mesh.userData.type !== 'enemy');
-            
-            const intersects = this.raycaster.intersectObjects(wallsOnly, true);
-
-            // 4. THE SLIDE MATH
-            if (intersects.length > 0) {
-                // We are about to hit a wall! 
-                const wallNormal = intersects[0].face.normal;
-                
-                // Flatten our desired direction against the wall
-                desiredDirection.projectOnPlane(wallNormal);
-                
-                // If we are pushed perfectly flat, normalize the vector to keep speed consistent
-                if (desiredDirection.lengthSq() > 0) {
-                    desiredDirection.normalize();
-                }
+        // 3. THE STATE MACHINE (Swapping Models)
+        if (distance > this.attackRange) {
+            // FAR AWAY: Walk
+            if (this.currentState !== 'walk') {
+                this.currentState = 'walk';
+                // Toggle visibility safely
+                if (this.models.walk) this.models.walk.visible = true;
+                if (this.models.attack) this.models.attack.visible = false;
             }
+            
+            // Move the hitbox forward
+            this.mesh.position.x += Math.sin(targetAngle) * this.speed * delta;
+            this.mesh.position.z += Math.cos(targetAngle) * this.speed * delta;
 
-            // 5. Move the enemy!
-            this.mesh.position.addScaledVector(desiredDirection, this.speed * delta);
-            
-            // Keep the enemy's "eyes" locked on the player, even while sliding sideways
-            this.mesh.lookAt(targetPos);
         } else {
-            
-            if (this.attackCooldown <= 0) {
-                this.player.takeDamage(this.attackDamage);
-                this.attackCooldown = 1.0; // Wait 1 second before hitting again
+            // CLOSE UP: Attack!
+            if (this.currentState !== 'attack') {
+                this.currentState = 'attack';
+                
+                // Toggle visibility safely
+                if (this.models.walk) this.models.walk.visible = false;
+                if (this.models.attack) {
+                    this.models.attack.visible = true;
+                    // Reset the attack animation so it starts from frame 1 every time!
+                    if (this.actions.attack) {
+                        this.actions.attack.reset().play();
+                    }
+                }
+                
+                this.player.takeDamage(this.damage);
+                console.log("Alien Attacked!");
             }
         }
     }
