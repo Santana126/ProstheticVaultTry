@@ -39,6 +39,12 @@ export class Player {
         this.maxExp = 100; 
         this.bolts = 0;
 
+
+        this.shakeTimer = 0;
+        this.maxShakeDuration = 0.3; // How long the earthquake lasts
+        this.baseShakeIntensity = 0.2; // How violently it shakes (in meters)
+        this.currentShakeOffset = new THREE.Vector3(0, 0, 0); // Stores the math to prevent drift
+
         setTimeout(() => {
             if (this.interactionManager && this.interactionManager.uiManager) {
                 this.interactionManager.uiManager.updateEconomy(this.level, this.exp, this.maxExp, this.bolts);
@@ -56,7 +62,11 @@ export class Player {
         // This routes through the interactionManager to reach your UIManager!
         if (this.interactionManager && this.interactionManager.uiManager) {
             this.interactionManager.uiManager.updateHealthBar(this.health, this.maxHealth);
+
+            this.interactionManager.uiManager.showDamageVignette();
         }
+
+        this.shakeTimer = this.maxShakeDuration;
 
         if (this.health <= 0) {
             this.die();
@@ -179,6 +189,36 @@ export class Player {
                 isMoving, 
                 delta
             );
+        }
+
+        // --- 4. SCREEN SHAKE ---
+        
+        // 1. Always remove the previous frame's offset so the camera doesn't drift permanently!
+        this.camera.position.sub(this.currentShakeOffset);
+
+        if (this.shakeTimer > 0) {
+            this.shakeTimer -= delta;
+
+            // Fade out the shake smoothly as the timer runs out
+            const fadeMultiplier = Math.max(0, this.shakeTimer / this.maxShakeDuration);
+            const intensity = this.baseShakeIntensity * fadeMultiplier;
+
+            // High-speed math for a violent jitter
+            // We use performance.now() to drive the sine waves extremely fast
+            const time = performance.now() * 0.05; 
+            
+            const offsetX = Math.sin(time) * intensity;
+            // We multiply time by a weird decimal (1.2) for the Z axis so the shake feels chaotic, not perfectly circular
+            const offsetZ = Math.cos(time * 1.2) * intensity; 
+
+            this.currentShakeOffset.set(offsetX, 0, offsetZ);
+
+            // 2. Apply the new shake offset for this frame
+            this.camera.position.add(this.currentShakeOffset);
+            
+        } else {
+            // Timer is 0, ensure the offset is perfectly zeroed out
+            this.currentShakeOffset.set(0, 0, 0);
         }
     }
 

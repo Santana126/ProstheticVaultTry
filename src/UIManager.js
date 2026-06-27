@@ -29,6 +29,21 @@ export class UIManager {
         // Clean architecture: Call setup functions, don't run renderStash empty!
         this.setupEquipSlots();
         this.initListeners();
+
+
+        // DAMAGE VIGNETTE 
+        this.damageOverlay = document.createElement('div');
+        this.damageOverlay.style.position = 'fixed';
+        this.damageOverlay.style.top = '0';
+        this.damageOverlay.style.left = '0';
+        this.damageOverlay.style.width = '100vw';
+        this.damageOverlay.style.height = '100vh';
+        this.damageOverlay.style.pointerEvents = 'none'; // CRITICAL: Lets you shoot through it!
+        this.damageOverlay.style.zIndex = '50'; 
+        
+        // Start completely invisible
+        this.damageOverlay.style.boxShadow = 'inset 0 0 0px rgba(255, 0, 0, 0)';
+        document.body.appendChild(this.damageOverlay);
     }
 
     initListeners() {
@@ -203,5 +218,18 @@ export class UIManager {
         this.winScreen.show();
         document.getElementById('crosshair').style.display = 'none';
         this.hideInteractionPrompt();
+    }
+
+    showDamageVignette() {
+        // Instantly snap to a harsh red border without any smooth animation
+        this.damageOverlay.style.transition = 'none';
+        this.damageOverlay.style.boxShadow = 'inset 0 0 150px rgba(255, 0, 0, 0.8)';
+
+        // Force the browser to register the instant change before moving to the next line
+        void this.damageOverlay.offsetWidth; 
+
+        // Smoothly fade back to invisible over 0.5 seconds
+        this.damageOverlay.style.transition = 'box-shadow 0.5s ease-out';
+        this.damageOverlay.style.boxShadow = 'inset 0 0 0px rgba(255, 0, 0, 0)';
     }
 }
