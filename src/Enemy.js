@@ -17,22 +17,32 @@ export class Enemy {
         this.speed = this.isBoss ? 2 : 4; 
         this.attackRange = 3; 
         this.damage = this.isBoss ? 20 : 10;
+
+        this.attackCooldown = 0;
+        this.attackRate = 1.5;
+        this.damageDelay = 0.6; 
+        this.currentSwingTimer = 0;
+        this.isSwinging = false;
+
         
         // The container for the 3D model and the hitbox
         this.mesh = new THREE.Group();
         this.mesh.position.set(x, y, z);
         
         // 1. CREATE THE HITBOX (Invisible)
-        const hitBoxGeometry = new THREE.CylinderGeometry(1, 1, 3, 16);
+        const hitBoxGeometry = new THREE.CylinderGeometry(1, 1, 13, 16);
         const hitBoxMaterial = new THREE.MeshBasicMaterial({ 
             color: 0xff0000, 
             wireframe: true, 
-            visible: false // Set to true if you need to debug the hitbox!
+            visible: true // Keep this true for a moment so you can aim!
         });
         this.hitBox = new THREE.Mesh(hitBoxGeometry, hitBoxMaterial);
         this.hitBox.position.y = 1.5;
         this.hitBox.userData = { isEnemy: true, entity: this };
         this.mesh.add(this.hitBox);
+        
+        // --- THE FIX: Tell the weapons this can be shot! ---
+        this.physicsManager.addColliders([this.hitBox]); 
         
         this.scene.add(this.mesh);
 
@@ -138,8 +148,8 @@ export class Enemy {
         }
 
         if (this.health <= 0) {
-            this.isDead = true;
-            this.scene.remove(this.mesh);
+            this.die();
+
         }
     }
 
@@ -166,6 +176,8 @@ export class Enemy {
             // FAR AWAY: Walk
             if (this.currentState !== 'walk') {
                 this.currentState = 'walk';
+                
+                this.isSwinging = false;
                 // Toggle visibility safely
                 if (this.models.walk) this.models.walk.visible = true;
                 if (this.models.attack) this.models.attack.visible = false;
@@ -176,22 +188,55 @@ export class Enemy {
             this.mesh.position.z += Math.cos(targetAngle) * this.speed * delta;
 
         } else {
-            // CLOSE UP: Attack!
+            // WE ARE CLOSE: Attack!
             if (this.currentState !== 'attack') {
                 this.currentState = 'attack';
                 
-                // Toggle visibility safely
+                // Toggle visibility
                 if (this.models.walk) this.models.walk.visible = false;
                 if (this.models.attack) {
                     this.models.attack.visible = true;
-                    // Reset the attack animation so it starts from frame 1 every time!
-                    if (this.actions.attack) {
-                        this.actions.attack.reset().play();
-                    }
+                    if (this.actions.attack) this.actions.attack.reset().play();
                 }
                 
-                this.player.takeDamage(this.damage);
-                console.log("Alien Attacked!");
+                // 1. START THE WIND-UP
+                this.isSwinging = true;
+                this.currentSwingTimer = this.damageDelay;
+                this.attackCooldown = this.attackRate; // Start the main cooldown
+            }
+
+            // --- TICK THE TIMERS ---
+
+            // 2. Tick down the Main Cooldown (When can we swing again?)
+            if (this.attackCooldown > 0) {
+                this.attackCooldown -= delta;
+            } else {
+                // Cooldown is finished! Start another swing!
+                this.isSwinging = true;
+                this.currentSwingTimer = this.damageDelay;
+                this.attackCooldown = this.attackRate;
+                
+                if (this.actions.attack) this.actions.attack.reset().play();
+            }
+
+            // 3. Tick down the Wind-Up (When does the hand actually hit?)
+            if (this.isSwinging) {
+                this.currentSwingTimer -= delta;
+                
+                if (this.currentSwingTimer <= 0) {
+                    // BOOM! The hand connects.
+                    
+                    // Optional Pro-Tip: Check the distance one more time right here!
+                    // If the player backed up during the wind-up, the attack misses!
+                    if (distance <= this.attackRange) {
+                        this.player.takeDamage(this.damage);
+                        console.log("Alien Hand Connected!");
+                    } else {
+                        console.log("Player dodged the attack!");
+                    }
+                    
+                    this.isSwinging = false; // The swing is complete, wait for the main cooldown.
+                }
             }
         }
     }
@@ -200,11 +245,15 @@ export class Enemy {
         this.isDead = true;
         console.log("Enemy eliminated!");
 
-        // Clean up the 3D model and remove its solid hitbox
+        // 1. Remove the entire enemy group from the visual scene
         this.scene.remove(this.mesh);
-        this.physicsManager.removeCollider(this.mesh);
-        this.mesh.geometry.dispose();
-        this.mesh.material.dispose();
+        
+        // 2. Erase the hitbox from the Physics Manager so lasers stop hitting it!
+        this.physicsManager.removeCollider(this.hitBox); 
+        
+        // 3. Clear the hitbox out of the computer's memory
+        if (this.hitBox.geometry) this.hitBox.geometry.dispose();
+        if (this.hitBox.material) this.hitBox.material.dispose();
     }
 
 }
