@@ -80,5 +80,18 @@ export const ITEM_DATABASE = {
             'assets/bolt.glb',   // We will just use a cube if you don't have a bolt model yet!
             { scale: 1 }       // Make them a bit smaller than the key
         )
+    },
+    belts: {
+        'thruster_belt': {
+            id: 'thruster_belt',
+            name: 'Thruster Belt',
+            description: 'Double-tap or press Shift to engage evasive thrusters.',
+            slot: 'BELT',
+            modelPath: 'assets/belt.glb', // Make sure your file is named exactly this!
+            stats: { 
+                dashPower: 100, // How explosive the movement is
+                cooldown: 1.5  // Seconds between dashes
+            }
+        }
     }
 };

@@ -71,6 +71,10 @@ export class InventoryManager {
         return this.equipment.get('RIGHT_ARM') || this.equipment.get('LEFT_ARM');
     }
 
+    getEquippedItem(slot){
+        return this.equipment.get(slot);
+    }
+
     getActiveArmModel() {
         return this.currentArmModel;
     }

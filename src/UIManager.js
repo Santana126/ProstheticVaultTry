@@ -92,13 +92,24 @@ export class UIManager {
         }
     }
 
+    getItemData(itemId) {
+        // Loops through arms, belts, materials, etc. to find the item!
+        for (const category in ITEM_DATABASE) {
+            if (ITEM_DATABASE[category] && ITEM_DATABASE[category][itemId]) {
+                return ITEM_DATABASE[category][itemId];
+            }
+        }
+        return null;
+    }
+
     renderStash(ownedItemIds) {
         this.stashGrid.innerHTML = ''; 
 
         if(!ownedItemIds) return;
 
         ownedItemIds.forEach(itemId => {
-            const itemData = ITEM_DATABASE.arms[itemId] || ITEM_DATABASE.legs[itemId]; // Check all categories!
+            // THE FIX: Use our new universal search!
+            const itemData = this.getItemData(itemId); 
             if (!itemData) return;
 
             const stashElement = document.createElement('div');
@@ -125,8 +136,10 @@ export class UIManager {
         this.mainEquipSlots.forEach(slotElement => {
             slotElement.addEventListener('mouseenter', () => {
                 const itemId = slotElement.getAttribute('data-item-id');
-                if (itemId && ITEM_DATABASE.arms[itemId]) {
-                    this.showTooltip(ITEM_DATABASE.arms[itemId]);
+                // THE FIX: Use the universal search here too!
+                if (itemId) {
+                    const itemData = this.getItemData(itemId);
+                    if (itemData) this.showTooltip(itemData);
                 }
             });
             slotElement.addEventListener('mouseleave', () => this.hideTooltip());
@@ -165,15 +178,25 @@ export class UIManager {
 
         // Broadcast to the game that an item needs to be equipped!
         document.dispatchEvent(new CustomEvent('equipItem', {
-            detail: { slot: itemData.slot, itemId: newItemId }
+            detail: { slot: itemData.slot, itemId: newItemId, item: itemData }
         }));
     }
 
     // --- Tooltip Helpers ---
     showTooltip(item) {
         this.ttName.innerText = item.name;
-        this.ttType.innerText = `Tipo: Protesi (${item.attackType || 'Standard'})`;
-        this.ttStats.innerHTML = `Danno: ${item.damage || 0}<br>Forza: +${item.stats.strength || 0}`;
+        this.ttType.innerText = `Tipo: ${item.slot === 'BELT' ? 'Equipaggiamento' : 'Protesi'}`;
+        
+        // THE FIX: Dynamically build the stats text based on what stats the item actually has!
+        let statsHtml = '';
+        if (item.damage) statsHtml += `Danno: ${item.damage}<br>`;
+        if (item.stats) {
+            if (item.stats.strength) statsHtml += `Forza: +${item.stats.strength}<br>`;
+            if (item.stats.dashPower) statsHtml += `Potenza Dash: ${item.stats.dashPower}<br>`;
+            if (item.stats.cooldown) statsHtml += `Cooldown: ${item.stats.cooldown}s<br>`;
+        }
+        
+        this.ttStats.innerHTML = statsHtml || 'Nessuna statistica';
         this.ttDesc.innerText = item.description;
         this.tooltip.style.display = 'block';
     }
@@ -204,7 +227,7 @@ export class UIManager {
     }
     updateEconomy(level, exp, maxExp, bolts) {
     this.economyUI.update(level, exp, maxExp, bolts);
-}
+    }
 
     showGameOver() {
         this.gameOverOverlay.style.display = 'flex';

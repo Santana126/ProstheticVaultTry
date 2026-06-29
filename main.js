@@ -94,8 +94,16 @@ interactionManager.addInteractable(groundLoot.mesh);
 const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['saw_arm'], -15, 1, 35);
 interactionManager.addInteractable(groundLoot2.mesh);
 
+const beltLoot = new WorldItem(
+    scene, 
+    ITEM_DATABASE.belts['thruster_belt'], 
+    10, 1, 20 // X, Y, Z coordinates (tweak these so it spawns where you want it!)
+);
+interactionManager.addInteractable(beltLoot.mesh);
+
 const activeWorldItems = [];
 
+activeWorldItems.push(beltLoot);
 
 // Initialize the Wave Manager
 const waveManager = new WaveManager(scene, physicsManager, player, interactionManager, activeWorldItems, ktx2Loader);
@@ -130,9 +138,11 @@ document.addEventListener('inventoryToggled', (e) => {
 });
 
 document.addEventListener('equipItem', (e) => {
-    const slotToEquip = e.detail.slot;
-    const itemToEquip = ITEM_DATABASE.arms[e.detail.itemId];
-    player.inventory.equip(slotToEquip, itemToEquip);
+    if (e.detail && e.detail.item) {
+        player.inventory.equip(e.detail.slot, e.detail.item);
+    } else {
+        console.error("Equip Event fired, but item data is missing!", e.detail);
+    }
 });
 
 document.addEventListener('currencyCollected', (e) => {
@@ -189,6 +199,7 @@ function animate() {
 
         groundLoot.update(delta);
         groundLoot2.update(delta);
+        beltLoot.update(delta);
 
         waveManager.update(delta, vfxManager);
 

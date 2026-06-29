@@ -40,6 +40,9 @@ export class Player {
         this.bolts = 0;
 
 
+        this.dashCooldownTimer = 0;
+
+
         this.shakeTimer = 0;
         this.maxShakeDuration = 0.3; // How long the earthquake lasts
         this.baseShakeIntensity = 0.2; // How violently it shakes (in meters)
@@ -117,6 +120,10 @@ export class Player {
         if (!this.controls.isLocked) return;
         this.interactionManager.update();
 
+        if (this.dashCooldownTimer > 0) {
+            this.dashCooldownTimer -= delta;
+        }
+
         if (this.input.isPressed('KeyF')) {
             if (!this.fKeyPressed) {
                 this.interactionManager.tryInteract(this.inventory);
@@ -135,6 +142,33 @@ export class Player {
         const moveBackward = this.input.isPressed('KeyS');
         const moveLeft = this.input.isPressed('KeyA');
         const moveRight = this.input.isPressed('KeyD');
+
+        //  DASH MECHANIC
+        // Assuming your InputManager tracks Shift as 'ShiftLeft'
+        if (this.input.isPressed('ShiftLeft') && this.dashCooldownTimer <= 0) {
+            console.log("Attempting to dash...");
+            
+            // Check if we actually own and have equipped a belt!
+            // (Check your specific InventoryManager code for the exact method name you use to get an equipped item)
+            const equippedBelt = this.inventory.getEquippedItem ? this.inventory.getEquippedItem('BELT') : null;
+            
+            if (equippedBelt) {
+                const dashForce = equippedBelt.stats.dashPower;
+                
+                // Only dash if we are actively holding a direction key
+                if (moveForward || moveBackward || moveLeft || moveRight) {
+                    console.log("Dashing with power:", dashForce);
+                    
+                    // 2. THE FIX: Multiply the force by the pre-calculated direction!
+                    this.velocity.x -= this.direction.x * dashForce;
+                    this.velocity.z -= this.direction.z * dashForce;
+
+                    // Put the dash on cooldown
+                    this.dashCooldownTimer = equippedBelt.stats.cooldown;
+                    console.log("WHOOSH! Dodged!");
+                }
+            }
+        }
 
         this.direction.z = Number(moveForward) - Number(moveBackward);
         this.direction.x = Number(moveRight) - Number(moveLeft);
