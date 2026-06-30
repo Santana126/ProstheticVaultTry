@@ -14,6 +14,8 @@ import { InteractionManager } from './src/InteractionManager.js';
 import { Enemy } from './src/Enemy.js';
 import { WaveManager } from './src/WaveManager.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { Vault } from './src/Vault.js';
+import * as TWEEN from '@tweenjs/tween.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -113,7 +115,10 @@ setTimeout(() => {
     waveManager.startNextWave();
 }, 2000);
 
+const vaultPosition = new THREE.Vector3(10, 2.5, -20);
+const vaultScale = 2.5;
 
+const levelVault = new Vault(scene, vaultPosition, vaultScale);
 
 // CREATE AN ARM ITEM AND EQUIP IT
 // const steelArm = new Arm(
@@ -162,23 +167,68 @@ document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyE') {
         uiManager.toggleInventory(); 
     }
+
+    // VAULT INTERACTION 
+    if (e.code === 'KeyO' && !hasWon) {
+        
+        // 1. Are we standing in the trigger zone?
+        if (winBox.containsPoint(player.camera.position)) {
+            
+            // 2. Do we have the key?
+            const ownedItems = player.inventory.getOwnedItems();
+            const hasKey = ownedItems.includes('vault_key');
+            
+            if (hasKey) {
+                console.log("Key accepted! Opening Vault...");
+                hasWon = true; 
+                
+                // 3. Trigger the animation!
+                levelVault.open();
+                
+                // 4. Wait 3 seconds for the animation to finish before showing the Win Screen!
+                setTimeout(() => {
+                    player.controls.unlock(); 
+                    uiManager.showWinScreen(); 
+                }, 3000);
+
+            } else {
+                console.log("The Vault is locked. Defeat the boss to get the key!");
+                //  could hook this into  UIManager to flash a "LOCKED" message on screen!
+            }
+        }
+    }
 });
 
 // --- THE FINISH LINE ---
-// Create a 5x5x5 invisible box
-const winGeometry = new THREE.BoxGeometry(5, 50, 5);
+const winGeometry = new THREE.BoxGeometry(10, 10, 10); 
 const winMaterial = new THREE.MeshBasicMaterial({ 
     color: 0x00ff00, 
     wireframe: true, 
-    visible: true // Change to true if you want to see it for testing!
+    visible: true 
 });
 const winTrigger = new THREE.Mesh(winGeometry, winMaterial);
 
-// TODO: Change these coordinates to the center of your Gold Vault!
-winTrigger.position.set(0, 2.5, -80); 
+// --- DYNAMIC POSITIONING LOGIC ---
+
+// 1. Force Three.js to calculate the math for the scale and positions immediately
+// (By default, Three.js waits until the first frame is rendered to do this)
+levelVault.group.updateMatrixWorld(true);
+
+// 2. Create an empty Vector to hold our coordinate data
+const doorGlobalPosition = new THREE.Vector3();
+
+// 3. Ask the vault's door for its exact global position
+levelVault.door.getWorldPosition(doorGlobalPosition);
+
+// 4. Move the trigger box to exactly match the door's center
+winTrigger.position.copy(doorGlobalPosition);
+
+// 5. Shift the box slightly forward on the Z-axis so it sits right in front of the door
+// (Adjust this number if you want the box closer or further from the door)
+winTrigger.position.z += 3; 
+
 scene.add(winTrigger);
 
-// Create a mathematical bounding box so we can check for overlaps
 const winBox = new THREE.Box3().setFromObject(winTrigger);
 let hasWon = false;
 
@@ -190,6 +240,7 @@ function animate() {
     requestAnimationFrame(animate);
     const time = performance.now();
     const delta = (time - prevTime) / 1000;
+    TWEEN.update(time);
 
     if(!isGameOver && !hasWon) {
         player.update(delta);
@@ -203,19 +254,20 @@ function animate() {
 
         waveManager.update(delta, vfxManager);
 
-        // CHECK WIN CONDITION
-        if (winBox.containsPoint(player.camera.position)) {
-            const ownedItems = player.inventory.getOwnedItems();
-            const hasKey = ownedItems.includes('vault_key');
+        // // CHECK WIN CONDITION
+        // if (winBox.containsPoint(player.camera.position)) {
+        //     const ownedItems = player.inventory.getOwnedItems();
+        //     const hasKey = ownedItems.includes('vault_key');
             
-            if (hasKey) {
-                hasWon = true;
-                player.controls.unlock(); 
-                uiManager.showWinScreen(); 
-            } else {
-                console.log("The Vault is locked. Defeat the boss to get the key!");
-            }
-        }
+        //     if (hasKey) {
+        //         hasWon = true;
+        //         levelVault.open();
+        //         player.controls.unlock(); 
+        //         uiManager.showWinScreen(); 
+        //     } else {
+        //         console.log("The Vault is locked. Defeat the boss to get the key!");
+        //     }
+        // }
 
     }
 
