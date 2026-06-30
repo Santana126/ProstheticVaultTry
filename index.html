@@ -8,16 +8,51 @@
 </head>
 <body>
     <div id="blocker">
-        <div id="instructions">
-            <h1>PROSTHETIC VAULT</h1>
-            <p>Click to Enter</p>
-            <p>(W,A,S,D = Move | Mouse = Look | E = Inventory)</p>
+        <div id="instructions" class="menu-panel">
+            <h1 class="game-title">PROSTHETIC VAULT</h1>
+            <p class="subtitle">BETA BUILD v0.1</p>
+
+            <hr class="divider">
+
+            <div class="guide-grid">
+                <div class="guide-section">
+                    <h2>🎯 MISSION LOG</h2>
+                    <p>Survive 3 waves of enemies in the arena.</p>
+                    <p>Defeat the Final Boss to obtain the <strong>Vault Key</strong>.</p>
+                    <p>Unlock the Vault to claim your victory.</p>
+                </div>
+
+                <div class="guide-section">
+                    <h2>⌨️ CONTROLS</h2>
+                    <ul>
+                        <li><strong>W, A, S, D</strong> - Move</li>
+                        <li><strong>Mouse</strong> - Look / Aim</li>
+                        <li><strong>Left Click</strong> - Attack / Fire</li>
+                        <li><strong>Shift</strong> - Dash (Requires Belt)</li>
+                        <li><strong>F</strong> - Pick up Loot</li>
+                        <li><strong>E</strong> - Open/Close Inventory</li>
+                        <li><strong>O</strong> - Interact with Vault</li>
+                    </ul>
+                </div>
+
+                <div class="guide-section full-width">
+                    <h2>⚙️ SURVIVAL TIPS</h2>
+                    <p>Enemies drop scrap and weapons. Press <strong>E</strong> to open your inventory and equip new prosthetic arms or thruster belts to survive the harder waves!</p>
+                </div>
+            </div>
+
+            <div class="start-prompt">
+                <p>--- CLICK ANYWHERE TO INITIALIZE ---</p>
+            </div>
         </div>
     </div>
 <div id="crosshair" style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255, 255, 255, 0.5); transform: translate(-50%, -50%); border-radius: 50%; z-index: 5; pointer-events: none;"></div>
 
     <div id="interaction-prompt" style="display: none; position: absolute; top: 60%; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.7); padding: 10px 20px; border: 1px solid #00d4ff; border-radius: 4px; font-family: sans-serif; pointer-events: none; z-index: 5;">
         Press [F] to pick up <span id="interact-name" style="color: #00d4ff; font-weight: bold;">Item</span>
+    </div>
+    <div id="vault-prompt" style="display: none; position: absolute; top: 60%; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.7); padding: 10px 20px; border: 1px solid #ffaa00; border-radius: 4px; font-family: sans-serif; pointer-events: none; z-index: 5;">
+        Press [O] to <span id="vault-action-text" style="color: #ffaa00; font-weight: bold;">Open Vault</span>
     </div>
 
     <div id="game-over-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(50, 0, 0, 0.85); z-index: 20; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif;">

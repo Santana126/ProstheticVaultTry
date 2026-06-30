@@ -110,10 +110,10 @@ activeWorldItems.push(beltLoot);
 // Initialize the Wave Manager
 const waveManager = new WaveManager(scene, physicsManager, player, interactionManager, activeWorldItems, ktx2Loader);
 
-// Start the first wave 2 seconds after the game loads!
-setTimeout(() => {
-    waveManager.startNextWave();
-}, 2000);
+// // Start the first wave 2 seconds after the game loads!
+// setTimeout(() => {
+//     waveManager.startNextWave();
+// }, 2000);
 
 const vaultPosition = new THREE.Vector3(10, 2.5, -20);
 const vaultScale = 2.5;
@@ -156,10 +156,33 @@ document.addEventListener('currencyCollected', (e) => {
 });
 
 // Controls
+let gamePaused = true; // The game starts paused on the menu!
+let firstStart = false; // Tracks if we've begun the first wave
+
 const blocker = document.getElementById('blocker');
 blocker.addEventListener('click', () => player.controls.lock());
-player.controls.addEventListener('lock', () => blocker.style.display = 'none');
-player.controls.addEventListener('unlock', () => blocker.style.display = 'flex');
+player.controls.addEventListener('lock', () => {
+    blocker.style.display = 'none';
+    gamePaused = false; // Unpause when we click into the game
+
+    // Start the first wave 2 seconds after they click "Start" for the first time
+    if (!firstStart) {
+        firstStart = true;
+        setTimeout(() => {
+            waveManager.startNextWave();
+        }, 5000);
+    }
+});
+
+player.controls.addEventListener('unlock', () => {
+    gamePaused = true; // Pause game logic immediately when ESC is pressed
+
+    // Only show the start menu if we aren't currently looking at the inventory!
+    const invOverlay = document.getElementById('inventory-overlay');
+    if (invOverlay.style.display === 'none' || invOverlay.style.display === '') {
+        blocker.style.display = 'flex';
+    }
+});
 
 
 // Keep 'E' for inventory in main.js, InputManager handles the rest!
@@ -168,32 +191,32 @@ document.addEventListener('keydown', (e) => {
         uiManager.toggleInventory(); 
     }
 
-    // VAULT INTERACTION 
+    // --- VAULT INTERACTION (PHASE 1 & 2) ---
     if (e.code === 'KeyO' && !hasWon) {
-        
-        // 1. Are we standing in the trigger zone?
         if (winBox.containsPoint(player.camera.position)) {
             
-            // 2. Do we have the key?
-            const ownedItems = player.inventory.getOwnedItems();
-            const hasKey = ownedItems.includes('vault_key');
-            
-            if (hasKey) {
-                console.log("Key accepted! Opening Vault...");
+            // PHASE 1: OPENING THE VAULT
+            if (!vaultOpened) {
+                const ownedItems = player.inventory.getOwnedItems();
+                const hasKey = ownedItems.includes('vault_key');
+                
+                if (hasKey) {
+                    console.log("Key accepted! Opening Vault...");
+                    vaultOpened = true; 
+                    levelVault.open();
+                } else {
+                    console.log("The Vault is locked. Defeat the boss to get the key!");
+                }
+            } 
+            // PHASE 2: ENTERING THE VAULT
+            else {
+                console.log("Entering Vault! You Win!");
                 hasWon = true; 
                 
-                // 3. Trigger the animation!
-                levelVault.open();
-                
-                // 4. Wait 3 seconds for the animation to finish before showing the Win Screen!
-                setTimeout(() => {
-                    player.controls.unlock(); 
-                    uiManager.showWinScreen(); 
-                }, 3000);
-
-            } else {
-                console.log("The Vault is locked. Defeat the boss to get the key!");
-                //  could hook this into  UIManager to flash a "LOCKED" message on screen!
+                // Hide the prompt, unlock the mouse, and show the win screen
+                document.getElementById('vault-prompt').style.display = 'none';
+                player.controls.unlock(); 
+                uiManager.showWinScreen(); 
             }
         }
     }
@@ -231,19 +254,50 @@ scene.add(winTrigger);
 
 const winBox = new THREE.Box3().setFromObject(winTrigger);
 let hasWon = false;
+let vaultOpened = false;
 
 
 // --- GAME LOOP ---
-let prevTime = performance.now();
+let prevRealTime = performance.now();
+let gameTime = 0; // We use a custom timer so animations pause perfectly!
 
 function animate() {
     requestAnimationFrame(animate);
-    const time = performance.now();
-    const delta = (time - prevTime) / 1000;
-    TWEEN.update(time);
+    // Always calculate real delta time so the math doesn't explode when we unpause
+    const realTime = performance.now();
+    const delta = (realTime - prevRealTime) / 1000;
+    prevRealTime = realTime;
 
-    if(!isGameOver && !hasWon) {
+    if(!isGameOver && !hasWon && !gamePaused) {
+        // Advance our custom game timer
+        gameTime += delta * 1000;
+        TWEEN.update(gameTime); // Now Tweens pause properly too!
         player.update(delta);
+
+        // --- VAULT UI TOGGLE ---
+        if (!hasWon) {
+            const vaultPrompt = document.getElementById('vault-prompt');
+            const vaultActionText = document.getElementById('vault-action-text');
+
+            // If the player is standing inside the trigger zone
+            if (winBox.containsPoint(player.camera.position)) {
+                vaultPrompt.style.display = 'block'; // Show the prompt
+                
+                // Swap the text and colors based on the vault's state
+                if (!vaultOpened) {
+                    vaultActionText.innerText = 'Open Vault';
+                    vaultActionText.style.color = '#ffaa00'; // Orange when closed
+                    vaultPrompt.style.borderColor = '#ffaa00';
+                } else {
+                    vaultActionText.innerText = 'Enter Vault';
+                    vaultActionText.style.color = '#00ff00'; // Green when open
+                    vaultPrompt.style.borderColor = '#00ff00';
+                }
+            } else {
+                // If they step out of the zone, hide it
+                vaultPrompt.style.display = 'none';
+            }
+        }
 
         vfxManager.update(delta);
         projectileManager.update(delta, physicsManager, vfxManager);
@@ -271,7 +325,7 @@ function animate() {
 
     }
 
-    prevTime = time;
+    // prevTime = time;
 
     renderer.render(scene, camera);
 }

@@ -39,6 +39,18 @@ export class Vault {
         this.wheel.rotation.x = Math.PI / 2; 
         this.wheel.position.set(0, 0, 0.3);  
         this.door.add(this.wheel);
+        // A thin cylinder that spans across the entire 0.8 radius of the wheel
+        const handleGeometry = new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8);
+        const handle1 = new THREE.Mesh(handleGeometry, this.metalMat);
+        const handle2 = new THREE.Mesh(handleGeometry, this.metalMat);
+        handle2.rotation.z = Math.PI / 2; // Rotate the second one 90 degrees to form a cross
+        // rotate all handles to be perpendicular to the wheel's face
+        handle1.rotation.x = Math.PI / 2;
+        handle2.rotation.x = Math.PI / 2;
+
+        
+        this.wheel.add(handle1);
+        this.wheel.add(handle2);
 
         // The Bolts (Children of Door)
         const boltGeometry = new THREE.CylinderGeometry(0.2, 0.2, 1.5);
