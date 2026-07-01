@@ -38,7 +38,7 @@ export const ITEM_DATABASE = {
             'laser_arm', 'Laser Cannon', 'Fires high-energy laser beams.', 'RIGHT_ARM', 
             'assets/laser_arm.glb', 
             { strength: 10 }, 
-            { damage: 10, attackSpeed: 0.1, projectileSpeed: 50 },
+            { damage: 5, attackSpeed: 0.1, projectileSpeed: 50 },
             {
                 scale: 1, 
                 position: { x: 1, y: -0.5, z: -1.25 }, 
@@ -79,7 +79,7 @@ export const ITEM_DATABASE = {
             'Currency used for upgrading and buying gear.',
             'CURRENCY',          // Type
             'assets/bolt.glb',   // We will just use a cube if you don't have a bolt model yet!
-            { scale: 1 }       // Make them a bit smaller than the key
+            { scale: 5 }       // Make them a bit smaller than the key
         )
     },
     belts: {
