@@ -40,6 +40,13 @@ export class Player {
         this.bolts = 0;
 
 
+        // --- BASE STATS (For Shop Upgrades) ---
+        this.baseStats = {
+            speedMultiplier: 1.0, // 1.0 is 100% normal speed
+            damageBonus: 0,       // Flat extra damage added to weapons
+            maxHealthBonus: 0     // Extra HP on top of standard leveling
+        };
+
         this.dashCooldownTimer = 0;
         this.dashActiveTimer = 0;
 
@@ -48,6 +55,8 @@ export class Player {
         this.maxShakeDuration = 0.3; // How long the earthquake lasts
         this.baseShakeIntensity = 0.2; // How violently it shakes (in meters)
         this.currentShakeOffset = new THREE.Vector3(0, 0, 0); // Stores the math to prevent drift
+
+
 
         setTimeout(() => {
             if (this.interactionManager && this.interactionManager.uiManager) {
@@ -179,8 +188,9 @@ export class Player {
         this.direction.x = Number(moveRight) - Number(moveLeft);
         this.direction.normalize();
 
-        if (moveForward || moveBackward) this.velocity.z -= this.direction.z * GAME_CONFIG.PLAYER.moveSpeed * delta;
-        if (moveLeft || moveRight) this.velocity.x -= this.direction.x * GAME_CONFIG.PLAYER.moveSpeed * delta;
+        const currentMoveSpeed = GAME_CONFIG.PLAYER.moveSpeed * this.baseStats.speedMultiplier;
+        if (moveForward || moveBackward) this.velocity.z -= this.direction.z * currentMoveSpeed * delta;
+        if (moveLeft || moveRight) this.velocity.x -= this.direction.x * currentMoveSpeed * delta;
 
         // --- 2. COLLISION ---
         const nextX = -this.velocity.x * delta;
