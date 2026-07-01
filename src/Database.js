@@ -46,20 +46,21 @@ export const ITEM_DATABASE = {
                 muzzleNode: 'mesh_0', 
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
-        ),
-        'saw_arm': new Prosthetic(
-            'saw_arm', 'Rotary Saw', 'Perfect for close combat and cutting through obstacles.', 'RIGHT_ARM',
-            'assets/saw_armv1.glb',
-            { strength: 0 },
-            
-            {
-                scale: 1,
-                position: { x: 1, y: -0.75, z: -1.25 },
-                rotation: { x: Math.PI/2, y: -Math.PI/2, z: Math.PI /2},
-                muzzleNode: 'mesh_0',
-                muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
-            }
         )
+        // ,
+        // 'saw_arm': new Prosthetic(
+        //     'saw_arm', 'Rotary Saw', 'Perfect for close combat and cutting through obstacles.', 'RIGHT_ARM',
+        //     'assets/saw_armv1.glb',
+        //     { strength: 0 },
+            
+        //     {
+        //         scale: 1,
+        //         position: { x: 1, y: -0.75, z: -1.25 },
+        //         rotation: { x: Math.PI/2, y: -Math.PI/2, z: Math.PI /2},
+        //         muzzleNode: 'mesh_0',
+        //         muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
+        //     }
+        // )
     },
     keys: {
         'vault_key': new Item(
@@ -90,7 +91,7 @@ export const ITEM_DATABASE = {
             modelPath: 'assets/belt.glb', // Make sure your file is named exactly this!
             stats: { 
                 dashPower: 100, // How explosive the movement is
-                cooldown: 1.5  // Seconds between dashes
+                cooldown: 2.5  // Seconds between dashes
             }
         }
     }

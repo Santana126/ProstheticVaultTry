@@ -11,16 +11,38 @@ export class Enemy {
         this.isBoss = isBoss;
         this.ktx2Loader = ktx2Loader;
         
-        // Stats
-        this.maxHealth = this.isBoss ? 300 : 50; 
+        // // Stats
+        // this.maxHealth = this.isBoss ? 300 : 50; 
+        // this.health = this.maxHealth;
+        // this.isDead = false;
+        
+        // // BASE stats
+        // const baseSpeed = this.isBoss ? 2 : 4; 
+        // const baseAttackRate = 1.5;
+
+        // // RANDOMIZE speed and attack rate by +/- 20%
+        // const speedFactor = 0.8 + (Math.random() * 0.4);
+        // const attackFactor = 0.8 + (Math.random() * 0.4);
+
+        // this.speed = baseSpeed * speedFactor; 
+        // this.attackRate = baseAttackRate * attackFactor; 
+
+        // this.attackRange = 3; 
+        // this.damage = this.isBoss ? 20 : 10;
+
+        //  STATS 
+        //  chance for a standard enemy to become a Sprinter!
+        this.isSprinter = !this.isBoss && (Math.random() < 0.40); 
+
+        this.maxHealth = this.isBoss ? 300 : (this.isSprinter ? 20 : 50); 
         this.health = this.maxHealth;
         this.isDead = false;
         
-        // BASE stats
-        const baseSpeed = this.isBoss ? 2 : 4; 
+        // Base stats
+        const baseSpeed = this.isBoss ? 8 : (this.isSprinter ? 20 : 10); 
         const baseAttackRate = 1.5;
 
-        // RANDOMIZE speed and attack rate by +/- 20%
+        // Randomize speed and attack rate slightly so they don't sync up perfectly
         const speedFactor = 0.8 + (Math.random() * 0.4);
         const attackFactor = 0.8 + (Math.random() * 0.4);
 
@@ -28,7 +50,8 @@ export class Enemy {
         this.attackRate = baseAttackRate * attackFactor; 
 
         this.attackRange = 3; 
-        this.damage = this.isBoss ? 20 : 10;
+        this.damage = this.isBoss ? 20 : (this.isSprinter ? 5 : 10);
+        // ---------------------------------
 
         this.attackCooldown = 0;
         this.attackRate = 1.5;
@@ -90,7 +113,15 @@ export class Enemy {
             this.models.walk.position.y = 0;
             
             this.models.walk.traverse((node) => {
-                if (node.isMesh) { node.castShadow = true; node.raycast = function() {}; }
+                if (node.isMesh) { 
+                    node.castShadow = true;
+                    node.raycast = function() {}; 
+                    // Paint the sprinter red!
+                    if (this.isSprinter) {
+                        node.material = node.material.clone();
+                        node.material.color.setHex(0xff3300); 
+                    }
+                }
             });
             this.mesh.add(this.models.walk);
 
@@ -112,7 +143,16 @@ export class Enemy {
             this.models.attack.visible = false; 
             
             this.models.attack.traverse((node) => {
-                if (node.isMesh) { node.castShadow = true; node.raycast = function() {}; }
+                if (node.isMesh) { 
+                    node.castShadow = true;
+                    node.raycast = function() {}; 
+                    // Paint the sprinter red!
+                    if (this.isSprinter) {
+                        node.material = node.material.clone();
+                        node.material.color.setHex(0xff3300); 
+                    }
+                }
+
             });
             this.mesh.add(this.models.attack);
 

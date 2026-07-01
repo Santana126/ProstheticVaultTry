@@ -14,7 +14,7 @@ export class ShopManager {
 
         // The items available in the shop
         this.shopItems = [
-            { id: 'saw_arm', price: 30 },
+            // { id: 'saw_arm', price: 30 },
             { id: 'laser_arm', price: 60 },
             { id: 'plasma_arm', price: 120 },
             { id: 'thruster_belt', price: 50 }
