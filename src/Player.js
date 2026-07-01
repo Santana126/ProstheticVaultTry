@@ -41,6 +41,7 @@ export class Player {
 
 
         this.dashCooldownTimer = 0;
+        this.dashActiveTimer = 0;
 
 
         this.shakeTimer = 0;
@@ -123,6 +124,9 @@ export class Player {
         if (this.dashCooldownTimer > 0) {
             this.dashCooldownTimer -= delta;
         }
+        if (this.dashActiveTimer > 0) {
+            this.dashActiveTimer -= delta;
+        }
 
         if (this.input.isPressed('KeyF')) {
             if (!this.fKeyPressed) {
@@ -165,6 +169,7 @@ export class Player {
 
                     // Put the dash on cooldown
                     this.dashCooldownTimer = equippedBelt.stats.cooldown;
+                    this.dashActiveTimer = 0.3;
                     console.log("WHOOSH! Dodged!");
                 }
             }
@@ -263,7 +268,9 @@ export class Player {
             new THREE.Vector3(0.6, playerHeight, 1.0)
         );
 
+        const isDashing = this.dashActiveTimer > 0;
+
         // We completely removed the `for` loop! Just ask the referee:
-        return this.physicsManager.checkCollision(playerBox);
+        return this.physicsManager.checkCollision(playerBox, isDashing);
     }
 }

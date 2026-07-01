@@ -60,6 +60,16 @@ export class UIManager {
                 this.updateEquipmentSlot(e.detail.slot, e.detail.itemId, e.detail.item);
             }
         });
+
+        document.addEventListener('bossDamaged', (e) => {
+            const pct = Math.max(0, (e.detail.hp / e.detail.maxHp) * 100);
+            document.getElementById('boss-hp-fill').style.width = pct + '%';
+            
+            // Hide the bar a moment after the boss dies
+            if (e.detail.hp <= 0) {
+                setTimeout(() => document.getElementById('boss-ui').style.display = 'none', 1500);
+            }
+        });
     }
 
     toggleInventory() {

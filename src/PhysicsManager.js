@@ -17,8 +17,13 @@ export class PhysicsManager {
     }
 
     // The universal collision check
-    checkCollision(targetBox) {
+    checkCollision(targetBox, ignoreEnemies = false) {
         for (let collider of this.colliders) {
+
+            if (ignoreEnemies && collider.userData && collider.userData.isEnemy) {
+                continue;
+            }
+            
             // Assuming your Level.js creates walls with userData.boundingBox
             if (collider.userData && collider.userData.boundingBox) {
                 if (targetBox.intersectsBox(collider.userData.boundingBox)) {

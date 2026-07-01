@@ -32,6 +32,16 @@ export class WaveManager {
 
         const waveConfig = this.waves[this.currentWave];
         console.log(`Starting Wave ${this.currentWave + 1}! Spawning ${waveConfig.count} enemies.`);
+        // Update the HUD Text
+        const waveText = document.getElementById('wave-counter');
+        waveText.style.display = 'block';
+        waveText.innerText = waveConfig.isBossWave ? 'FINAL WAVE' : `WAVE ${this.currentWave + 1}`;
+
+        // Show Boss HP if it's the final wave
+        if (waveConfig.isBossWave) {
+            document.getElementById('boss-ui').style.display = 'block';
+            document.getElementById('boss-hp-fill').style.width = '100%';
+        }
 
         for (let i = 0; i < waveConfig.count; i++) {
             const angle = Math.random() * Math.PI * 2;

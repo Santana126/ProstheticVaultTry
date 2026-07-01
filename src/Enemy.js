@@ -12,9 +12,21 @@ export class Enemy {
         this.ktx2Loader = ktx2Loader;
         
         // Stats
-        this.health = this.isBoss ? 300 : 50; 
+        this.maxHealth = this.isBoss ? 300 : 50; 
+        this.health = this.maxHealth;
         this.isDead = false;
-        this.speed = this.isBoss ? 2 : 4; 
+        
+        // BASE stats
+        const baseSpeed = this.isBoss ? 2 : 4; 
+        const baseAttackRate = 1.5;
+
+        // RANDOMIZE speed and attack rate by +/- 20%
+        const speedFactor = 0.8 + (Math.random() * 0.4);
+        const attackFactor = 0.8 + (Math.random() * 0.4);
+
+        this.speed = baseSpeed * speedFactor; 
+        this.attackRate = baseAttackRate * attackFactor; 
+
         this.attackRange = 3; 
         this.damage = this.isBoss ? 20 : 10;
 
@@ -145,6 +157,12 @@ export class Enemy {
         console.log(`Enemy Health: ${this.health}`);
         if(vfxManager){
             vfxManager.spawnDamageNumber(this.mesh.position, amount);
+        }
+        // Broadcast Boss HP changes to the UI
+        if (this.isBoss) {
+            document.dispatchEvent(new CustomEvent('bossDamaged', { 
+                detail: { hp: this.health, maxHp: this.maxHealth } 
+            }));
         }
 
         if (this.health <= 0) {

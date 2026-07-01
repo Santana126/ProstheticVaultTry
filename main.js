@@ -259,7 +259,7 @@ let vaultOpened = false;
 
 // --- GAME LOOP ---
 let prevRealTime = performance.now();
-let gameTime = 0; // We use a custom timer so animations pause perfectly!
+// let gameTime = 0; // We use a custom timer so animations pause perfectly!
 
 function animate() {
     requestAnimationFrame(animate);
@@ -267,11 +267,11 @@ function animate() {
     const realTime = performance.now();
     const delta = (realTime - prevRealTime) / 1000;
     prevRealTime = realTime;
+    TWEEN.update(realTime); 
 
     if(!isGameOver && !hasWon && !gamePaused) {
         // Advance our custom game timer
-        gameTime += delta * 1000;
-        TWEEN.update(gameTime); // Now Tweens pause properly too!
+        // gameTime += delta * 1000;
         player.update(delta);
 
         // --- VAULT UI TOGGLE ---
