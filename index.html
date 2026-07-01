@@ -68,6 +68,20 @@
         <button onclick="location.reload()" style="padding: 15px 30px; font-size: 1.2rem; background: #ff3333; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">TRY AGAIN</button>
     </div>
 
+    <div id="shop-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 16, 20, 0.95); z-index: 40; flex-direction: column; align-items: center; justify-content: center; font-family: sans-serif;">
+        <div class="menu-panel" style="width: 80%; max-width: 900px; pointer-events: auto;">
+            <h1 class="game-title">UPGRADE TERMINAL</h1>
+            <p class="subtitle">Available Funds: <span id="shop-bolts-display" style="color: #ffaa00; font-size: 1.5rem;">0</span> Bolts</p>
+            
+            <hr class="divider">
+            
+            <div id="shop-items-grid" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;">
+                </div>
+            
+            <button id="close-shop-btn" style="padding: 15px 30px; font-size: 1.2rem; background: #007b8f; color: white; border: 2px solid #00d4ff; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s;">INITIATE NEXT WAVE</button>
+        </div>
+    </div>
+
     <div id="inventory-overlay" style="display: none;">
         <div class="inv-window">
             <div class="inv-header">

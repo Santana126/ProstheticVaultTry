@@ -100,10 +100,15 @@ export class WaveManager {
             this.isWaveActive = false;
             console.log("Wave Cleared!");
             
-            // Wait 3 seconds, then start the next wave
             setTimeout(() => {
-                this.startNextWave();
-            }, 3000);
+                // If there are more standard waves left, open the shop!
+                if (this.currentWave < this.waves.length) {
+                    // This announces to the whole game that the wave is done!
+                    document.dispatchEvent(new Event('waveCleared'));
+                } else {
+                    console.log("Boss defeated! Go unlock the vault!");
+                }
+            }, 2000); // 2 second breather before the menu pops up
         }
     }
 }

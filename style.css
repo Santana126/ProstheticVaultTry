@@ -363,6 +363,48 @@ body { margin: 0; overflow: hidden; }
     animation: pulseText 1.5s infinite;
 }
 
+
+/* --- SHOP UI STYLES --- */
+.shop-item {
+    background: rgba(5, 10, 15, 0.8);
+    border: 2px solid #446677;
+    border-radius: 8px;
+    padding: 20px;
+    width: 220px;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.shop-item:hover { 
+    border-color: #00d4ff; 
+    transform: translateY(-5px); 
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3); 
+}
+
+.shop-item h3 { color: #00d4ff; margin-top: 0; font-size: 1.1rem; }
+.shop-item p { font-size: 0.85rem; color: #ccc; height: 60px; overflow: hidden; }
+.shop-item .price { color: #ffaa00; font-weight: bold; font-size: 1.4rem; margin: 15px 0; }
+
+.buy-btn { 
+    background: #ffaa00; 
+    color: #000; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    width: 100%; 
+    transition: 0.2s;
+}
+
+.buy-btn:hover:not(:disabled) { background: #ffcc00; box-shadow: 0 0 10px #ffaa00; }
+.buy-btn:disabled { background: #333 !important; color: #666 !important; cursor: not-allowed; border: 1px solid #444; }
+
+#close-shop-btn:hover { background: #00d4ff; color: #000; box-shadow: 0 0 15px #00d4ff; }
+
 @keyframes pulseText {
     0% { opacity: 0.3; }
     50% { opacity: 1; text-shadow: 0 0 10px #00d4ff; }

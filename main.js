@@ -16,6 +16,7 @@ import { WaveManager } from './src/WaveManager.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { Vault } from './src/Vault.js';
 import * as TWEEN from '@tweenjs/tween.js';
+import { ShopManager } from './src/ShopManager.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -109,6 +110,8 @@ activeWorldItems.push(beltLoot);
 
 // Initialize the Wave Manager
 const waveManager = new WaveManager(scene, physicsManager, player, interactionManager, activeWorldItems, ktx2Loader);
+// Initialize the Shop Manager
+const shopManager = new ShopManager(player, uiManager, waveManager);
 
 // // Start the first wave 2 seconds after the game loads!
 // setTimeout(() => {
