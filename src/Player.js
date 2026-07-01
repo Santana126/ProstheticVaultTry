@@ -215,7 +215,17 @@ export class Player {
 
         if (equippedArm) {
             if (this.input.isAttacking) {
-                equippedArm.attack(this.camera, muzzlePosition, this.scene, this.physicsManager, delta, this.vfxManager, this.projectileManager);
+                // const bonusDmg = this.baseStats.damageBonus;
+                equippedArm.attack({
+                    camera: this.camera,
+                    muzzlePosition: muzzlePosition,
+                    scene: this.scene,
+                    physicsManager: this.physicsManager,
+                    delta: delta,
+                    vfxManager: this.vfxManager,
+                    projectileManager: this.projectileManager,
+                    bonusDmg: this.baseStats.damageBonus // Pass it by name!
+                });
             } else {
                 equippedArm.stopAttack(this.scene);
             }

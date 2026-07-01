@@ -26,7 +26,13 @@ export class HitscanArm extends Prosthetic {
         this.tickTimer = 0;
     }
 
-    attack(camera, muzzlePosition, scene, physicsManager, delta, vfxManager) {
+    attack(args) {
+        const { 
+            camera, muzzlePosition, scene, physicsManager, 
+            delta, vfxManager, projectileManager, bonusDmg 
+        } = args; // Destructure the variables by name
+        const finalDamage = this.damage + bonusDmg;
+        console.log("Bonus Dmg received:", bonusDmg);
         // 1. If overheated, we cannot fire!
         if (this.isOverheated) {
             this.stopAttack(scene);
@@ -93,7 +99,9 @@ export class HitscanArm extends Prosthetic {
             this.tickTimer += delta;
             if (this.tickTimer >= this.tickRate) { 
                 if (hitObject && hitObject.userData && hitObject.userData.entity) {
-                    hitObject.userData.entity.takeDamage(this.damage, targetPoint, targetNormal, vfxManager);
+                    // const finalDamage = this.damage + bonusDmg;
+                    console.log("Applying damage:", finalDamage);
+                    hitObject.userData.entity.takeDamage(finalDamage, targetPoint, targetNormal, vfxManager);
                 } else {
                     vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
                 }

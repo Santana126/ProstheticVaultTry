@@ -20,8 +20,13 @@ export class ProjectileArm extends Prosthetic {
         this.raycaster = new THREE.Raycaster();
     }
 
-    attack(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager) {
+    attack(args) {
+        const { 
+            camera, muzzlePosition, scene, physicsManager, 
+            delta, vfxManager, projectileManager, bonusDmg 
+        } = args; // Destructure the variables by name
         
+        const finalDamage = this.damage + bonusDmg;
         // 1. Check if we have ammo before firing!
         if (this.currentAmmo <= 0) {
             return; // Out of ammo! (Clicking empty)
@@ -45,7 +50,8 @@ export class ProjectileArm extends Prosthetic {
             }
 
             const direction = new THREE.Vector3().subVectors(targetPoint, muzzlePosition).normalize();
-            const pBall = new PlasmaBall(muzzlePosition, direction, this.projectileSpeed, this.damage);
+            // const finalDamage = this.damage + bonusDmg;
+            const pBall = new PlasmaBall(muzzlePosition, direction, this.projectileSpeed, finalDamage);
             projectileManager.addProjectile(pBall);
 
             this.cooldownTimer = this.fireRate;

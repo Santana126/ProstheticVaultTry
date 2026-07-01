@@ -9,7 +9,7 @@ export class Prosthetic extends Item {
         this.visualData = visualData; // Store it for the InventoryManager to read!
     }
 
-    attack(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager) {}
+    attack(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager, bonusDmg) {}
     stopAttack(scene) {}
     update(delta) {}
 }

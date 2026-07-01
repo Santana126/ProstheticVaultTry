@@ -14,10 +14,18 @@ export class ShopManager {
 
         // The items available in the shop
         this.shopItems = [
-            // { id: 'saw_arm', price: 30 },
-            { id: 'laser_arm', price: 60 },
-            { id: 'plasma_arm', price: 120 },
-            { id: 'thruster_belt', price: 50 }
+            // Weapons
+            { id: 'laser_arm', price: 60, type: 'weapon' },
+            { id: 'plasma_arm', price: 120, type: 'weapon' },
+            { id: 'thruster_belt', price: 50, type: 'weapon' },
+            
+            // Consumables (Ammo/Health)
+            { id: 'hp_pack', name: 'Medkit (HP+)', price: 20, type: 'consumable' },
+            { id: 'ammo_refill', name: 'Ammo/Battery Pack', price: 15, type: 'consumable' },
+            
+            // Permanent Upgrades
+            { id: 'upg_speed', name: 'Speed Boost (+5%)', price: 40, type: 'upgrade' },
+            { id: 'upg_dmg', name: 'Damage Boost (+10)', price: 40, type: 'upgrade' }
         ];
 
         this.initListeners();
@@ -112,23 +120,36 @@ export class ShopManager {
     }
 
     buyItem(itemId, price, buttonElement) {
-        // 1. Deduct funds and unlock item
+        if (this.player.bolts < price) return;
+
         this.player.bolts -= price;
         this.player.inventory.unlockItem(itemId);
-        
-        // 2. Update the main HUD via UIManager
+
+        // Handle based on purchase type
+        const itemObj = this.shopItems.find(i => i.id === itemId);
+
+        if (itemObj.type === 'consumable') {
+            if (itemId === 'hp_pack') {
+                this.player.health = Math.min(this.player.health + 30, this.player.maxHealth);
+                this.uiManager.updateHealthBar(this.player.health, this.player.maxHealth);
+            } else if (itemId === 'ammo_refill') {
+                const arm = this.player.inventory.getActiveArm();
+                if (arm) {
+                    if (arm.maxAmmo) arm.currentAmmo = arm.maxAmmo;
+                    if (arm.heat) arm.heat = 0;
+                }
+            }
+        } 
+        else if (itemObj.type === 'upgrade') {
+            if (itemId === 'upg_speed') this.player.baseStats.speedMultiplier += 0.05;
+            if (itemId === 'upg_dmg') this.player.baseStats.damageBonus += 10;
+        }
+
+        // Final UI Updates
         this.uiManager.updateEconomy(this.player.level, this.player.exp, this.player.maxExp, this.player.bolts);
-        
-        // 3. Update the Shop's internal display
         this.updateDisplay();
-        
-        // 4. Disable the button so they can't buy it twice
         buttonElement.disabled = true;
         buttonElement.innerText = 'OWNED';
-        
-        // 5. Re-check all other buttons to see if we are now too poor to afford them!
         this.renderItems(); 
-        
-        console.log(`Purchased ${itemId}! Remaining bolts: ${this.player.bolts}`);
     }
 }
