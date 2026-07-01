@@ -85,6 +85,11 @@ document.addEventListener('playerDied', () => {
     uiManager.showGameOver();
 });
 
+// Listen for weapon overheat backfires!
+document.addEventListener('overheatDamage', (e) => {
+    player.takeDamage(e.detail.amount);
+});
+
 const steelArm = ITEM_DATABASE.arms['steel_arm'];
 player.inventory.equip('RIGHT_ARM', steelArm);
 uiManager.renderStash(player.inventory.getOwnedItems());
@@ -275,6 +280,22 @@ function animate() {
     if(!isGameOver && !hasWon && !gamePaused) {
         // Advance our custom game timer
         // gameTime += delta * 1000;
+        // Update Dash UI
+        uiManager.updateDash(player.dashCooldownTimer, 3.5); // 3.5 is your new cooldown
+
+        // Update Weapon UI
+        const activeArm = player.inventory.getActiveArm();
+        if (activeArm) {
+            if (activeArm.id === 'plasma_arm') {
+                uiManager.updateAmmo(activeArm.currentAmmo, activeArm.maxAmmo);
+            } else if (activeArm.id === 'laser_arm') {
+                uiManager.updateHeat(activeArm.heat, activeArm.maxHeat);
+            } else {
+                uiManager.hideCombatHUD();
+            }
+        } else {
+            uiManager.hideCombatHUD();
+        }
         player.update(delta);
 
         // --- VAULT UI TOGGLE ---

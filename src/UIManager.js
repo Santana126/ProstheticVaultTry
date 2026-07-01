@@ -265,4 +265,27 @@ export class UIManager {
         this.damageOverlay.style.transition = 'box-shadow 0.5s ease-out';
         this.damageOverlay.style.boxShadow = 'inset 0 0 0px rgba(255, 0, 0, 0)';
     }
+
+    updateAmmo(current, max) {
+        const ui = document.getElementById('ammo-ui');
+        ui.style.display = 'block';
+        document.getElementById('ammo-val').innerText = `${current} / ${max}`;
+    }
+
+    updateHeat(heat, max) {
+        const ui = document.getElementById('heat-ui');
+        ui.style.display = 'block';
+        document.getElementById('heat-bar').style.width = `${(heat / max) * 100}%`;
+    }
+
+    updateDash(cooldown, maxCooldown) {
+        const progress = Math.max(0, (1 - (cooldown / maxCooldown)) * 100);
+        document.getElementById('dash-bar').style.width = `${progress}%`;
+    }
+
+    // Hide HUD elements when no weapon is equipped
+    hideCombatHUD() {
+        document.getElementById('ammo-ui').style.display = 'none';
+        document.getElementById('heat-ui').style.display = 'none';
+    }
 }

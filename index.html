@@ -134,6 +134,23 @@
             <p id="tt-desc">Descrizione</p>
         </div>
     </div>
+    <div id="combat-hud" style="position: absolute; bottom: 20px; right: 20px; width: 200px; color: #fff; font-family: sans-serif; pointer-events: none;">
+        <div id="ammo-ui" style="margin-bottom: 10px; display: none;">
+            Ammo: <span id="ammo-val" style="color: #00d4ff; font-weight: bold;">20</span>
+        </div>
+        <div id="heat-ui" style="margin-bottom: 10px; display: none;">
+            Heat:
+            <div style="width: 100%; height: 10px; background: #222; border: 1px solid #ffaa00;">
+                <div id="heat-bar" style="width: 0%; height: 100%; background: #ffaa00;"></div>
+            </div>
+        </div>
+        <div id="dash-ui" style="margin-top: 10px;">
+            Dash:
+            <div style="width: 100%; height: 10px; background: #222; border: 1px solid #00d4ff;">
+                <div id="dash-bar" style="width: 100%; height: 100%; background: #00d4ff;"></div>
+            </div>
+        </div>
+    </div>
 
     <script type="importmap">
         {
