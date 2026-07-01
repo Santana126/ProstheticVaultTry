@@ -235,7 +235,7 @@ const winGeometry = new THREE.BoxGeometry(10, 10, 10);
 const winMaterial = new THREE.MeshBasicMaterial({ 
     color: 0x00ff00, 
     wireframe: true, 
-    visible: true 
+    visible: false 
 });
 const winTrigger = new THREE.Mesh(winGeometry, winMaterial);
 

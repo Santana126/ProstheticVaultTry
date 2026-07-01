@@ -22,7 +22,7 @@ export class WorldItem {
         const hitBoxMaterial = new THREE.MeshBasicMaterial({ 
             color: 0x00ff00, 
             wireframe: true, 
-            visible: true // Change to 'true' while testing 
+            visible: false // Change to 'true' while testing 
         });
         this.hitBox = new THREE.Mesh(hitBoxGeometry, hitBoxMaterial);
 

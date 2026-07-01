@@ -69,7 +69,7 @@ export class Enemy {
         const hitBoxMaterial = new THREE.MeshBasicMaterial({ 
             color: 0xff0000, 
             wireframe: true, 
-            visible: true // Keep this true for a moment so you can aim!
+            visible: false // Keep this true for a moment so you can aim!
         });
         this.hitBox = new THREE.Mesh(hitBoxGeometry, hitBoxMaterial);
         this.hitBox.position.y = 1.5;
