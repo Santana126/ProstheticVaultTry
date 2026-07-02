@@ -91,7 +91,7 @@ export const ITEM_DATABASE = {
             modelPath: 'assets/belt.glb', // Make sure your file is named exactly this!
             stats: { 
                 dashPower: 100, // How explosive the movement is
-                cooldown: 2.5  // Seconds between dashes
+                cooldown: 3.5  // Seconds between dashes
             }
         }
     }

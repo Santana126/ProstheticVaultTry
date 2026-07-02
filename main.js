@@ -276,7 +276,16 @@ function animate() {
         // Advance our custom game timer
         // gameTime += delta * 1000;
         // Update Dash UI
-        uiManager.updateDash(player.dashCooldownTimer, 3.5); // 3.5 is your new cooldown
+        // --- NEW: Check for Belt before updating Dash UI ---
+        const equippedBelt = player.inventory.getEquippedItem ? player.inventory.getEquippedItem('BELT') : null;
+        
+        if (equippedBelt && equippedBelt.stats) {
+            // Dynamically pull the cooldown time directly from the item's stats!
+            uiManager.updateDash(player.dashCooldownTimer, equippedBelt.stats.cooldown);
+        } else {
+            // No belt? Hide the UI!
+            uiManager.hideDash();
+        }
 
         // Update Weapon UI
         const activeArm = player.inventory.getActiveArm();

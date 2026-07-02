@@ -279,8 +279,16 @@ export class UIManager {
     }
 
     updateDash(cooldown, maxCooldown) {
+        const ui = document.getElementById('dash-ui');
+        ui.style.display = 'block'; // Make sure it's visible!
+        
         const progress = Math.max(0, (1 - (cooldown / maxCooldown)) * 100);
         document.getElementById('dash-bar').style.width = `${progress}%`;
+    }
+
+    hideDash() {
+        const ui = document.getElementById('dash-ui');
+        if (ui) ui.style.display = 'none';
     }
 
     // Hide HUD elements when no weapon is equipped
