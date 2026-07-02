@@ -61,6 +61,9 @@ export class Enemy {
         this.currentSwingTimer = 0;
         this.isSwinging = false;
 
+        // Boss Spell Mechanics
+        this.spellCooldown = 3; // Casts the first spell after 3 seconds
+        this.spellRate = 5;     // Casts a new spell every 5 seconds after that
         
         // The container for the 3D model and the hitbox
         this.mesh = new THREE.Group();
@@ -185,8 +188,9 @@ export class Enemy {
         this.models = {};
         this.mixers = {};
         this.actions = {};
-
-        const scaleSize = 15; 
+        
+        // custom for boss and normal enemies
+        const scaleSize = this.isBoss ? 15 : 1;
 
         if (this.isBoss) {
             // ==========================================
@@ -413,6 +417,24 @@ export class Enemy {
         const targetAngle = Math.atan2(dx, dz);
         this.mesh.rotation.y = targetAngle;
 
+        // --- NEW: BOSS SPELL CASTING ---
+        if (this.isBoss && distance > this.attackRange) {
+            this.spellCooldown -= delta;
+            if (this.spellCooldown <= 0) {
+                this.spellCooldown = this.spellRate;
+                console.log("Boss casts a spell!");
+                
+                const spellDir = new THREE.Vector3(dx, 0, dz).normalize();
+                const spawnPos = this.mesh.position.clone();
+                spawnPos.y += 2; // Shoot from the chest/head, not the feet!
+
+                // Shout to the rest of the game to spawn a projectile!
+                document.dispatchEvent(new CustomEvent('bossSpellCast', {
+                    detail: { position: spawnPos, direction: spellDir, damage: 30 }
+                }));
+            }
+        }
+
         // 3. THE STATE MACHINE (Swapping Animations & Movement)
         if (distance > this.runRange) {
             // TIER 1: VERY FAR AWAY -> RUN
@@ -425,6 +447,7 @@ export class Enemy {
                     this.fadeToAction('run', 0.3); 
                 } else {
                     // Standard Aliens don't have a run, so default to walk visuals
+                    this.currentState = 'walk';
                     if (this.models.walk) this.models.walk.visible = true;
                     if (this.models.attack) this.models.attack.visible = false;
                 }

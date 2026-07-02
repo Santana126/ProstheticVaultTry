@@ -225,6 +225,28 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Listen for the Boss casting a spell!
+document.addEventListener('bossSpellCast', (e) => {
+    const { position, direction, damage } = e.detail;
+    
+    // Create a scary, glowing red orb!
+    const geometry = new THREE.SphereGeometry(1.2, 16, 16);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(position);
+
+    // Build a hostile projectile object that perfectly matches what the Manager expects!
+    const hostileProjectile = {
+        mesh: mesh,
+        velocity: direction.multiplyScalar(25), // Speed of the spell
+        damage: damage,
+        life: 6, // Disappears after 6 seconds if it misses
+        isEnemyProjectile: true // CRITICAL: This tells the manager it hurts the player!
+    };
+    
+    projectileManager.addProjectile(hostileProjectile);
+});
+
 // // --- THE FINISH LINE ---
 // const winGeometry = new THREE.BoxGeometry(10, 10, 10); 
 // const winMaterial = new THREE.MeshBasicMaterial({ 
@@ -328,7 +350,7 @@ function animate() {
         }
 
         vfxManager.update(delta);
-        projectileManager.update(delta, physicsManager, vfxManager);
+        projectileManager.update(delta, physicsManager, vfxManager, player);
 
         groundLoot.update(delta);
         // groundLoot2.update(delta);

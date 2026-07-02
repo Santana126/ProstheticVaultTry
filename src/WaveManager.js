@@ -18,10 +18,10 @@ export class WaveManager {
 
         // Define waves
         this.waves = [
-            { count: 5, isBossWave: false }, // Wave 1: 3 Enemies
-            { count: 7, isBossWave: false }, // Wave 2: 5 Enemies
-            { count: 10, isBossWave: false }, // Wave 3: 1 Boss Enemy
-            { count: 1, isBossWave: true } // Wave 4: 1 Boss Enemy
+            // { count: 5, isBossWave: false }, // Wave 1: 5 Enemies
+            // { count: 7, isBossWave: false }, // Wave 2: 7 Enemies
+            // { count: 10, isBossWave: false }, // Wave 3: 10 Enemies
+            { count: 4, isBossWave: true } // Wave 4: 1 Boss Enemy
         ];
     }
 
@@ -46,12 +46,14 @@ export class WaveManager {
 
         for (let i = 0; i < waveConfig.count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const radius = waveConfig.isBossWave ? 0 : 35; // Spawn boss in the center!
+            
+            const isThisTheBoss = waveConfig.isBossWave && (i === 0);
+            
+            const radius = isThisTheBoss ? 0 : 35; // Spawn boss in center, minions on the edge
             const spawnX = Math.cos(angle) * radius;
             const spawnZ = Math.sin(angle) * radius;
 
-            // Pass the isBossWave flag to the Enemy constructor
-            const enemy = new Enemy(this.scene, this.physicsManager, spawnX, 0, spawnZ, this.player, waveConfig.isBossWave, this.ktx2Loader);
+            const enemy = new Enemy(this.scene, this.physicsManager, spawnX, 0, spawnZ, this.player, isThisTheBoss, this.ktx2Loader);
             this.activeEnemies.push(enemy);
         }
 
