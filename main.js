@@ -6,7 +6,7 @@ import { ITEM_DATABASE } from './src/Database.js';
 import { UIManager } from './src/UIManager.js';
 import { VFXManager } from './src/VFXManager.js';
 import { PhysicsManager } from './src/PhysicsManager.js';
-import { Dummy } from './src/Dummy.js';
+// import { Dummy } from './src/Dummy.js';
 import { ProjectileManager } from './src/ProjectileManager.js';
 import { AnimationManager } from './src/AnimationManager.js';
 import { WorldItem } from './src/WorldItem.js';
@@ -94,7 +94,7 @@ const steelArm = ITEM_DATABASE.arms['steel_arm'];
 player.inventory.equip('RIGHT_ARM', steelArm);
 uiManager.renderStash(player.inventory.getOwnedItems());
 //Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
-const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
+// const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
 
 const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
 interactionManager.addInteractable(groundLoot.mesh);

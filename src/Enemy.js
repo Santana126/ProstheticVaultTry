@@ -34,7 +34,7 @@ export class Enemy {
         //  chance for a standard enemy to become a Sprinter!
         this.isSprinter = !this.isBoss && (Math.random() < 0.40); 
 
-        this.maxHealth = this.isBoss ? 300 : (this.isSprinter ? 20 : 50); 
+        this.maxHealth = this.isBoss ? 1000 : (this.isSprinter ? 30 : 60); 
         this.health = this.maxHealth;
         this.isDead = false;
         
