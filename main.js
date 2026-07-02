@@ -123,10 +123,10 @@ const shopManager = new ShopManager(player, uiManager, waveManager);
 //     waveManager.startNextWave();
 // }, 2000);
 
-const vaultPosition = new THREE.Vector3(10, 2.5, -20);
+const vaultPosition = new THREE.Vector3(10, 5, -20);
 const vaultScale = 2.5;
 
-const levelVault = new Vault(scene, vaultPosition, vaultScale);
+const levelVault = new Vault(scene, physicsManager, vaultPosition, vaultScale);
 
 // CREATE AN ARM ITEM AND EQUIP IT
 // const steelArm = new Arm(
@@ -201,66 +201,61 @@ document.addEventListener('keydown', (e) => {
 
     // --- VAULT INTERACTION (PHASE 1 & 2) ---
     if (e.code === 'KeyO' && !hasWon) {
-        if (winBox.containsPoint(player.camera.position)) {
-            
-            // PHASE 1: OPENING THE VAULT
-            if (!vaultOpened) {
-                const ownedItems = player.inventory.getOwnedItems();
-                const hasKey = ownedItems.includes('vault_key');
-                
-                if (hasKey) {
-                    console.log("Key accepted! Opening Vault...");
-                    vaultOpened = true; 
-                    levelVault.open();
-                } else {
-                    console.log("The Vault is locked. Defeat the boss to get the key!");
-                }
-            } 
-            // PHASE 2: ENTERING THE VAULT
-            else {
-                console.log("Entering Vault! You Win!");
-                hasWon = true; 
-                
-                // Hide the prompt, unlock the mouse, and show the win screen
-                document.getElementById('vault-prompt').style.display = 'none';
-                player.controls.unlock(); 
-                uiManager.showWinScreen(); 
+        
+        // PHASE 1: OPENING THE VAULT (Checking the outside box)
+        if (!vaultOpened && levelVault.openBox.containsPoint(player.camera.position)) {
+            const ownedItems = player.inventory.getOwnedItems();
+            if (ownedItems.includes('vault_key')) {
+                console.log("Key accepted! Opening Vault...");
+                vaultOpened = true; 
+                levelVault.open();
+            } else {
+                console.log("The Vault is locked. Defeat the boss to get the key!");
             }
+        } 
+        // PHASE 2: ENTERING THE VAULT (Checking the inside box)
+        else if (vaultOpened && levelVault.winBox.containsPoint(player.camera.position)) {
+            console.log("Artifact claimed! You Win!");
+            hasWon = true; 
+            
+            document.getElementById('vault-prompt').style.display = 'none';
+            player.controls.unlock(); 
+            uiManager.showWinScreen(); 
         }
     }
 });
 
-// --- THE FINISH LINE ---
-const winGeometry = new THREE.BoxGeometry(10, 10, 10); 
-const winMaterial = new THREE.MeshBasicMaterial({ 
-    color: 0x00ff00, 
-    wireframe: true, 
-    visible: false 
-});
-const winTrigger = new THREE.Mesh(winGeometry, winMaterial);
+// // --- THE FINISH LINE ---
+// const winGeometry = new THREE.BoxGeometry(10, 10, 10); 
+// const winMaterial = new THREE.MeshBasicMaterial({ 
+//     color: 0x00ff00, 
+//     wireframe: true, 
+//     visible: false 
+// });
+// const winTrigger = new THREE.Mesh(winGeometry, winMaterial);
 
-// --- DYNAMIC POSITIONING LOGIC ---
+// // --- DYNAMIC POSITIONING LOGIC ---
 
-// 1. Force Three.js to calculate the math for the scale and positions immediately
-// (By default, Three.js waits until the first frame is rendered to do this)
-levelVault.group.updateMatrixWorld(true);
+// // 1. Force Three.js to calculate the math for the scale and positions immediately
+// // (By default, Three.js waits until the first frame is rendered to do this)
+// levelVault.group.updateMatrixWorld(true);
 
-// 2. Create an empty Vector to hold our coordinate data
-const doorGlobalPosition = new THREE.Vector3();
+// // 2. Create an empty Vector to hold our coordinate data
+// const doorGlobalPosition = new THREE.Vector3();
 
-// 3. Ask the vault's door for its exact global position
-levelVault.door.getWorldPosition(doorGlobalPosition);
+// // 3. Ask the vault's door for its exact global position
+// levelVault.door.getWorldPosition(doorGlobalPosition);
 
-// 4. Move the trigger box to exactly match the door's center
-winTrigger.position.copy(doorGlobalPosition);
+// // 4. Move the trigger box to exactly match the door's center
+// winTrigger.position.copy(doorGlobalPosition);
 
-// 5. Shift the box slightly forward on the Z-axis so it sits right in front of the door
-// (Adjust this number if you want the box closer or further from the door)
-winTrigger.position.z += 3; 
+// // 5. Shift the box slightly forward on the Z-axis so it sits right in front of the door
+// // (Adjust this number if you want the box closer or further from the door)
+// winTrigger.position.z += 3; 
 
-scene.add(winTrigger);
+// scene.add(winTrigger);
 
-const winBox = new THREE.Box3().setFromObject(winTrigger);
+// const winBox = new THREE.Box3().setFromObject(winTrigger);
 let hasWon = false;
 let vaultOpened = false;
 
@@ -303,22 +298,22 @@ function animate() {
             const vaultPrompt = document.getElementById('vault-prompt');
             const vaultActionText = document.getElementById('vault-action-text');
 
-            // If the player is standing inside the trigger zone
-            if (winBox.containsPoint(player.camera.position)) {
-                vaultPrompt.style.display = 'block'; // Show the prompt
-                
-                // Swap the text and colors based on the vault's state
-                if (!vaultOpened) {
-                    vaultActionText.innerText = 'Open Vault';
-                    vaultActionText.style.color = '#ffaa00'; // Orange when closed
-                    vaultPrompt.style.borderColor = '#ffaa00';
-                } else {
-                    vaultActionText.innerText = 'Enter Vault';
-                    vaultActionText.style.color = '#00ff00'; // Green when open
-                    vaultPrompt.style.borderColor = '#00ff00';
-                }
-            } else {
-                // If they step out of the zone, hide it
+            // If standing at the closed door...
+            if (!vaultOpened && levelVault.openBox.containsPoint(player.camera.position)) {
+                vaultPrompt.style.display = 'block'; 
+                vaultActionText.innerText = 'Open Vault';
+                vaultActionText.style.color = '#ffaa00'; 
+                vaultPrompt.style.borderColor = '#ffaa00';
+            } 
+            // If the door is open AND they walked all the way to the pedestal...
+            else if (vaultOpened && levelVault.winBox.containsPoint(player.camera.position)) {
+                vaultPrompt.style.display = 'block';
+                vaultActionText.innerText = 'Take Artifact'; // Updated text!
+                vaultActionText.style.color = '#00ff00'; 
+                vaultPrompt.style.borderColor = '#00ff00';
+            } 
+            // Otherwise, hide the prompt
+            else {
                 vaultPrompt.style.display = 'none';
             }
         }
