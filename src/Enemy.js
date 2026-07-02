@@ -47,9 +47,11 @@ export class Enemy {
         const attackFactor = 0.8 + (Math.random() * 0.4);
 
         this.speed = baseSpeed * speedFactor; 
+        this.runSpeed = this.speed * 2;
         this.attackRate = baseAttackRate * attackFactor; 
 
         this.attackRange = 3; 
+        this.runRange = 20;
         this.damage = this.isBoss ? 20 : (this.isSprinter ? 5 : 10);
         // ---------------------------------
 
@@ -91,87 +93,258 @@ export class Enemy {
         this.loadModel();
     }
 
+    // async loadModel() {
+    //     const loader = new GLTFLoader();
+        
+    //     // Keep your decoders if you are still using the compressed 1.4mb files!
+    //     if (this.ktx2Loader) loader.setKTX2Loader(this.ktx2Loader);
+    //     if (typeof MeshoptDecoder !== 'undefined') loader.setMeshoptDecoder(MeshoptDecoder);
+        
+    //     this.models = {};
+    //     this.mixers = {};
+    //     this.actions = {};
+
+    //     const scaleSize = 1; 
+
+    //     try {
+    //         // --- 1. LOAD THE WALK ALIEN ---
+    //         const walkGltf = await loader.loadAsync('assets/alien_walking.glb');
+            
+    //         this.models.walk = walkGltf.scene;
+    //         this.models.walk.scale.set(scaleSize, scaleSize, scaleSize);
+    //         this.models.walk.position.y = 0;
+            
+    //         this.models.walk.traverse((node) => {
+    //             if (node.isMesh) { 
+    //                 node.castShadow = true;
+    //                 node.raycast = function() {}; 
+    //                 // Paint the sprinter red!
+    //                 if (this.isSprinter) {
+    //                     node.material = node.material.clone();
+    //                     node.material.color.setHex(0xff3300); 
+    //                 }
+    //             }
+    //         });
+    //         this.mesh.add(this.models.walk);
+
+    //         this.mixers.walk = new THREE.AnimationMixer(this.models.walk);
+    //         const walkClip = THREE.AnimationClip.findByName(walkGltf.animations, 'mixamo.com') || walkGltf.animations[0];
+    //         if (walkClip) {
+    //             this.actions.walk = this.mixers.walk.clipAction(walkClip);
+    //             this.actions.walk.play();
+    //         }
+
+    //         // --- 2. LOAD THE ATTACK ALIEN ---
+    //         const attackGltf = await loader.loadAsync('assets/alien_attack.glb');
+            
+    //         this.models.attack = attackGltf.scene;
+    //         this.models.attack.scale.set(scaleSize, scaleSize, scaleSize);
+    //         this.models.attack.position.y = 0;
+            
+    //         // CRITICAL: Hide the attack model immediately!
+    //         this.models.attack.visible = false; 
+            
+    //         this.models.attack.traverse((node) => {
+    //             if (node.isMesh) { 
+    //                 node.castShadow = true;
+    //                 node.raycast = function() {}; 
+    //                 // Paint the sprinter red!
+    //                 if (this.isSprinter) {
+    //                     node.material = node.material.clone();
+    //                     node.material.color.setHex(0xff3300); 
+    //                 }
+    //             }
+
+    //         });
+    //         this.mesh.add(this.models.attack);
+
+    //         this.mixers.attack = new THREE.AnimationMixer(this.models.attack);
+    //         const attackClip = THREE.AnimationClip.findByName(attackGltf.animations, 'mixamo.com') || attackGltf.animations[0];
+    //         if (attackClip) {
+    //             this.actions.attack = this.mixers.attack.clipAction(attackClip);
+    //             this.actions.attack.play(); // Play it invisibly in the background
+    //         }
+
+    //         this.currentState = 'walk';
+    //         console.log("✅ Both alien animations loaded successfully!");
+
+    //     } catch (error) {
+    //         console.error("❌ Failed to load alien assets:", error);
+    //     }
+    // }
+
+    // A helper function to smoothly transition between animations
+    
+    
+
     async loadModel() {
-        const loader = new GLTFLoader();
-        
-        // Keep your decoders if you are still using the compressed 1.4mb files!
-        if (this.ktx2Loader) loader.setKTX2Loader(this.ktx2Loader);
-        if (typeof MeshoptDecoder !== 'undefined') loader.setMeshoptDecoder(MeshoptDecoder);
-        
+        const gltfLoader = new GLTFLoader();
+        if (this.ktx2Loader) gltfLoader.setKTX2Loader(this.ktx2Loader);
+        if (typeof MeshoptDecoder !== 'undefined') gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+
         this.models = {};
         this.mixers = {};
         this.actions = {};
 
-        const scaleSize = 1; 
+        const scaleSize = 15; 
 
-        try {
-            // --- 1. LOAD THE WALK ALIEN ---
-            const walkGltf = await loader.loadAsync('assets/alien_walking.glb');
-            
-            this.models.walk = walkGltf.scene;
-            this.models.walk.scale.set(scaleSize, scaleSize, scaleSize);
-            this.models.walk.position.y = 0;
-            
-            this.models.walk.traverse((node) => {
-                if (node.isMesh) { 
-                    node.castShadow = true;
-                    node.raycast = function() {}; 
-                    // Paint the sprinter red!
-                    if (this.isSprinter) {
-                        node.material = node.material.clone();
-                        node.material.color.setHex(0xff3300); 
+        if (this.isBoss) {
+            // ==========================================
+            // BOSS LOADING LOGIC (100% GLB)
+            // ==========================================
+            try {
+                // 1. Load the Base Body (Walking)
+                const walkGltf = await gltfLoader.loadAsync('assets/RomeoTheCircle/RomeoWalking.glb');
+                const bossBase = walkGltf.scene;
+                
+                // --- SCALE 1: THE BODY ---
+                // You found that 800 looks great!
+                const bodyScale = 800; 
+                bossBase.scale.set(bodyScale, bodyScale, bodyScale);
+                bossBase.position.y = 0;
+                
+                bossBase.traverse((node) => {
+                    if (node.isMesh || node.isSkinnedMesh) { 
+                        node.castShadow = true;
+                        node.receiveShadow = true;
+                        node.frustumCulled = false; 
                     }
+                });
+
+                // 3. Load The GLB Circle
+                const circleGltf = await gltfLoader.loadAsync('assets/RomeoTheCircle/TheCircle.glb');
+                const circleModel = circleGltf.scene;
+                
+                // --- SCALE 2: THE CIRCLE ---
+                // We want the final visual size to be roughly 5.
+                // By doing the math here, the circle will always stay the same 
+                // relative size even if you change the bodyScale later!
+                const targetCircleSize = 5; 
+                const circleScale = targetCircleSize / bodyScale; // 0.00625
+                
+                circleModel.scale.set(circleScale, circleScale, circleScale);
+                
+                // 4. Glue the Circle to the Back!
+                const backBone = bossBase.getObjectByName('mixamorigSpine2') || bossBase.getObjectByName('mixamorigSpine');
+                if (backBone) {
+                    // Adjust these three numbers (X, Y, Z) to shift it!
+                    circleModel.position.set(0, 0, -0.00055); 
+                    
+                    circleModel.rotation.set(0, 0, 0); 
+                    backBone.add(circleModel);
+                } else {
+                    console.error("❌ Could not find backbone in the converted GLB.");
                 }
-            });
-            this.mesh.add(this.models.walk);
 
-            this.mixers.walk = new THREE.AnimationMixer(this.models.walk);
-            const walkClip = THREE.AnimationClip.findByName(walkGltf.animations, 'mixamo.com') || walkGltf.animations[0];
-            if (walkClip) {
-                this.actions.walk = this.mixers.walk.clipAction(walkClip);
-                this.actions.walk.play();
+                // 5. Setup the Animation Mixer
+                this.models.walk = bossBase;
+                this.mesh.add(this.models.walk);
+                this.mixers.walk = new THREE.AnimationMixer(this.models.walk);
+
+                // Add Walk Animation
+                const walkClip = THREE.AnimationClip.findByName(walkGltf.animations, 'mixamo.com') || walkGltf.animations[0];
+                if (walkClip) {
+                    this.actions.walk = this.mixers.walk.clipAction(walkClip);
+                    this.actions.walk.play();
+                }
+
+                // 6. Extract Punch Animation
+                const attackGltf = await gltfLoader.loadAsync('assets/RomeoTheCircle/RomeoPunchingSkin.glb');
+                const attackClip = THREE.AnimationClip.findByName(attackGltf.animations, 'mixamo.com') || attackGltf.animations[0];
+                
+                if (attackClip) {
+                    // Notice we add the attack clip to the WALK mixer, so it plays on the same body!
+                    this.actions.attack = this.mixers.walk.clipAction(attackClip);
+                }
+
+                // 7. Extract Run Animation
+                const runGltf = await gltfLoader.loadAsync('assets/RomeoTheCircle/RomeoRunning.glb');
+                const runClip = THREE.AnimationClip.findByName(runGltf.animations, 'mixamo.com') || runGltf.animations[0];
+                
+                if (runClip) {
+                    // Add the run clip to the main WALK mixer, just like the attack!
+                    this.actions.run = this.mixers.walk.clipAction(runClip);
+                }
+                
+
+                this.currentState = 'walk';
+                this.activeAction = this.actions.walk;
+                console.log("✅ Boss (GLB) and Circle loaded successfully!");
+
+            } catch (error) {
+                console.error("❌ Failed to load Boss GLB assets:", error);
             }
-
-            // --- 2. LOAD THE ATTACK ALIEN ---
-            const attackGltf = await loader.loadAsync('assets/alien_attack.glb');
-            
-            this.models.attack = attackGltf.scene;
-            this.models.attack.scale.set(scaleSize, scaleSize, scaleSize);
-            this.models.attack.position.y = 0;
-            
-            // CRITICAL: Hide the attack model immediately!
-            this.models.attack.visible = false; 
-            
-            this.models.attack.traverse((node) => {
-                if (node.isMesh) { 
-                    node.castShadow = true;
-                    node.raycast = function() {}; 
-                    // Paint the sprinter red!
-                    if (this.isSprinter) {
-                        node.material = node.material.clone();
-                        node.material.color.setHex(0xff3300); 
+        } else {
+            // ==========================================
+            // STANDARD ALIEN LOADING LOGIC (Unchanged)
+            // ==========================================
+            try {
+                // --- 1. LOAD THE WALK ALIEN ---
+                const walkGltf = await gltfLoader.loadAsync('assets/alien_walking.glb');
+                
+                this.models.walk = walkGltf.scene;
+                this.models.walk.scale.set(scaleSize, scaleSize, scaleSize);
+                this.models.walk.position.y = 0;
+                
+                this.models.walk.traverse((node) => {
+                    if (node.isMesh) { 
+                        node.castShadow = true;
+                        node.raycast = function() {}; 
+                        if (this.isSprinter) {
+                            node.material = node.material.clone();
+                            node.material.color.setHex(0xff3300); 
+                        }
                     }
+                });
+                this.mesh.add(this.models.walk);
+
+                this.mixers.walk = new THREE.AnimationMixer(this.models.walk);
+                const walkClip = THREE.AnimationClip.findByName(walkGltf.animations, 'mixamo.com') || walkGltf.animations[0];
+                if (walkClip) {
+                    this.actions.walk = this.mixers.walk.clipAction(walkClip);
+                    this.actions.walk.play();
                 }
 
-            });
-            this.mesh.add(this.models.attack);
+                // --- 2. LOAD THE ATTACK ALIEN ---
+                const attackGltf = await gltfLoader.loadAsync('assets/alien_attack.glb');
+                
+                this.models.attack = attackGltf.scene;
+                this.models.attack.scale.set(scaleSize, scaleSize, scaleSize);
+                this.models.attack.position.y = 0;
+                this.models.attack.visible = false; 
+                
+                this.models.attack.traverse((node) => {
+                    if (node.isMesh) { 
+                        node.castShadow = true;
+                        node.raycast = function() {}; 
+                        if (this.isSprinter) {
+                            node.material = node.material.clone();
+                            node.material.color.setHex(0xff3300); 
+                        }
+                    }
+                });
+                this.mesh.add(this.models.attack);
 
-            this.mixers.attack = new THREE.AnimationMixer(this.models.attack);
-            const attackClip = THREE.AnimationClip.findByName(attackGltf.animations, 'mixamo.com') || attackGltf.animations[0];
-            if (attackClip) {
-                this.actions.attack = this.mixers.attack.clipAction(attackClip);
-                this.actions.attack.play(); // Play it invisibly in the background
+                this.mixers.attack = new THREE.AnimationMixer(this.models.attack);
+                const attackClip = THREE.AnimationClip.findByName(attackGltf.animations, 'mixamo.com') || attackGltf.animations[0];
+                if (attackClip) {
+                    this.actions.attack = this.mixers.attack.clipAction(attackClip);
+                    this.actions.attack.play(); 
+                }
+
+                this.currentState = 'walk';
+                console.log("✅ Standard Alien animations loaded successfully!");
+
+            } catch (error) {
+                console.error("❌ Failed to load alien assets:", error);
             }
-
-            this.currentState = 'walk';
-            console.log("✅ Both alien animations loaded successfully!");
-
-        } catch (error) {
-            console.error("❌ Failed to load alien assets:", error);
         }
     }
 
-    // A helper function to smoothly transition between animations
+
+
+
+    
     fadeToAction(name, duration) {
         const newAction = this.actions[name];
         if (!newAction || this.activeAction === newAction) return;
@@ -216,10 +389,21 @@ export class Enemy {
         if (this.isDead) return;
 
         // 1. Tick the correct animation mixer
-        if (this.currentState === 'walk' && this.mixers.walk) {
-            this.mixers.walk.update(delta);
-        } else if (this.currentState === 'attack' && this.mixers.attack) {
-            this.mixers.attack.update(delta);
+        if (this.isBoss) {
+            // THE BOSS FIX: 
+            // The Boss has ALL of his animations (walk, run, attack) on a single mixer.
+            // Therefore, we just tick this mixer every single frame!
+            if (this.mixers.walk) {
+                this.mixers.walk.update(delta);
+            }
+        } else {
+            // STANDARD ALIEN LOGIC:
+            // Aliens still use two completely different models/mixers.
+            if (this.currentState === 'walk' && this.mixers.walk) {
+                this.mixers.walk.update(delta);
+            } else if (this.currentState === 'attack' && this.mixers.attack) {
+                this.mixers.attack.update(delta);
+            }
         }
 
         // 2. Distance Math
@@ -229,38 +413,67 @@ export class Enemy {
         const targetAngle = Math.atan2(dx, dz);
         this.mesh.rotation.y = targetAngle;
 
-        // 3. THE STATE MACHINE (Swapping Models)
-        if (distance > this.attackRange) {
-            // FAR AWAY: Walk
-            if (this.currentState !== 'walk') {
-                this.currentState = 'walk';
-                
+        // 3. THE STATE MACHINE (Swapping Animations & Movement)
+        if (distance > this.runRange) {
+            // TIER 1: VERY FAR AWAY -> RUN
+            if (this.currentState !== 'run') {
+                this.currentState = 'run';
                 this.isSwinging = false;
-                // Toggle visibility safely
-                if (this.models.walk) this.models.walk.visible = true;
-                if (this.models.attack) this.models.attack.visible = false;
+                
+                if (this.isBoss) {
+                    // Blend smoothly into the run over 0.3 seconds
+                    this.fadeToAction('run', 0.3); 
+                } else {
+                    // Standard Aliens don't have a run, so default to walk visuals
+                    if (this.models.walk) this.models.walk.visible = true;
+                    if (this.models.attack) this.models.attack.visible = false;
+                }
             }
             
-            // Move the hitbox forward
+            // Move using the faster RUN SPEED
+            const currentSpeed = this.isBoss ? this.runSpeed : this.speed;
+            this.mesh.position.x += Math.sin(targetAngle) * currentSpeed * delta;
+            this.mesh.position.z += Math.cos(targetAngle) * currentSpeed * delta;
+
+        } else if (distance > this.attackRange) {
+            // TIER 2: CLOSING IN -> WALK
+            if (this.currentState !== 'walk') {
+                this.currentState = 'walk';
+                this.isSwinging = false;
+                
+                if (this.isBoss) {
+                    // Blend smoothly back into the walk over 0.3 seconds
+                    this.fadeToAction('walk', 0.3); 
+                } else {
+                    if (this.models.walk) this.models.walk.visible = true;
+                    if (this.models.attack) this.models.attack.visible = false;
+                }
+            }
+            
+            // Move using the normal WALK SPEED
             this.mesh.position.x += Math.sin(targetAngle) * this.speed * delta;
             this.mesh.position.z += Math.cos(targetAngle) * this.speed * delta;
 
         } else {
-            // WE ARE CLOSE: Attack!
+            // TIER 3: WE ARE CLOSE -> ATTACK!
             if (this.currentState !== 'attack') {
                 this.currentState = 'attack';
                 
-                // Toggle visibility
-                if (this.models.walk) this.models.walk.visible = false;
-                if (this.models.attack) {
-                    this.models.attack.visible = true;
-                    if (this.actions.attack) this.actions.attack.reset().play();
+                if (this.isBoss) {
+                    // Blend smoothly into the punch
+                    this.fadeToAction('attack', 0.2); 
+                } else {
+                    if (this.models.walk) this.models.walk.visible = false;
+                    if (this.models.attack) {
+                        this.models.attack.visible = true;
+                        if (this.actions.attack) this.actions.attack.reset().play();
+                    }
                 }
                 
                 // 1. START THE WIND-UP
                 this.isSwinging = true;
                 this.currentSwingTimer = this.damageDelay;
-                this.attackCooldown = this.attackRate; // Start the main cooldown
+                this.attackCooldown = this.attackRate;
             }
 
             // --- TICK THE TIMERS ---
