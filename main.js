@@ -200,6 +200,7 @@ let firstStart = false; // Tracks if we've begun the first wave
 
 const blocker = document.getElementById('blocker');
 blocker.addEventListener('click', () => player.controls.lock());
+
 player.controls.addEventListener('lock', () => {
     blocker.style.display = 'none';
     gamePaused = false; // Unpause when we click into the game
@@ -207,9 +208,20 @@ player.controls.addEventListener('lock', () => {
     // Start the first wave 2 seconds after they click "Start" for the first time
     if (!firstStart) {
         firstStart = true;
+        
+        // Play the Intro Transmission!
+        // Replace 'assets/commander.jpg' with the actual file path to the image you have!
+        uiManager.showTransmission(
+            'assets/narr_prost.png', 
+            'HQ Command', 
+            'Mercenary, you are cleared to engage. Survive the alien swarm, eliminate their leader, and secure the artifact inside that vault. Good luck.', 
+            8000 // Stays on screen for 8 seconds
+        );
+
+        // Start the first wave a few seconds after the transmission finishes
         setTimeout(() => {
             waveManager.startNextWave();
-        }, 5000);
+        }, 9000);
     }
 });
 

@@ -296,4 +296,35 @@ export class UIManager {
         document.getElementById('ammo-ui').style.display = 'none';
         document.getElementById('heat-ui').style.display = 'none';
     }
+
+    // --- NARRATOR SYSTEM ---
+    showTransmission(portraitSrc, speakerName, message, durationMs = 5000) {
+        const ui = document.getElementById('narrator-ui');
+        const portrait = document.getElementById('narrator-portrait');
+        const textEl = document.getElementById('narrator-text');
+
+        // Set up the box
+        portrait.src = portraitSrc;
+        textEl.innerText = ""; // Clear old text
+        ui.style.display = 'block';
+
+        // Clear any existing typewriter loops or hide timeouts
+        if (this.typewriterInterval) clearInterval(this.typewriterInterval);
+        if (this.transmissionTimeout) clearTimeout(this.transmissionTimeout);
+
+        // The Typewriter Effect
+        let i = 0;
+        this.typewriterInterval = setInterval(() => {
+            textEl.innerHTML += message.charAt(i);
+            i++;
+            if (i >= message.length) {
+                clearInterval(this.typewriterInterval);
+            }
+        }, 30); // 30ms per letter
+
+        // Auto-hide the box after the duration ends
+        this.transmissionTimeout = setTimeout(() => {
+            ui.style.display = 'none';
+        }, durationMs);
+    }
 }
