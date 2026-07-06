@@ -297,34 +297,49 @@ export class UIManager {
         document.getElementById('heat-ui').style.display = 'none';
     }
 
-    // --- NARRATOR SYSTEM ---
-    showTransmission(portraitSrc, speakerName, message, durationMs = 5000) {
+    // added 'waitForSpace' and 'onComplete' as new optional arguments
+    showTransmission(portraitSrc, speakerName, message, durationMs = 5000, waitForSpace = false, onComplete = null) {
         const ui = document.getElementById('narrator-ui');
         const portrait = document.getElementById('narrator-portrait');
         const textEl = document.getElementById('narrator-text');
+        const promptEl = document.getElementById('narrator-prompt'); // Get the new prompt
 
-        // Set up the box
         portrait.src = portraitSrc;
-        textEl.innerText = ""; // Clear old text
-        ui.style.display = 'block';
+        textEl.innerText = ""; 
+        promptEl.style.display = 'none'; // Hide prompt initially
+        ui.style.display = 'flex';
 
-        // Clear any existing typewriter loops or hide timeouts
         if (this.typewriterInterval) clearInterval(this.typewriterInterval);
         if (this.transmissionTimeout) clearTimeout(this.transmissionTimeout);
 
-        // The Typewriter Effect
         let i = 0;
         this.typewriterInterval = setInterval(() => {
             textEl.innerHTML += message.charAt(i);
             i++;
             if (i >= message.length) {
                 clearInterval(this.typewriterInterval);
+                
+                // If this is the intro, show the spacebar prompt!
+                if (waitForSpace) {
+                    promptEl.style.display = 'block';
+                }
+                
+                // Trigger the callback to let the game know typing is done
+                if (onComplete) onComplete();
             }
-        }, 30); // 30ms per letter
+        }, 30);
 
-        // Auto-hide the box after the duration ends
-        this.transmissionTimeout = setTimeout(() => {
-            ui.style.display = 'none';
-        }, durationMs);
+        // Only auto-hide if we aren't waiting for the spacebar!
+        if (!waitForSpace) {
+            this.transmissionTimeout = setTimeout(() => {
+                ui.style.display = 'none';
+            }, durationMs);
+        }
+    }
+
+    //  Manually hide the UI 
+    hideTransmission() {
+        document.getElementById('narrator-ui').style.display = 'none';
+        document.getElementById('narrator-prompt').style.display = 'none';
     }
 }

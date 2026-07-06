@@ -197,40 +197,63 @@ document.addEventListener('currencyCollected', (e) => {
 // Controls
 let gamePaused = true; // The game starts paused on the menu!
 let firstStart = false; // Tracks if we've begun the first wave
+let isIntroPlaying = false;
 
 const blocker = document.getElementById('blocker');
 blocker.addEventListener('click', () => player.controls.lock());
 
 player.controls.addEventListener('lock', () => {
     blocker.style.display = 'none';
-    gamePaused = false; // Unpause when we click into the game
-
-    // Start the first wave 2 seconds after they click "Start" for the first time
+    
     if (!firstStart) {
         firstStart = true;
+        isIntroPlaying = true; // Lock the game dynamics!
+        gamePaused = true;     // Ensure the game STAYS paused
         
-        // Play the Intro Transmission!
-        // Replace 'assets/commander.jpg' with the actual file path to the image you have!
         uiManager.showTransmission(
             'assets/narr_prost.png', 
-            'HQ Command', 
+            '', 
             'Mercenary, you are cleared to engage. Survive the alien swarm, eliminate their leader, and secure the artifact inside that vault. Good luck.', 
-            8000 // Stays on screen for 8 seconds
+            0,    // Duration doesn't matter because we wait for Space
+            true, // waitForSpace = true
+            () => {
+                // This code runs exactly when the typewriter finishes!
+                const spaceListener = (e) => {
+                    if (e.code === 'Space') {
+                        document.removeEventListener('keydown', spaceListener);
+                        uiManager.hideTransmission();
+                        isIntroPlaying = false; 
+                        gamePaused = false; // UNPAUSE THE GAME!
+                        
+                        // Keep your delayed spawn! 
+                        setTimeout(() => {
+                            waveManager.startNextWave();
+                        }, 4000); 
+                    }
+                };
+                // Start listening for the spacebar
+                document.addEventListener('keydown', spaceListener);
+            }
         );
-
-        // Start the first wave a few seconds after the transmission finishes
-        setTimeout(() => {
-            waveManager.startNextWave();
-        }, 9000);
+    } else if (!isIntroPlaying) {
+        // If the intro isn't playing, unpause normally when clicking back in
+        gamePaused = false; 
     }
 });
 
 player.controls.addEventListener('unlock', () => {
-    gamePaused = true; // Pause game logic immediately when ESC is pressed
+    // 1. ALWAYS pause the game the moment the mouse is freed!
+    gamePaused = true; 
 
-    // Only show the start menu if we aren't currently looking at the inventory!
+    // 2. Figure out which UI screen to show
     const invOverlay = document.getElementById('inventory-overlay');
-    if (invOverlay.style.display === 'none' || invOverlay.style.display === '') {
+    const shopOverlay = document.getElementById('shop-overlay'); // Just to be safe!
+    
+    // Only show the main pause screen (blocker) if the inventory and shop are CLOSED
+    if (
+        (!invOverlay || invOverlay.style.display === 'none' || invOverlay.style.display === '') &&
+        (!shopOverlay || shopOverlay.style.display === 'none' || shopOverlay.style.display === '')
+    ) {
         blocker.style.display = 'flex';
     }
 });
