@@ -17,12 +17,16 @@ import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { Vault } from './src/Vault.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { ShopManager } from './src/ShopManager.js';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 
 // Setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111111);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0; // Tweak this later if the sky is too dark/bright
 
 const ktx2Loader = new KTX2Loader()
     // We use a safe CDN to grab the complex transcoder files Three.js needs
@@ -40,20 +44,36 @@ const sunLight = new THREE.DirectionalLight(0xffffff, 1);
 sunLight.position.set(5, 10, 7.5);
 scene.add(sunLight);
 
-// --- 3. THE ENVIRONMENT (The Floor) ---
-const floorGeometry = new THREE.PlaneGeometry(100, 100);
-const floorMaterial = new THREE.MeshStandardMaterial({ 
-    color: 0x1a1a2e, // Deep Midnight Blue
-    roughness: 0.8 
-});
-const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-floor.rotation.x = -Math.PI / 2;
-scene.add(floor);
 
-// ADD A GRID HELPER: This creates the "technical" look
-// Parameters: (size, divisions, centerColor, gridColor)
-const gridHelper = new THREE.GridHelper(100, 50, 0x4444ff, 0x222244);
-scene.add(gridHelper);
+// --- NEW: Load the EXR Skybox ---
+const exrLoader = new EXRLoader();
+exrLoader.load('assets/environment/sky/night_sky.exr', (texture) => {
+    // Tell Three.js this is a 360-degree sphere image
+    texture.mapping = THREE.EquirectangularReflectionMapping; 
+    
+    // Set it as the visual background
+    scene.background = texture; 
+    
+    // Set it as the global lighting environment (Reflects off metal!)
+    scene.environment = texture; 
+});
+
+
+
+// // --- 3. THE ENVIRONMENT (The Floor) ---
+// const floorGeometry = new THREE.PlaneGeometry(100, 100);
+// const floorMaterial = new THREE.MeshStandardMaterial({ 
+//     color: 0x1a1a2e, // Deep Midnight Blue
+//     roughness: 0.8 
+// });
+// const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+// floor.rotation.x = -Math.PI / 2;
+// scene.add(floor);
+
+// // ADD A GRID HELPER: This creates the "technical" look
+// // Parameters: (size, divisions, centerColor, gridColor)
+// const gridHelper = new THREE.GridHelper(100, 50, 0x4444ff, 0x222244);
+// scene.add(gridHelper);
 
 // Initialize Level
 // const level = new Level(scene, new PhysicsManager());
@@ -61,6 +81,8 @@ scene.add(gridHelper);
 
 const physicsManager = new PhysicsManager();
 // physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
+//  Initialize the Level (This automatically builds the textured floor, walls, and cover!)
+const level = new Level(scene, physicsManager);
 const vfxManager = new VFXManager(scene);
 const projectileManager = new ProjectileManager(scene);
 const animationManager = new AnimationManager();
