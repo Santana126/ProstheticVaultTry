@@ -35,7 +35,7 @@ export class InteractionManager {
             const entity = hitBox.userData.entity;
 
             // Check if this item is currency
-            if (entity && entity.itemData.type === 'CURRENCY') {
+            if (entity && entity.itemData && entity.itemData.type === 'CURRENCY') {
                 
                 // Calculate 2D Distance (Ignore the Y axis height!)
                 const dx = this.camera.position.x - entity.mesh.position.x;
@@ -64,7 +64,7 @@ export class InteractionManager {
             }
         }
 
-        // --- 2. RAYCAST CHECK (Manual F-Pickup for Weapons/Keys) ---
+        // --- 2. RAYCAST CHECK (Manual F-Pickup/Interact) ---
         this.raycaster.setFromCamera(this.centerScreen, this.camera);
         const intersects = this.raycaster.intersectObjects(this.interactables, true);
         const validHit = intersects.find(hit => hit.object.userData && hit.object.userData.interactable);
@@ -73,8 +73,14 @@ export class InteractionManager {
             const hitNode = validHit.object;
             const entity = hitNode.userData.entity;
             
-            // Only show the F prompt if it's NOT currency (just to be safe)
-            if (entity.itemData.type !== 'CURRENCY') {
+            if (entity.isVendingMachine) {
+                // IT'S A MACHINE! Show custom prompt with price
+                if (this.currentLookTarget !== entity) {
+                    this.currentLookTarget = entity;
+                    this.uiManager.showInteractionPrompt(`${entity.type} REFILL [${entity.cost} Bolts]`);
+                }
+            } else if (entity.itemData && entity.itemData.type !== 'CURRENCY') {
+                // IT'S NORMAL LOOT
                 if (this.currentLookTarget !== entity) {
                     this.currentLookTarget = entity;
                     this.uiManager.showInteractionPrompt(hitNode.userData.name);
@@ -91,18 +97,19 @@ export class InteractionManager {
     // Called by the Player when they press 'F'
     tryInteract(inventoryManager) {
         if (this.currentLookTarget) {
-            const itemEntity = this.currentLookTarget;
+            const target = this.currentLookTarget;
             
-            console.log(`Picked up: ${itemEntity.itemData.name}`);
+            // If it's a machine, broadcast an event and STOP here!
+            if (target.isVendingMachine) {
+                document.dispatchEvent(new CustomEvent('useVendingMachine', { detail: target }));
+                return; 
+            }
             
-            // 1. Tell the InventoryManager to unlock the item
-            inventoryManager.unlockItem(itemEntity.itemData.id);
-
-            // 2. Remove the 3D object from the world
-            this.removeInteractable(itemEntity.mesh);
-            itemEntity.destroy();
-
-            // 3. Reset our look target and hide the UI
+            // ... (keep the rest of your normal loot pickup code exactly as it is) ...
+            console.log(`Picked up: ${target.itemData.name}`);
+            inventoryManager.unlockItem(target.itemData.id);
+            this.removeInteractable(target.mesh);
+            target.destroy();
             this.currentLookTarget = null;
             this.uiManager.hideInteractionPrompt();
         }

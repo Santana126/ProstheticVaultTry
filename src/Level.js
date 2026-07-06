@@ -6,7 +6,7 @@ export class Level {
         this.physicsManager = physicsManager;
         
         // --- TWEAKED: Pushed the fog further back so you can see more of the bigger map ---
-        this.scene.fog = new THREE.Fog(0x111111, 40, 120);
+        this.scene.fog = new THREE.FogExp2(0x05050A, 0.012);
         
         this.generateArena();
     }

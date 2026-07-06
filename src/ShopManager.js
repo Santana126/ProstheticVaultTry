@@ -6,23 +6,21 @@ export class ShopManager {
         this.uiManager = uiManager;
         this.waveManager = waveManager;
 
-        // Get the DOM elements
         this.shopOverlay = document.getElementById('shop-overlay');
         this.shopBoltsDisplay = document.getElementById('shop-bolts-display');
         this.shopGrid = document.getElementById('shop-items-grid');
         this.closeBtn = document.getElementById('close-shop-btn');
 
-        // The items available in the shop
-        this.shopItems = [
+        this.masterShopPool = [
             { id: 'laser_arm', name: 'Laser Cannon', price: 60, type: 'weapon' },
             { id: 'plasma_arm', name: 'Plasma Projector', price: 120, type: 'weapon' },
             { id: 'thruster_belt', name: 'Thruster Belt', price: 50, type: 'weapon' },
-            { id: 'hp_pack', name: 'Medkit (HP+)', price: 20, type: 'consumable' },
-            { id: 'ammo_refill', name: 'Ammo/Battery Pack', price: 15, type: 'consumable' },
             { id: 'upg_speed', name: 'Speed Boost (+5%)', price: 40, type: 'upgrade' },
             { id: 'upg_dmg', name: 'Damage Boost (+10)', price: 40, type: 'upgrade' },
             { id: 'upg_maxhp', name: 'Max Health +20', price: 50, type: 'upgrade' }
         ];
+
+        this.currentShopItems = []; // Holds the 3 random items for the current wave
 
         this.initListeners();
     }
@@ -39,12 +37,24 @@ export class ShopManager {
         });
     }
 
+    shuffleArray(array) {
+        let shuffled = [...array];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
     openShop() {
         this.shopOverlay.style.display = 'flex';
-
-        //  Free the mouse and pause the game!
         this.player.controls.unlock();
         this.updateDisplay();
+
+        // Randomize exactly 3 items every time the shop opens! 
+        const randomizedPool = this.shuffleArray(this.masterShopPool);
+        this.currentShopItems = randomizedPool.slice(0, 3); 
+
         this.renderItems();
     }
 
@@ -76,7 +86,7 @@ export class ShopManager {
         this.shopGrid.innerHTML = '';
         const ownedItems = this.player.inventory.getOwnedItems();
 
-        this.shopItems.forEach(item => {
+        this.currentShopItems.forEach(item => {
             const isOwned = item.type === 'weapon' && ownedItems.includes(item.id);
             const canAfford = this.player.bolts >= item.price;
             

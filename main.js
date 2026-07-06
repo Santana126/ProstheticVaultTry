@@ -18,6 +18,7 @@ import { Vault } from './src/Vault.js';
 import * as TWEEN from '@tweenjs/tween.js';
 import { ShopManager } from './src/ShopManager.js';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import { VendingMachine } from './src/VendingMachine.js';
 
 // Setup
 const scene = new THREE.Scene();
@@ -120,6 +121,14 @@ uiManager.renderStash(player.inventory.getOwnedItems());
 
 const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
 interactionManager.addInteractable(groundLoot.mesh);
+
+// Add an Ammo machine and a Health machine to the arena
+const ammoMachine = new VendingMachine(scene, physicsManager, -25, 0, -25, 'AMMO', 15);
+const healthMachine = new VendingMachine(scene, physicsManager, 25, 0, -25, 'HEALTH', 25);
+
+// Tell the interaction manager they exist!
+interactionManager.addInteractable(ammoMachine.hitbox);
+interactionManager.addInteractable(healthMachine.hitbox);
 
 // const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['saw_arm'], -15, 1, 35);
 // interactionManager.addInteractable(groundLoot2.mesh);
@@ -244,6 +253,32 @@ document.addEventListener('keydown', (e) => {
             player.controls.unlock(); 
             uiManager.showWinScreen(); 
         }
+    }
+});
+
+// Listen for Vending Machine purchases
+document.addEventListener('useVendingMachine', (e) => {
+    const machine = e.detail;
+
+    if (player.bolts >= machine.cost) {
+        player.bolts -= machine.cost; // Take the money
+
+        if (machine.type === 'AMMO') {
+            const arm = player.inventory.getActiveArm();
+            if (arm) {
+                if (arm.maxAmmo) arm.currentAmmo = arm.maxAmmo;
+                if (arm.heat !== undefined) arm.heat = 0; // Vent heat instantly
+                console.log("Weapons fully reloaded/cooled!");
+            }
+        } else if (machine.type === 'HEALTH') {
+            player.health = Math.min(player.health + 40, player.maxHealth);
+            uiManager.updateHealthBar(player.health, player.maxHealth);
+            console.log("Health restored!");
+        }
+
+        uiManager.updateEconomy(player.level, player.exp, player.maxExp, player.bolts);
+    } else {
+        console.log("Not enough bolts!");
     }
 });
 
