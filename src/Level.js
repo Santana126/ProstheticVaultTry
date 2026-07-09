@@ -1,10 +1,15 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 export class Level {
-    constructor(scene, physicsManager) {
+    constructor(scene, physicsManager, renderer) {
         this.scene = scene;
         this.physicsManager = physicsManager;
-        
+        this.renderer = renderer;
+
         // --- TWEAKED: Pushed the fog further back so you can see more of the bigger map ---
         this.scene.fog = new THREE.FogExp2(0x05050A, 0.012);
         
@@ -84,55 +89,108 @@ export class Level {
         this.scene.add(northWall, southWall, eastWall, westWall);
         this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
 
-        // 3. Randomized Cover Blocks (Smart Spawning)
-        const coverGeo = new THREE.BoxGeometry(6, 8, 6);
-        const coverMat = new THREE.MeshStandardMaterial({ 
-            color: 0x1a1a24, roughness: 0.5, metalness: 0.8
-        });
+        
+        const ktx2Loader = new KTX2Loader()
+            .setTranscoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/')
+            .detectSupport(this.renderer); 
+
+        const dracoLoader = new DRACOLoader()
+            .setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+
+
+        
+        const gltfLoader = new GLTFLoader()
+            .setKTX2Loader(ktx2Loader)
+            .setDRACOLoader(dracoLoader)
+            .setMeshoptDecoder(MeshoptDecoder);
+        
+        // 👉 Update these paths to match your actual file names!
+        const obstacleModels = [
+            'assets/environment/obstacles/obstacle_1.glb',
+            'assets/environment/obstacles/obstacle_2.glb',
+            'assets/environment/obstacles/obstacle_3.glb',
+            'assets/environment/obstacles/obstacle_4.glb',
+            'assets/environment/obstacles/obstacle_5.glb'
+        ];
+
+        // The invisible hitbox geometry (adjust size to roughly match your models)
+        const hitboxGeo = new THREE.BoxGeometry(6, 8, 6);
+        const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
 
         const reservedZones = [
-            { x: 0, z: 0, radius: 15 },       // Player Start & Ground Loot
-            { x: -70, z: -50, radius: 10 },    // Ammo Vending Machine 
-            { x: 70, z: -50, radius: 10 },     // Health Vending Machine 
-            { x: 50, z: -70, radius: 40 }      // The Vault Door Area 
+            { x: 0, z: 0, radius: 5 },       // Player Start & Ground Loot
+            { x: -70, z: -50, radius: 8 },    // Ammo Vending Machine 
+            { x: 70, z: -50, radius: 8 },     // Health Vending Machine 
+            { x: 50, z: -70, radius: 30 }      // The Vault Door Area 
         ];
 
         let blocksPlaced = 0;
-        let attempts = 0; // Failsafe to prevent infinite loops
+        let attempts = 0;
 
-        // Keep trying until we successfully place exactly 24 blocks (or try 200 times)
-        while (blocksPlaced < 24 && attempts < 200) {
+        while (blocksPlaced < 40 && attempts < 200) { // (Assuming you bumped this to 40 for the bigger map)
             attempts++;
             
-            const randomX = (Math.random() - 0.5) * 240;
-            const randomZ = (Math.random() - 0.5) * 240;
+            const randomX = (Math.random() - 0.5) * 320; 
+            const randomZ = (Math.random() - 0.5) * 320;
             
-            // Check if this random spot overlaps with ANY reserved zone
             let isValidSpot = true;
             for (const zone of reservedZones) {
                 const dx = randomX - zone.x;
                 const dz = randomZ - zone.z;
-                const distance = Math.sqrt(dx * dx + dz * dz);
-                
-                if (distance < zone.radius) {
+                if (Math.sqrt(dx * dx + dz * dz) < zone.radius) {
                     isValidSpot = false;
                     break; 
                 }
             }
 
-            // If the spot is safe, build the block!
             if (isValidSpot) {
-                const cover = new THREE.Mesh(coverGeo, coverMat);
-                cover.position.set(randomX, 4, randomZ);
+                // 1. Place the solid physical hitbox for collisions
+                const obstacleHitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
                 
-                cover.castShadow = true;
-                cover.receiveShadow = true;
-                this.scene.add(cover);
-                this.physicsManager.addColliders([cover]);
+                // Assuming 4 is the vertical center of your 8-unit-tall hitbox
+                obstacleHitbox.position.set(randomX, 4, randomZ); 
                 
-                // Add this new block to the reserved zones so future blocks don't overlap IT!
+                this.scene.add(obstacleHitbox);
+                this.physicsManager.addColliders([obstacleHitbox]);
+                
+                // 2. Pick a random model and load it visually
+                const randomPath = obstacleModels[Math.floor(Math.random() * obstacleModels.length)];
+                
+                gltfLoader.load(randomPath, (gltf) => {
+                    const model = gltf.scene;
+                    
+                    // Match the model's position to the hitbox
+                    model.position.copy(obstacleHitbox.position);
+                    
+                    // Optional: If your models load floating in the air, you may need to offset the Y position:
+                    model.position.y -= 4; 
+
+                    const scaleSize = 5;
+
+                    if (randomPath.includes('obstacle_1')) {
+                        model.scale.set(scaleSize+1.5, scaleSize+1.5, scaleSize+1.5);
+                    }else if (randomPath.includes('obstacle_5')) {
+                        model.scale.set(scaleSize-1, scaleSize-1, scaleSize-1);
+                    }else if (randomPath.includes('obstacle_3')) {
+                        model.scale.set(scaleSize+15, scaleSize+15, scaleSize+15);
+                    }else {
+                        model.scale.set(scaleSize, scaleSize, scaleSize);
+                    }
+                    
+                    // Give each obstacle a random rotation so they don't look repetitive
+                    model.rotation.y = Math.random() * Math.PI * 2;
+
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+
+                    this.scene.add(model);
+                });
+
                 reservedZones.push({ x: randomX, z: randomZ, radius: 8 });
-                
                 blocksPlaced++;
             }
         }

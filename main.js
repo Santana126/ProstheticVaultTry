@@ -83,7 +83,7 @@ exrLoader.load('assets/environment/sky/night_sky.exr', (texture) => {
 const physicsManager = new PhysicsManager();
 // physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
 //  Initialize the Level (This automatically builds the textured floor, walls, and cover!)
-const level = new Level(scene, physicsManager);
+const level = new Level(scene, physicsManager, renderer);
 const vfxManager = new VFXManager(scene);
 const projectileManager = new ProjectileManager(scene);
 const animationManager = new AnimationManager();
