@@ -43,7 +43,7 @@ export class Level {
         // 4. THE GRID BUILDER
         // --- CHANGED: tileSize is now 5 instead of 20 ---
         const tileSize = 5; 
-        const floorSize = 300; 
+        const floorSize = 600; 
         
         // This math automatically adjusts! 
         // 200 / 5 = A 40x40 grid (1,600 individual tiles instead of 100)
@@ -89,7 +89,56 @@ export class Level {
         this.scene.add(northWall, southWall, eastWall, westWall);
         this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
 
-        
+const bgTextures = [
+            textureLoader.load('assets/environment/bg_city.png'),
+            textureLoader.load('assets/environment/bg_mountains.png'),
+            textureLoader.load('assets/environment/bg_industrial.png')
+            // You can add as many as you want here!
+        ];
+
+        const bgMaterial = new THREE.MeshBasicMaterial({ 
+            transparent: true, 
+            side: THREE.DoubleSide
+        });
+
+        // We make the planes smaller (200 wide) instead of 800
+        const segmentWidth = 200;
+        const bgGeo = new THREE.PlaneGeometry(segmentWidth, 150);
+
+        // This function now tiles multiple planes along either the X or Z axis
+        const createSceneryWall = (axisToTile, constantAxisValue, y, rotationY) => {
+            const numSegments = 5; // 5 segments of 200 = 1000 total width to cover the corners
+            const startPos = -400; // Start far left to center the 1000 width at 0
+
+            for (let i = 0; i < numSegments; i++) {
+                const randomTex = bgTextures[Math.floor(Math.random() * bgTextures.length)];
+                
+                const mat = bgMaterial.clone(); 
+                mat.map = randomTex;
+
+                const wallSegment = new THREE.Mesh(bgGeo, mat);
+                
+                // Calculate where this specific tile should sit
+                const currentOffset = startPos + (i * segmentWidth);
+                
+                // Place it along the correct axis
+                if (axisToTile === 'x') {
+                    wallSegment.position.set(currentOffset, y, constantAxisValue);
+                } else {
+                    wallSegment.position.set(constantAxisValue, y, currentOffset);
+                }
+                
+                wallSegment.rotation.y = rotationY;
+                this.scene.add(wallSegment);
+            }
+        };
+
+        // Push these out to +/- 250
+        createSceneryWall('x', -250, 50, 0);               // North Skyline (Tiles along X)
+        createSceneryWall('x', 250, 50, Math.PI);          // South Skyline (Tiles along X)
+        createSceneryWall('z', 250, 50, -Math.PI / 2);     // East Skyline (Tiles along Z)
+        createSceneryWall('z', -250, 50, Math.PI / 2);     // West Skyline (Tiles along Z)
+
         const ktx2Loader = new KTX2Loader()
             .setTranscoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/')
             .detectSupport(this.renderer); 
