@@ -18,27 +18,58 @@ export class Level {
         const floorNormal = textureLoader.load('assets/environment/floor/floor_gem_normal.jpg');
         const floorRoughness = textureLoader.load('assets/environment/floor/floor_gem_rough.jpg');
 
-        // --- TWEAKED: Increased repeat to 40 so the tiles stay sharp on the larger floor ---
-        [floorColor, floorNormal, floorRoughness].forEach(tex => {
-            tex.wrapS = THREE.RepeatWrapping;
-            tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(40, 40); 
+        // Load LAYER 2 Textures & Alpha Map
+        const floor2Color = textureLoader.load('assets/environment/floor/floor2_color.jpg');
+        const floor2Normal = textureLoader.load('assets/environment/floor/floor2_normal.jpg');
+        const floor2Roughness = textureLoader.load('assets/environment/floor/floor2_rough.jpg');
+        
+
+        // 3. Create the TWO Materials
+        const baseMat = new THREE.MeshStandardMaterial({ 
+            map: floorColor, normalMap: floorNormal, roughnessMap: floorRoughness,
+            roughness: 0.8, metalness: 0.2 
         });
 
-        // 1. The Main Floor (Doubled to 200x200)
-        const floorGeo = new THREE.PlaneGeometry(400, 400);
-        const floorMat = new THREE.MeshStandardMaterial({ 
-            map: floorColor,
-            normalMap: floorNormal,
-            roughnessMap: floorRoughness,
-            roughness: 0.8,
-            metalness: 0.2 
+        const detailMat = new THREE.MeshStandardMaterial({ 
+            map: floor2Color, normalMap: floor2Normal, roughnessMap: floor2Roughness,
+            roughness: 0.9, metalness: 0.1 
         });
+
+        // 4. THE GRID BUILDER
+        // --- CHANGED: tileSize is now 5 instead of 20 ---
+        const tileSize = 5; 
+        const floorSize = 200; 
         
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.receiveShadow = true;
-        this.scene.add(floor);
+        // This math automatically adjusts! 
+        // 200 / 5 = A 40x40 grid (1,600 individual tiles instead of 100)
+        const gridCount = floorSize / tileSize; 
+        const offset = (floorSize / 2) - (tileSize / 2); 
+
+        const tileGeo = new THREE.PlaneGeometry(tileSize, tileSize);
+
+        for (let x = 0; x < gridCount; x++) {
+            for (let z = 0; z < gridCount; z++) {
+                
+                // You can tweak this ratio based on the new smaller size
+                const useBase = Math.random() > 0.60; 
+                const tileMat = useBase ? baseMat : detailMat;
+
+                const tile = new THREE.Mesh(tileGeo, tileMat);
+                tile.rotation.x = -Math.PI / 2;
+
+                // Random rotation to break up patterns
+                tile.rotation.z = Math.floor(Math.random() * 4) * (Math.PI / 2);
+
+                tile.position.set(
+                    (x * tileSize) - offset,
+                    0,
+                    (z * tileSize) - offset
+                );
+
+                tile.receiveShadow = true;
+                this.scene.add(tile);
+            }
+        }
 
         // 2. Invisible Boundary Walls (Moved out to 100 meters)
         const wallMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -53,31 +84,58 @@ export class Level {
         this.scene.add(northWall, southWall, eastWall, westWall);
         this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
 
-        // 3. Randomized Cover Blocks
+        // 3. Randomized Cover Blocks (Smart Spawning)
         const coverGeo = new THREE.BoxGeometry(6, 8, 6);
         const coverMat = new THREE.MeshStandardMaterial({ 
-            color: 0x1a1a24, 
-            roughness: 0.5,
-            metalness: 0.8
+            color: 0x1a1a24, roughness: 0.5, metalness: 0.8
         });
 
-        // --- TWEAKED: Spawn 24 blocks instead of 12 ---
-        for (let i = 0; i < 24; i++) {
-            const cover = new THREE.Mesh(coverGeo, coverMat);
+        // --- NEW: Define the No-Spawn Zones (x, z, and radius in meters) ---
+        const reservedZones = [
+            { x: 0, z: 0, radius: 15 },       // Player Start & Ground Loot
+            { x: -25, z: -25, radius: 8 },    // Ammo Vending Machine
+            { x: 25, z: -25, radius: 8 },     // Health Vending Machine
+            { x: 0, z: -90, radius: 25 }      // The Vault Door Area
+        ];
+
+        let blocksPlaced = 0;
+        let attempts = 0; // Failsafe to prevent infinite loops
+
+        // Keep trying until we successfully place exactly 24 blocks (or try 200 times)
+        while (blocksPlaced < 24 && attempts < 200) {
+            attempts++;
             
-            // --- TWEAKED: Spread them out across 160 meters (-80 to +80) ---
             const randomX = (Math.random() - 0.5) * 160;
             const randomZ = (Math.random() - 0.5) * 160;
             
-            cover.position.set(randomX, 4, randomZ);
-            
-            // Don't spawn cover exactly where the player starts
-            if (cover.position.distanceTo(new THREE.Vector3(0, 0, 0)) < 15) continue;
+            // Check if this random spot overlaps with ANY reserved zone
+            let isValidSpot = true;
+            for (const zone of reservedZones) {
+                const dx = randomX - zone.x;
+                const dz = randomZ - zone.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < zone.radius) {
+                    isValidSpot = false;
+                    break; 
+                }
+            }
 
-            cover.castShadow = true;
-            cover.receiveShadow = true;
-            this.scene.add(cover);
-            this.physicsManager.addColliders([cover]);
+            // If the spot is safe, build the block!
+            if (isValidSpot) {
+                const cover = new THREE.Mesh(coverGeo, coverMat);
+                cover.position.set(randomX, 4, randomZ);
+                
+                cover.castShadow = true;
+                cover.receiveShadow = true;
+                this.scene.add(cover);
+                this.physicsManager.addColliders([cover]);
+                
+                // Add this new block to the reserved zones so future blocks don't overlap IT!
+                reservedZones.push({ x: randomX, z: randomZ, radius: 8 });
+                
+                blocksPlaced++;
+            }
         }
     }
 }
