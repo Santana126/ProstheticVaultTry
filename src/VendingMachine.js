@@ -32,16 +32,37 @@ export class VendingMachine {
         this.visualMesh.position.y = 4;
         this.mesh.add(this.visualMesh);
 
-        // --- 3. 3D MODEL LOADER (Uncomment when you have your model!) ---
-        /*
+        // --- 3. 3D MODEL LOADER ---
+        // Pick the right file based on the machine type!
+        const modelPath = type === 'AMMO' ? 'assets/vendingMachineBullets.glb' : 'assets/vendingMachineHP.glb';
+        
         const loader = new GLTFLoader();
-        loader.load('assets/vending_machine.glb', (gltf) => {
-            this.mesh.remove(this.visualMesh); // Hide the placeholder box
+        loader.load(modelPath, (gltf) => {
+            // Once the model loads, delete the colored placeholder box
+            this.mesh.remove(this.visualMesh); 
+            
             const model = gltf.scene;
-            model.scale.set(1, 1, 1);
+            
+            
+            // If it's too big/small, change this:
+            model.scale.set(5, 5, 5); 
+            // If it is sinking into the floor, raise the Y value:
+            model.position.set(0, 4, 0); 
+            // If it is facing the wrong way, rotate it on the Y axis:
+            // model.rotation.y = Math.PI; 
+
+            // Make sure the new model casts and receives shadows
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
             this.mesh.add(model);
         });
-        */
+
+        this.scene.add(this.mesh);
 
         this.scene.add(this.mesh);
     }
