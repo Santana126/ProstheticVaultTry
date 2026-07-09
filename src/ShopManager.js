@@ -52,9 +52,20 @@ export class ShopManager {
         this.shopOverlay.style.display = 'flex';
         this.player.controls.unlock();
         this.updateDisplay();
+        //Get the list of IDs the player already owns
+        const ownedItems = this.player.inventory.getOwnedItems();
 
-        // Randomize exactly 3 items every time the shop opens! 
-        const randomizedPool = this.shuffleArray(this.masterShopPool);
+        //Filter the master pool! 
+        // Keep upgrades always, but only keep weapons if they are NOT in the owned list.
+        const availablePool = this.masterShopPool.filter(item => {
+            if (item.type === 'weapon') {
+                return !ownedItems.includes(item.id);
+            }
+            return true; 
+        });
+
+        // Shuffle the remaining valid items and pick the top 3
+        const randomizedPool = this.shuffleArray(availablePool);
         this.currentShopItems = randomizedPool.slice(0, 3); 
 
         this.renderItems();
