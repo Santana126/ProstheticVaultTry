@@ -47,7 +47,7 @@ export class InteractionManager {
                 if (distance2D <= magnetRadius) {
                     // Pick it up! Dispatch an event so the Player script hears it.
                     document.dispatchEvent(new CustomEvent('currencyCollected', { 
-                        detail: { amount: 15 } // Give 15 bolts per pickup!
+                        detail: { amount: 25 } // Give 25 bolts per pickup!
                     }));
 
                     // Clean it up
