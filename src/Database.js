@@ -27,10 +27,10 @@ export const ITEM_DATABASE = {
             { strength: 5 }, 
             { damage: 40, attackSpeed: 0.2, projectileSpeed: 30 },
             {
-                scale: 1, 
-                position: { x: 1, y: -0.5, z: -1.25 }, 
+                scale: 1.5, 
+                position: { x: 0.75, y: -0.60, z: -0.85 }, 
                 rotation: { x: Math.PI/2, y: Math.PI/2 + Math.PI/4, z: -Math.PI /2},
-                muzzleNode: 'mesh_0', 
+                muzzleNode: 'Sphere', 
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),
@@ -40,10 +40,10 @@ export const ITEM_DATABASE = {
             { strength: 10 }, 
             { damage: 5, attackSpeed: 0.1, projectileSpeed: 50 },
             {
-                scale: 1, 
-                position: { x: 1, y: -0.5, z: -1.25 }, 
+                scale: 1.5, 
+                position: { x: 0.75, y: -0.6, z: -0.85 }, 
                 rotation: { x: Math.PI/2, y: Math.PI/2 + Math.PI/4, z: -Math.PI /2},
-                muzzleNode: 'mesh_0', 
+                muzzleNode: 'Sphere', 
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         )
