@@ -61,25 +61,42 @@ export class ShopManager {
         return shuffled;
     }
 
-    openShop() {
+openShop() {
         this.shopOverlay.style.display = 'flex';
         this.player.controls.unlock();
         this.updateDisplay();
-        //Get the list of IDs the player already owns
+
         const ownedItems = this.player.inventory.getOwnedItems();
 
-        //Filter the master pool! 
-        // Keep upgrades always, but only keep weapons if they are NOT in the owned list.
-        const availablePool = this.masterShopPool.filter(item => {
-            if (item.type === 'weapon') {
-                return !ownedItems.includes(item.id);
-            }
-            return true; 
-        });
+        // 1. Separate the master pool into two distinct decks
+        const availableWeapons = this.masterShopPool.filter(item => 
+            item.type === 'weapon' && !ownedItems.includes(item.id)
+        );
+        const availableUpgrades = this.masterShopPool.filter(item => 
+            item.type === 'upgrade' || item.type === 'consumable' // Included consumable just in case!
+        );
 
-        // Shuffle the remaining valid items and pick the top 3
-        const randomizedPool = this.shuffleArray(availablePool);
-        this.currentShopItems = randomizedPool.slice(0, 3); 
+        // 2. Shuffle both decks to ensure randomness
+        const shuffledWeapons = this.shuffleArray(availableWeapons);
+        const shuffledUpgrades = this.shuffleArray(availableUpgrades);
+
+        this.currentShopItems = [];
+
+        // 3. The Drafting Logic
+        if (shuffledWeapons.length > 0) {
+            // We have at least one unowned weapon! Grab 1 weapon and 2 upgrades.
+            this.currentShopItems.push(shuffledWeapons[0]);
+            
+            // Safely push up to 2 upgrades 
+            if (shuffledUpgrades.length > 0) this.currentShopItems.push(shuffledUpgrades[0]);
+            if (shuffledUpgrades.length > 1) this.currentShopItems.push(shuffledUpgrades[1]);
+        } else {
+            // Player owns all weapons! Fill all 3 slots with upgrades.
+            this.currentShopItems = shuffledUpgrades.slice(0, 3);
+        }
+
+        // 4. Shuffle the final 3 items so the weapon isn't always sitting in the exact same left slot
+        this.currentShopItems = this.shuffleArray(this.currentShopItems);
 
         this.renderItems();
     }
