@@ -49,13 +49,24 @@ export class ProjectileManager {
                 const hitObject = intersects[0].object;
 
                 if (hitObject && hitObject.userData && hitObject.userData.entity) {
-                    // --- NEW: Prevent the Boss from team-killing its minions! ---
+                    const entity = hitObject.userData.entity;
+
+                    // Prevent the Boss from team-killing its minions
                     if (!proj.isEnemyProjectile) {
-                        hitObject.userData.entity.takeDamage(proj.damage, hitPoint, normal, vfxManager);
+                        
+                        // SAFE CHECK: Does this entity actually have health? (Enemies/Boss)
+                        if (typeof entity.takeDamage === 'function') {
+                            entity.takeDamage(proj.damage, hitPoint, normal, vfxManager);
+                        } else {
+                            // It is an entity (like a Vending Machine), so treat it like a wall!
+                            vfxManager.createBurnDecal(this.scene, hitPoint, normal);
+                        }
                     }
-                } else {
+                }else {
+                    // It is an entity (like a Vending Machine), so treat it like a wall!
                     vfxManager.createBurnDecal(this.scene, hitPoint, normal);
                 }
+                    
 
                 for(let s = 0; s < 5; s++) vfxManager.spawnSparks(hitPoint, normal);
 

@@ -99,12 +99,22 @@ export class HitscanArm extends Prosthetic {
             this.tickTimer += delta;
             if (this.tickTimer >= this.tickRate) { 
                 if (hitObject && hitObject.userData && hitObject.userData.entity) {
-                    // const finalDamage = this.damage + bonusDmg;
-                    console.log("Applying damage:", finalDamage);
-                    hitObject.userData.entity.takeDamage(finalDamage, targetPoint, targetNormal, vfxManager);
+                    const entity = hitObject.userData.entity;
+
+                    // SAFE CHECK: Does this entity actually take damage?
+                    if (typeof entity.takeDamage === 'function') {
+                        // const finalDamage = this.damage + bonusDmg;
+                        console.log("Applying damage:", finalDamage);
+                        entity.takeDamage(finalDamage, targetPoint, targetNormal, vfxManager);
+                    } else {
+                        // It's a Vending Machine or interactive object, scorch it!
+                        vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
+                    }
                 } else {
+                    // It's a standard wall or floor
                     vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
                 }
+                
                 vfxManager.spawnSparks(targetPoint, targetNormal);
                 this.tickTimer = 0; 
             }
