@@ -18,8 +18,8 @@ export class WaveManager {
 
         // Define waves
         this.waves = [
-            // { count: 5, isBossWave: false }, // Wave 1: 5 Enemies
-            // { count: 7, isBossWave: false }, // Wave 2: 7 Enemies
+            { count: 5, isBossWave: false }, // Wave 1: 5 Enemies
+            { count: 7, isBossWave: false }, // Wave 2: 7 Enemies
             // { count: 10, isBossWave: false }, // Wave 3: 10 Enemies
             { count: 4, isBossWave: true } // Wave 4: 1 Boss Enemy
         ];
@@ -32,13 +32,32 @@ export class WaveManager {
         }
 
         const waveConfig = this.waves[this.currentWave];
+        
+        // --- SCENARIO 6: BOSS INTRO ---
+        if (waveConfig.isBossWave) {
+            if (window.uiManager) {
+                window.uiManager.showTransmission(
+                    'assets/narr_prost.png', '', 
+                    'Critical warning: a massive spatial distortion and interdimensional energy spike is tearing right through the arena! Brace yourself, Hunter, because Romeo, The Circle, has finally breached our reality. Do not let this giant crush you!', 
+                    () => {
+                        this.executeWaveSpawn(waveConfig); // Spawn AFTER they read the text!
+                    }
+                );
+            }
+            return; // Halt the function so it doesn't spawn immediately!
+        }
+
+        // For all normal waves, just spawn immediately
+        this.executeWaveSpawn(waveConfig);
+    }
+
+    executeWaveSpawn(waveConfig) {
         console.log(`Starting Wave ${this.currentWave + 1}! Spawning ${waveConfig.count} enemies.`);
-        // Update the HUD Text
+        
         const waveText = document.getElementById('wave-counter');
         waveText.style.display = 'block';
         waveText.innerText = waveConfig.isBossWave ? 'FINAL WAVE' : `WAVE ${this.currentWave + 1}`;
 
-        // Show Boss HP if it's the final wave
         if (waveConfig.isBossWave) {
             document.getElementById('boss-ui').style.display = 'block';
             document.getElementById('boss-hp-fill').style.width = '100%';
@@ -46,10 +65,8 @@ export class WaveManager {
 
         for (let i = 0; i < waveConfig.count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            
             const isThisTheBoss = waveConfig.isBossWave && (i === 0);
-            
-            const radius = isThisTheBoss ? 0 : 35; // Spawn boss in center, minions on the edge
+            const radius = isThisTheBoss ? 0 : 35; 
             const spawnX = Math.cos(angle) * radius;
             const spawnZ = Math.sin(angle) * radius;
 

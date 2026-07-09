@@ -13,7 +13,7 @@ export class ShopManager {
 
         this.masterShopPool = [
             { id: 'laser_arm', name: 'Laser Cannon', price: 60, type: 'weapon' },
-            { id: 'plasma_arm', name: 'Plasma Projector', price: 120, type: 'weapon' },
+            { id: 'plasma_arm', name: 'Plasma Projector', price: 60, type: 'weapon' },
             { id: 'thruster_belt', name: 'Thruster Belt', price: 50, type: 'weapon' },
             { id: 'upg_speed', name: 'Speed Boost (+5%)', price: 40, type: 'upgrade' },
             { id: 'upg_dmg', name: 'Damage Boost (+10)', price: 40, type: 'upgrade' },
@@ -26,16 +26,29 @@ export class ShopManager {
     }
 
     initListeners() {
-        // Listen for the button to close the shop and start the next wave
         this.closeBtn.addEventListener('click', () => {
             this.closeShop();
         });
 
-        
+        let isFirstWave = true; // Track the first wave!
+
         document.addEventListener('waveCleared', () => {
             setTimeout(() => {
-                this.openShop();
-            }, 4000); // 4-second delay for loot gathering
+                // --- SCENARIO 4: THE ECONOMY ---
+                if (isFirstWave && window.uiManager) {
+                    isFirstWave = false;
+                    
+                    window.uiManager.showTransmission(
+                        'assets/narr_prost.png', '', 
+                        'Wave one neutralized, but it is not over yet. The Orbital Shop Network is patching through your HUD now, allowing you to buy crucial powerups. Do not forget you can also spend those collected Bolts at the Vending Machines around the map.', 
+                        () => {
+                            this.openShop();
+                        }
+                    );
+                } else {
+                    this.openShop();
+                }
+            }, 4000); 
         });
     }
 

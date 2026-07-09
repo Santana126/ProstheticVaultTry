@@ -88,6 +88,7 @@ const vfxManager = new VFXManager(scene);
 const projectileManager = new ProjectileManager(scene);
 const animationManager = new AnimationManager();
 const uiManager = new UIManager();
+window.uiManager = uiManager; 
 const interactionManager = new InteractionManager(scene, camera, uiManager);
 
 // Add it as the 4th argument!
@@ -122,8 +123,8 @@ uiManager.renderStash(player.inventory.getOwnedItems());
 const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
 interactionManager.addInteractable(groundLoot.mesh);
 
-const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['plasma_arm'], 10, 1, 35);
-interactionManager.addInteractable(groundLoot2.mesh);
+// const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['plasma_arm'], 10, 1, 35);
+// interactionManager.addInteractable(groundLoot2.mesh);
 
 
 // Add an Ammo machine and a Health machine to the arena
@@ -202,6 +203,8 @@ document.addEventListener('currencyCollected', (e) => {
 let gamePaused = true; // The game starts paused on the menu!
 let firstStart = false; // Tracks if we've begun the first wave
 let isIntroPlaying = false;
+let hasSeenArmTutorial = false;
+let hasSeenBeltTutorial = false;
 
 const blocker = document.getElementById('blocker');
 blocker.addEventListener('click', () => player.controls.lock());
@@ -211,36 +214,15 @@ player.controls.addEventListener('lock', () => {
     
     if (!firstStart) {
         firstStart = true;
-        isIntroPlaying = true; // Lock the game dynamics!
-        gamePaused = true;     // Ensure the game STAYS paused
         
-        uiManager.showTransmission(
-            'assets/narr_prost.png', 
-            '', 
-            'Mercenary, you are cleared to engage. Survive the alien swarm, eliminate their leader, and secure the artifact inside that vault. Good luck.', 
-            0,    // Duration doesn't matter because we wait for Space
-            true, // waitForSpace = true
+        window.uiManager.showTransmission(
+            'assets/narr_prost.png', '', 
+            'Drop successful, Vault Hunter; you are in the hot zone. Grab any scrap weapons on the ground, zero those hostiles, and collect every Bolt they drop. We need that salvage to survive this wretched sector and complete the mission.', 
             () => {
-                // This code runs exactly when the typewriter finishes!
-                const spaceListener = (e) => {
-                    if (e.code === 'Space') {
-                        document.removeEventListener('keydown', spaceListener);
-                        uiManager.hideTransmission();
-                        isIntroPlaying = false; 
-                        gamePaused = false; // UNPAUSE THE GAME!
-                        
-                        // Keep your delayed spawn! 
-                        setTimeout(() => {
-                            waveManager.startNextWave();
-                        }, 4000); 
-                    }
-                };
-                // Start listening for the spacebar
-                document.addEventListener('keydown', spaceListener);
+                setTimeout(() => { waveManager.startNextWave(); }, 4000); 
             }
         );
-    } else if (!isIntroPlaying) {
-        // If the intro isn't playing, unpause normally when clicking back in
+    } else if (!window.isTransmissionActive) {
         gamePaused = false; 
     }
 });
@@ -263,6 +245,9 @@ player.controls.addEventListener('unlock', () => {
 });
 
 
+document.addEventListener('transmissionStarted', () => { gamePaused = true; });
+document.addEventListener('transmissionEnded', () => { gamePaused = false; });
+
 // Keep 'E' for inventory in main.js, InputManager handles the rest!
 document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyE') {
@@ -279,10 +264,20 @@ document.addEventListener('keydown', (e) => {
                 console.log("Key accepted! Opening Vault...");
                 vaultOpened = true; 
                 levelVault.open();
+                
+                // --- SCENARIO 7: VAULT UNLOCKED ---
+                window.uiManager.showTransmission(
+                    'assets/narr_prost.png', '', 
+                    'The genetic cipher is accepted, and the Vault is finally open. Move in immediately to secure that pulsing artifact before the entire sector\'s power grid collapses. Grab the package and prepare for immediate orbital extraction!'
+                );
             } else {
-                console.log("The Vault is locked. Defeat the boss to get the key!");
+                // --- SCENARIO 5: VAULT LOCKED ---
+                window.uiManager.showTransmission(
+                    'assets/narr_prost.png', '', 
+                    'Negative, Hunter, that massive Vault door\'s biometric lock is sealed tight and cannot be forced. It requires a specific genetic cipher to breach the system. Scans indicate the final anomaly holding that key has yet to show its face.'
+                );
             }
-        } 
+        }
         // PHASE 2: ENTERING THE VAULT (Checking the inside box)
         else if (vaultOpened && levelVault.winBox.containsPoint(player.camera.position)) {
             console.log("Artifact claimed! You Win!");
@@ -292,6 +287,31 @@ document.addEventListener('keydown', (e) => {
             player.controls.unlock(); 
             uiManager.showWinScreen(); 
         }
+    }
+});
+
+// --- SCENARIOS 2 & 3: ITEM PICKUPS ---
+document.addEventListener('inventoryUpdated', (e) => {
+    if (!e.detail || !e.detail.ownedItems) return;
+    
+    const owned = e.detail.ownedItems;
+    
+    // Check if they picked up any Arm for the first time
+    if (!hasSeenArmTutorial && (owned.includes('laser_arm') || owned.includes('plasma_arm'))) {
+        hasSeenArmTutorial = true;
+        window.uiManager.showTransmission(
+            'assets/narr_prost.png', '',
+            'Solid acquisition, Hunter; that is a mil-spec weaponized prosthetic. Access your suit\'s inventory interface and equip the arm directly to your chassis. Calibrate your servos and prepare for heavy combat because they know you are here.'
+        );
+    }
+    
+    // Check if they picked up the Belt for the first time
+    if (!hasSeenBeltTutorial && owned.includes('thruster_belt')) {
+        hasSeenBeltTutorial = true;
+        window.uiManager.showTransmission(
+            'assets/narr_prost.png', '',
+            'Belt module secured and integrated, bringing your suit\'s kinetic thrusters fully online. Your mobility is now upgraded, so use the dash function to evade incoming enemy fire and reposition. Keep moving, or you will be turned into scrap.'
+        );
     }
 });
 
@@ -449,7 +469,7 @@ function animate() {
         projectileManager.update(delta, physicsManager, vfxManager, player);
 
         groundLoot.update(delta);
-        groundLoot2.update(delta);
+        // groundLoot2.update(delta);
         beltLoot.update(delta);
 
         waveManager.update(delta, vfxManager);

@@ -297,20 +297,27 @@ export class UIManager {
         document.getElementById('heat-ui').style.display = 'none';
     }
 
-    // added 'waitForSpace' and 'onComplete' as new optional arguments
-    showTransmission(portraitSrc, speakerName, message, durationMs = 5000, waitForSpace = false, onComplete = null) {
+    showTransmission(portraitSrc, speakerName, message, onComplete = null) {
         const ui = document.getElementById('narrator-ui');
         const portrait = document.getElementById('narrator-portrait');
         const textEl = document.getElementById('narrator-text');
-        const promptEl = document.getElementById('narrator-prompt'); // Get the new prompt
+        const promptEl = document.getElementById('narrator-prompt');
 
         portrait.src = portraitSrc;
         textEl.innerText = ""; 
-        promptEl.style.display = 'none'; // Hide prompt initially
+        promptEl.style.display = 'none'; 
         ui.style.display = 'flex';
 
+        // 1. Tell the entire game to PAUSE
+        window.isTransmissionActive = true;
+        document.dispatchEvent(new Event('transmissionStarted'));
+
         if (this.typewriterInterval) clearInterval(this.typewriterInterval);
-        if (this.transmissionTimeout) clearTimeout(this.transmissionTimeout);
+        
+        // Clean up old space listener if a transmission was interrupted
+        if (this.spaceListener) {
+            document.removeEventListener('keydown', this.spaceListener);
+        }
 
         let i = 0;
         this.typewriterInterval = setInterval(() => {
@@ -318,23 +325,26 @@ export class UIManager {
             i++;
             if (i >= message.length) {
                 clearInterval(this.typewriterInterval);
-                
-                // If this is the intro, show the spacebar prompt!
-                if (waitForSpace) {
-                    promptEl.style.display = 'block';
-                }
-                
-                // Trigger the callback to let the game know typing is done
-                if (onComplete) onComplete();
-            }
-        }, 30);
+                promptEl.style.display = 'block'; // Show "> Press SPACE to start <"
 
-        // Only auto-hide if we aren't waiting for the spacebar!
-        if (!waitForSpace) {
-            this.transmissionTimeout = setTimeout(() => {
-                ui.style.display = 'none';
-            }, durationMs);
-        }
+                // 2. Wait for the player to press Space
+                this.spaceListener = (e) => {
+                    if (e.code === 'Space') {
+                        document.removeEventListener('keydown', this.spaceListener);
+                        this.spaceListener = null;
+                        this.hideTransmission();
+                        
+                        // 3. Tell the game to UNPAUSE
+                        window.isTransmissionActive = false;
+                        document.dispatchEvent(new Event('transmissionEnded'));
+                        
+                        // 4. Trigger whatever happens next (e.g., spawn boss, open shop)
+                        if (onComplete) onComplete();
+                    }
+                };
+                document.addEventListener('keydown', this.spaceListener);
+            }
+        }, 30); // Adjust this number to make the typing faster or slower!
     }
 
     //  Manually hide the UI 
