@@ -122,9 +122,13 @@ uiManager.renderStash(player.inventory.getOwnedItems());
 const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
 interactionManager.addInteractable(groundLoot.mesh);
 
+const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['plasma_arm'], 10, 1, 35);
+interactionManager.addInteractable(groundLoot2.mesh);
+
+
 // Add an Ammo machine and a Health machine to the arena
-const ammoMachine = new VendingMachine(scene, physicsManager, -25, 0, -25, 'AMMO', 15);
-const healthMachine = new VendingMachine(scene, physicsManager, 25, 0, -25, 'HEALTH', 25);
+const ammoMachine = new VendingMachine(scene, physicsManager, -70, 0, -50, 'AMMO', 15);
+const healthMachine = new VendingMachine(scene, physicsManager, 70, 0, -50, 'HEALTH', 25);
 
 // Tell the interaction manager they exist!
 interactionManager.addInteractable(ammoMachine.hitbox);
@@ -154,7 +158,7 @@ const shopManager = new ShopManager(player, uiManager, waveManager);
 //     waveManager.startNextWave();
 // }, 2000);
 
-const vaultPosition = new THREE.Vector3(10, 5, -20);
+const vaultPosition = new THREE.Vector3(50, 5, -70);
 const vaultScale = 2.5;
 
 const levelVault = new Vault(scene, physicsManager, vaultPosition, vaultScale);
@@ -266,7 +270,7 @@ document.addEventListener('keydown', (e) => {
     }
 
     // --- VAULT INTERACTION (PHASE 1 & 2) ---
-    if (e.code === 'KeyO' && !hasWon) {
+    if (e.code === 'KeyQ' && !hasWon) {
         
         // PHASE 1: OPENING THE VAULT (Checking the outside box)
         if (!vaultOpened && levelVault.openBox.containsPoint(player.camera.position)) {
@@ -445,7 +449,7 @@ function animate() {
         projectileManager.update(delta, physicsManager, vfxManager, player);
 
         groundLoot.update(delta);
-        // groundLoot2.update(delta);
+        groundLoot2.update(delta);
         beltLoot.update(delta);
 
         waveManager.update(delta, vfxManager);

@@ -38,7 +38,7 @@ export class Level {
         // 4. THE GRID BUILDER
         // --- CHANGED: tileSize is now 5 instead of 20 ---
         const tileSize = 5; 
-        const floorSize = 200; 
+        const floorSize = 300; 
         
         // This math automatically adjusts! 
         // 200 / 5 = A 40x40 grid (1,600 individual tiles instead of 100)
@@ -73,13 +73,13 @@ export class Level {
 
         // 2. Invisible Boundary Walls (Moved out to 100 meters)
         const wallMat = new THREE.MeshBasicMaterial({ visible: false });
-        const wallGeo = new THREE.BoxGeometry(400, 20, 2); // Walls are now 400m long
+        const wallGeo = new THREE.BoxGeometry(300, 20, 2); // Walls are now 300m long
         
-        const northWall = new THREE.Mesh(wallGeo, wallMat); northWall.position.set(0, 10, -200);
-        const southWall = new THREE.Mesh(wallGeo, wallMat); southWall.position.set(0, 10, 200);
+        const northWall = new THREE.Mesh(wallGeo, wallMat); northWall.position.set(0, 10, -150);
+        const southWall = new THREE.Mesh(wallGeo, wallMat); southWall.position.set(0, 10, 150);
         
-        const eastWall = new THREE.Mesh(wallGeo, wallMat); eastWall.rotation.y = Math.PI / 2; eastWall.position.set(200, 10, 0);
-        const westWall = new THREE.Mesh(wallGeo, wallMat); westWall.rotation.y = Math.PI / 2; westWall.position.set(-200, 10, 0);
+        const eastWall = new THREE.Mesh(wallGeo, wallMat); eastWall.rotation.y = Math.PI / 2; eastWall.position.set(150, 10, 0);
+        const westWall = new THREE.Mesh(wallGeo, wallMat); westWall.rotation.y = Math.PI / 2; westWall.position.set(-150, 10, 0);
 
         this.scene.add(northWall, southWall, eastWall, westWall);
         this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
@@ -90,12 +90,11 @@ export class Level {
             color: 0x1a1a24, roughness: 0.5, metalness: 0.8
         });
 
-        // --- NEW: Define the No-Spawn Zones (x, z, and radius in meters) ---
         const reservedZones = [
             { x: 0, z: 0, radius: 15 },       // Player Start & Ground Loot
-            { x: -25, z: -25, radius: 8 },    // Ammo Vending Machine
-            { x: 25, z: -25, radius: 8 },     // Health Vending Machine
-            { x: 0, z: -90, radius: 25 }      // The Vault Door Area
+            { x: -70, z: -50, radius: 10 },    // Ammo Vending Machine 
+            { x: 70, z: -50, radius: 10 },     // Health Vending Machine 
+            { x: 50, z: -70, radius: 40 }      // The Vault Door Area 
         ];
 
         let blocksPlaced = 0;
@@ -105,8 +104,8 @@ export class Level {
         while (blocksPlaced < 24 && attempts < 200) {
             attempts++;
             
-            const randomX = (Math.random() - 0.5) * 160;
-            const randomZ = (Math.random() - 0.5) * 160;
+            const randomX = (Math.random() - 0.5) * 240;
+            const randomZ = (Math.random() - 0.5) * 240;
             
             // Check if this random spot overlaps with ANY reserved zone
             let isValidSpot = true;
