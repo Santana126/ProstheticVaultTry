@@ -31,9 +31,11 @@ export class ShopManager {
             this.closeShop();
         });
 
-        // We can still use the Custom Event to open the shop cleanly!
+        
         document.addEventListener('waveCleared', () => {
-            this.openShop();
+            setTimeout(() => {
+                this.openShop();
+            }, 4000); // 4-second delay for loot gathering
         });
     }
 
