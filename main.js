@@ -6,7 +6,6 @@ import { ITEM_DATABASE } from './src/Database.js';
 import { UIManager } from './src/UIManager.js';
 import { VFXManager } from './src/VFXManager.js';
 import { PhysicsManager } from './src/PhysicsManager.js';
-// import { Dummy } from './src/Dummy.js';
 import { ProjectileManager } from './src/ProjectileManager.js';
 import { AnimationManager } from './src/AnimationManager.js';
 import { WorldItem } from './src/WorldItem.js';
@@ -27,10 +26,9 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0; // Tweak this later if the sky is too dark/bright
+renderer.toneMappingExposure = 1.0;
 
 const ktx2Loader = new KTX2Loader()
-    // We use a safe CDN to grab the complex transcoder files Three.js needs
     .setTranscoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/')
     .detectSupport(renderer);
 
@@ -38,7 +36,6 @@ const ktx2Loader = new KTX2Loader()
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lighting (Keep your lighting and floor code here)
 const ambientLight = new THREE.AmbientLight(0x404040, 2);
 scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -46,43 +43,14 @@ sunLight.position.set(5, 10, 7.5);
 scene.add(sunLight);
 
 
-// --- NEW: Load the EXR Skybox ---
 const exrLoader = new EXRLoader();
 exrLoader.load('assets/environment/sky/night_sky.exr', (texture) => {
-    // Tell Three.js this is a 360-degree sphere image
     texture.mapping = THREE.EquirectangularReflectionMapping; 
-    
-    // Set it as the visual background
     scene.background = texture; 
-    
-    // Set it as the global lighting environment (Reflects off metal!)
     scene.environment = texture; 
 });
 
-
-
-// // --- 3. THE ENVIRONMENT (The Floor) ---
-// const floorGeometry = new THREE.PlaneGeometry(100, 100);
-// const floorMaterial = new THREE.MeshStandardMaterial({ 
-//     color: 0x1a1a2e, // Deep Midnight Blue
-//     roughness: 0.8 
-// });
-// const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-// floor.rotation.x = -Math.PI / 2;
-// scene.add(floor);
-
-// // ADD A GRID HELPER: This creates the "technical" look
-// // Parameters: (size, divisions, centerColor, gridColor)
-// const gridHelper = new THREE.GridHelper(100, 50, 0x4444ff, 0x222244);
-// scene.add(gridHelper);
-
-// Initialize Level
-// const level = new Level(scene, new PhysicsManager());
-// level.buildVaultLayout(); // One line to build the whole world!
-
 const physicsManager = new PhysicsManager();
-// physicsManager.addColliders(level.walls); // Tell the physics manager about the walls
-//  Initialize the Level (This automatically builds the textured floor, walls, and cover!)
 const level = new Level(scene, physicsManager, renderer);
 const vfxManager = new VFXManager(scene);
 const projectileManager = new ProjectileManager(scene);
@@ -90,9 +58,6 @@ const animationManager = new AnimationManager();
 const uiManager = new UIManager();
 window.uiManager = uiManager; 
 const interactionManager = new InteractionManager(scene, camera, uiManager);
-
-// Add it as the 4th argument!
-// const player = new Player(scene, camera, level, vfxManager);
 const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager, ktx2Loader);
 
 
@@ -102,10 +67,7 @@ let isGameOver = false;
 document.addEventListener('playerDied', () => {
     isGameOver = true;
     
-    // Unlock the mouse so they can click "Try Again"
     player.controls.unlock(); 
-    
-    // Show the red overlay
     uiManager.showGameOver();
 });
 
@@ -114,57 +76,33 @@ document.addEventListener('overheatDamage', (e) => {
     player.takeDamage(e.detail.amount);
 });
 
-// // const steelArm = ITEM_DATABASE.arms['steel_arm'];
-// // player.inventory.equip('RIGHT_ARM', steelArm);
-// const torchArm = ITEM_DATABASE.arms['torch_arm'];
-// player.inventory.equip('RIGHT_ARM', torchArm);   
-// uiManager.renderStash(player.inventory.getOwnedItems());
-
 
 const torchArm = ITEM_DATABASE.arms['torch_arm'];
-
-// 👉 THE FIX: Give it to the player first!
 player.inventory.unlockItem('torch_arm'); 
-
-// Now they own it, so the security check will let them equip it!
 player.inventory.equip('LEFT_ARM', torchArm);
-
-// You can put the steel arm back in the right slot now too!
 const steelArm = ITEM_DATABASE.arms['steel_arm'];
 player.inventory.equip('RIGHT_ARM', steelArm);
 
 uiManager.renderStash(player.inventory.getOwnedItems());
 
-//Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
-// const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
-
 const groundLoot = new WorldItem(scene, ITEM_DATABASE.arms['laser_arm'], 15, 1, 30);
 interactionManager.addInteractable(groundLoot.mesh);
-
-// const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['plasma_arm'], 10, 1, 35);
-// interactionManager.addInteractable(groundLoot2.mesh);
-
 
 // Add an Ammo machine and a Health machine to the arena
 const ammoMachine = new VendingMachine(scene, physicsManager, -70, 0, -50, 'AMMO', 15);
 const healthMachine = new VendingMachine(scene, physicsManager, 70, 0, -50, 'HEALTH', 25);
 
-// Tell the interaction manager they exist!
 interactionManager.addInteractable(ammoMachine.hitbox);
 interactionManager.addInteractable(healthMachine.hitbox);
-
-// const groundLoot2 = new WorldItem(scene, ITEM_DATABASE.arms['saw_arm'], -15, 1, 35);
-// interactionManager.addInteractable(groundLoot2.mesh);
 
 const beltLoot = new WorldItem(
     scene, 
     ITEM_DATABASE.belts['thruster_belt'], 
-    10, 1, 20 // X, Y, Z coordinates (tweak these so it spawns where you want it!)
+    10, 1, 20 
 );
 interactionManager.addInteractable(beltLoot.mesh);
 
 const activeWorldItems = [];
-
 activeWorldItems.push(beltLoot);
 
 // Initialize the Wave Manager
@@ -172,29 +110,9 @@ const waveManager = new WaveManager(scene, physicsManager, player, interactionMa
 // Initialize the Shop Manager
 const shopManager = new ShopManager(player, uiManager, waveManager);
 
-// // Start the first wave 2 seconds after the game loads!
-// setTimeout(() => {
-//     waveManager.startNextWave();
-// }, 2000);
-
 const vaultPosition = new THREE.Vector3(50, 5, -70);
 const vaultScale = 2.5;
-
 const levelVault = new Vault(scene, physicsManager, vaultPosition, vaultScale);
-
-// CREATE AN ARM ITEM AND EQUIP IT
-// const steelArm = new Arm(
-//     'steel_arm', // Set to match the database ID
-//     'Steel Arm', 
-//     'A heavy industrial prosthetic', 
-//     'LEFT_ARM', 
-//     'assets/arm.glb', 
-//     { strength: 15 }, 
-//     { damage: 20, attackSpeed: 0.8, attackType: 'melee' }
-// );
-// player.inventory.equip('LEFT_ARM', steelArm);
-
-
 
 document.addEventListener('inventoryToggled', (e) => {
     if (e.detail.isOpen) {
@@ -213,12 +131,11 @@ document.addEventListener('equipItem', (e) => {
 });
 
 document.addEventListener('currencyCollected', (e) => {
-    // This calls the gainBolts method we added to Player.js earlier!
     player.gainBolts(e.detail.amount);
 });
 
 // Controls
-let gamePaused = true; // The game starts paused on the menu!
+let gamePaused = true; // The game starts paused on the menu
 let firstStart = false; // Tracks if we've begun the first wave
 let isIntroPlaying = false;
 let hasSeenArmTutorial = false;
@@ -230,12 +147,11 @@ const difficultyBlocker = document.getElementById('difficulty-blocker');
 const btnEasy = document.getElementById('btn-easy');
 const btnNormal = document.getElementById('btn-normal');
 blocker.style.display = 'none';
-// 2. Wire up the Easy Button
 btnEasy.addEventListener('click', () => {
     waveManager.waves = [
         { count: 3, isBossWave: false }, // Wave 1
         { count: 5, isBossWave: false }, // Wave 2
-        { count: 4, isBossWave: true }   // Wave 3: 1 Boss + 3 Minions (4 total)
+        { count: 4, isBossWave: true }   // Wave 3: 1 Boss + 3 Minions
     ];
     
     // Transition to the main menu blocker
@@ -243,7 +159,6 @@ btnEasy.addEventListener('click', () => {
     blocker.style.display = 'flex';
 });
 
-// 3. Wire up the Normal Button
 btnNormal.addEventListener('click', () => {
     waveManager.waves = [
         { count: 5, isBossWave: false },  // Wave 1
@@ -257,7 +172,6 @@ btnNormal.addEventListener('click', () => {
     blocker.style.display = 'flex';
 });
 
-// Standard play button logic
 blocker.addEventListener('click', () => player.controls.lock());
 
 player.controls.addEventListener('lock', () => {
@@ -279,14 +193,12 @@ player.controls.addEventListener('lock', () => {
 });
 
 player.controls.addEventListener('unlock', () => {
-    // 1. ALWAYS pause the game the moment the mouse is freed!
     gamePaused = true; 
 
-    // 2. Figure out which UI screen to show
     const invOverlay = document.getElementById('inventory-overlay');
-    const shopOverlay = document.getElementById('shop-overlay'); // Just to be safe!
+    const shopOverlay = document.getElementById('shop-overlay');
     
-    // Only show the main pause screen (blocker) if the inventory and shop are CLOSED
+    //only show the main pause screen (blocker) if the inventory and shop are closed
     if (
         (!invOverlay || invOverlay.style.display === 'none' || invOverlay.style.display === '') &&
         (!shopOverlay || shopOverlay.style.display === 'none' || shopOverlay.style.display === '') &&
@@ -297,24 +209,16 @@ player.controls.addEventListener('unlock', () => {
 });
 
 window.addEventListener('resize', () => {
-    // 1. Update the camera's aspect ratio to match the new screen dimensions
     camera.aspect = window.innerWidth / window.innerHeight;
-    
-    // 2. Recalculate the 3D math so objects don't look stretched or squished
     camera.updateProjectionMatrix();
-    
-    // 3. Expand the actual canvas to fill the new window size
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 
 document.addEventListener('transmissionStarted', () => { 
     gamePaused = true; 
-    
-    // 1. Forcefully unlock the mouse so the camera locks in place!
     player.controls.unlock();
     
-    // 2. Force weapons to stop firing so lasers don't get stuck in mid-air
     const rightArm = player.inventory.getEquippedItem('RIGHT_ARM');
     const leftArm = player.inventory.getEquippedItem('LEFT_ARM');
     
@@ -329,19 +233,16 @@ document.addEventListener('transmissionStarted', () => {
 });
 document.addEventListener('transmissionEnded', () => { 
     gamePaused = false;
-    player.controls.lock(); // Lock the mouse again so they can play!
+    player.controls.lock();
 });
 
-// Keep 'E' for inventory in main.js, InputManager handles the rest!
 document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyE') {
         uiManager.toggleInventory(); 
     }
 
-    // --- VAULT INTERACTION (PHASE 1 & 2) ---
     if (e.code === 'KeyQ' && !hasWon) {
         
-        // PHASE 1: OPENING THE VAULT (Checking the outside box)
         if (!vaultOpened && levelVault.openBox.containsPoint(player.camera.position)) {
             const ownedItems = player.inventory.getOwnedItems();
             if (ownedItems.includes('vault_key')) {
@@ -349,20 +250,17 @@ document.addEventListener('keydown', (e) => {
                 vaultOpened = true; 
                 levelVault.open();
                 
-                // --- SCENARIO 7: VAULT UNLOCKED ---
                 window.uiManager.showTransmission(
                     'assets/narr_prost.png', '', 
                     'The genetic cipher is accepted, and the Vault is finally open. Move in immediately to secure that pulsing artifact before the entire sector\'s power grid collapses. Grab the package and prepare for immediate orbital extraction!'
                 );
             } else {
-                // --- SCENARIO 5: VAULT LOCKED ---
                 window.uiManager.showTransmission(
                     'assets/narr_prost.png', '', 
                     'Negative, Hunter, that massive Vault door\'s biometric lock is sealed tight and cannot be forced. It requires a specific genetic cipher to breach the system. Scans indicate the final anomaly holding that key has yet to show its face.'
                 );
             }
         }
-        // PHASE 2: ENTERING THE VAULT (Checking the inside box)
         else if (vaultOpened && levelVault.winBox.containsPoint(player.camera.position)) {
             console.log("Artifact claimed! You Win!");
             hasWon = true; 
@@ -374,13 +272,13 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// --- SCENARIOS 2 & 3: ITEM PICKUPS ---
+// ITEM PICKUPS 
 document.addEventListener('inventoryUpdated', (e) => {
     if (!e.detail || !e.detail.ownedItems) return;
     
     const owned = e.detail.ownedItems;
     
-    // Check if they picked up any Arm for the first time
+    // Check if the user picked up any Arm for the first time
     if (!hasSeenArmTutorial && (owned.includes('laser_arm') || owned.includes('plasma_arm'))) {
         hasSeenArmTutorial = true;
         window.uiManager.showTransmission(
@@ -389,7 +287,7 @@ document.addEventListener('inventoryUpdated', (e) => {
         );
     }
     
-    // Check if they picked up the Belt for the first time
+    // Check if the user picked up the Belt for the first time
     if (!hasSeenBeltTutorial && owned.includes('thruster_belt')) {
         hasSeenBeltTutorial = true;
         window.uiManager.showTransmission(
@@ -426,99 +324,54 @@ document.addEventListener('useVendingMachine', (e) => {
 });
 
 
-// 1. PRE-LOAD THE TEXTURE (Put this right above the event listener)
 const textureLoader = new THREE.TextureLoader();
-// Make sure you actually have an image here, like a fireball, noise map, or plasma swirl!
 const bossSpellTexture = textureLoader.load('assets/spell_texture.png'); 
 
-// 2. CREATE THE MATERIAL ONCE
 const bossSpellMaterial = new THREE.MeshBasicMaterial({ 
     map: bossSpellTexture,
-    color: 0xffffff, // Keep it white to show the texture's true colors, or tint it red (0xff0000)!
-    transparent: true // Optional: Set to true if your texture has a transparent background
+    color: 0xffffff, 
+    transparent: true
 });
 
 
-// Listen for the Boss casting a spell!
+// Listener for the Boss casting a spell
 document.addEventListener('bossSpellCast', (e) => {
     const { position, direction, damage } = e.detail;
-    
-    // Create a scary, glowing red orb!
     const geometry = new THREE.SphereGeometry(1.2, 16, 16);
     const mesh = new THREE.Mesh(geometry, bossSpellMaterial);
     mesh.position.copy(position);
 
-    // Build a hostile projectile object that perfectly matches what the Manager expects!
     const hostileProjectile = {
         mesh: mesh,
         velocity: direction.multiplyScalar(25), // Speed of the spell
         damage: damage,
         life: 6, // Disappears after 6 seconds if it misses
-        isEnemyProjectile: true // CRITICAL: This tells the manager it hurts the player!
+        isEnemyProjectile: true
     };
     
     projectileManager.addProjectile(hostileProjectile);
 });
 
-// // --- THE FINISH LINE ---
-// const winGeometry = new THREE.BoxGeometry(10, 10, 10); 
-// const winMaterial = new THREE.MeshBasicMaterial({ 
-//     color: 0x00ff00, 
-//     wireframe: true, 
-//     visible: false 
-// });
-// const winTrigger = new THREE.Mesh(winGeometry, winMaterial);
-
-// // --- DYNAMIC POSITIONING LOGIC ---
-
-// // 1. Force Three.js to calculate the math for the scale and positions immediately
-// // (By default, Three.js waits until the first frame is rendered to do this)
-// levelVault.group.updateMatrixWorld(true);
-
-// // 2. Create an empty Vector to hold our coordinate data
-// const doorGlobalPosition = new THREE.Vector3();
-
-// // 3. Ask the vault's door for its exact global position
-// levelVault.door.getWorldPosition(doorGlobalPosition);
-
-// // 4. Move the trigger box to exactly match the door's center
-// winTrigger.position.copy(doorGlobalPosition);
-
-// // 5. Shift the box slightly forward on the Z-axis so it sits right in front of the door
-// // (Adjust this number if you want the box closer or further from the door)
-// winTrigger.position.z += 3; 
-
-// scene.add(winTrigger);
-
-// const winBox = new THREE.Box3().setFromObject(winTrigger);
 let hasWon = false;
 let vaultOpened = false;
 
 
-// --- GAME LOOP ---
+// GAME LOOP
 let prevRealTime = performance.now();
-// let gameTime = 0; // We use a custom timer so animations pause perfectly!
 
 function animate() {
     requestAnimationFrame(animate);
-    // Always calculate real delta time so the math doesn't explode when we unpause
     const realTime = performance.now();
     const delta = (realTime - prevRealTime) / 1000;
     prevRealTime = realTime;
     TWEEN.update(realTime); 
 
     if(!isGameOver && !hasWon && !gamePaused) {
-        // Advance our custom game timer
-        // gameTime += delta * 1000;
-        // Update Dash UI
-        // --- NEW: Check for Belt before updating Dash UI ---
         const equippedBelt = player.inventory.getEquippedItem ? player.inventory.getEquippedItem('BELT') : null;
         
         if (equippedBelt && equippedBelt.stats) {
-            // Dynamically pull the cooldown time directly from the item's stats!
             uiManager.updateDash(player.dashCooldownTimer, equippedBelt.stats.cooldown);
         } else {
-            // No belt? Hide the UI!
             uiManager.hideDash();
         }
 
@@ -537,26 +390,23 @@ function animate() {
         }
         player.update(delta);
 
-        // --- VAULT UI TOGGLE ---
+        // VAULT UI 
         if (!hasWon) {
             const vaultPrompt = document.getElementById('vault-prompt');
             const vaultActionText = document.getElementById('vault-action-text');
 
-            // If standing at the closed door...
             if (!vaultOpened && levelVault.openBox.containsPoint(player.camera.position)) {
                 vaultPrompt.style.display = 'block'; 
                 vaultActionText.innerText = 'Open Vault';
                 vaultActionText.style.color = '#ffaa00'; 
                 vaultPrompt.style.borderColor = '#ffaa00';
             } 
-            // If the door is open AND they walked all the way to the pedestal...
             else if (vaultOpened && levelVault.winBox.containsPoint(player.camera.position)) {
                 vaultPrompt.style.display = 'block';
                 vaultActionText.innerText = 'Take Artifact'; // Updated text!
                 vaultActionText.style.color = '#00ff00'; 
                 vaultPrompt.style.borderColor = '#00ff00';
             } 
-            // Otherwise, hide the prompt
             else {
                 vaultPrompt.style.display = 'none';
             }
@@ -564,31 +414,11 @@ function animate() {
 
         vfxManager.update(delta);
         projectileManager.update(delta, physicsManager, vfxManager, player);
-
         groundLoot.update(delta);
         beltLoot.update(delta);
 
         waveManager.update(delta, vfxManager);
-
-        // // CHECK WIN CONDITION
-        // if (winBox.containsPoint(player.camera.position)) {
-        //     const ownedItems = player.inventory.getOwnedItems();
-        //     const hasKey = ownedItems.includes('vault_key');
-            
-        //     if (hasKey) {
-        //         hasWon = true;
-        //         levelVault.open();
-        //         player.controls.unlock(); 
-        //         uiManager.showWinScreen(); 
-        //     } else {
-        //         console.log("The Vault is locked. Defeat the boss to get the key!");
-        //     }
-        // }
-
     }
-
-    // prevTime = time;
-
     renderer.render(scene, camera);
 }
 

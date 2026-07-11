@@ -9,8 +9,6 @@ export class Level {
         this.scene = scene;
         this.physicsManager = physicsManager;
         this.renderer = renderer;
-
-        // --- TWEAKED: Pushed the fog further back so you can see more of the bigger map ---
         this.scene.fog = new THREE.FogExp2(0x05050A, 0.012);
         
         this.generateArena();
@@ -23,13 +21,10 @@ export class Level {
         const floorNormal = textureLoader.load('assets/environment/floor/floor_gem_normal.jpg');
         const floorRoughness = textureLoader.load('assets/environment/floor/floor_gem_rough.jpg');
 
-        // Load LAYER 2 Textures & Alpha Map
         const floor2Color = textureLoader.load('assets/environment/floor/floor2_color.jpg');
         const floor2Normal = textureLoader.load('assets/environment/floor/floor2_normal.jpg');
         const floor2Roughness = textureLoader.load('assets/environment/floor/floor2_rough.jpg');
         
-
-        // 3. Create the TWO Materials
         const baseMat = new THREE.MeshStandardMaterial({ 
             map: floorColor, normalMap: floorNormal, roughnessMap: floorRoughness,
             roughness: 0.8, metalness: 0.2 
@@ -40,13 +35,9 @@ export class Level {
             roughness: 0.9, metalness: 0.1 
         });
 
-        // 4. THE GRID BUILDER
-        // --- CHANGED: tileSize is now 5 instead of 20 ---
+        // grid builder
         const tileSize = 5; 
         const floorSize = 600; 
-        
-        // This math automatically adjusts! 
-        // 200 / 5 = A 40x40 grid (1,600 individual tiles instead of 100)
         const gridCount = floorSize / tileSize; 
         const offset = (floorSize / 2) - (tileSize / 2); 
 
@@ -55,14 +46,12 @@ export class Level {
         for (let x = 0; x < gridCount; x++) {
             for (let z = 0; z < gridCount; z++) {
                 
-                // You can tweak this ratio based on the new smaller size
                 const useBase = Math.random() > 0.60; 
                 const tileMat = useBase ? baseMat : detailMat;
 
                 const tile = new THREE.Mesh(tileGeo, tileMat);
                 tile.rotation.x = -Math.PI / 2;
 
-                // Random rotation to break up patterns
                 tile.rotation.z = Math.floor(Math.random() * 4) * (Math.PI / 2);
 
                 tile.position.set(
@@ -76,9 +65,9 @@ export class Level {
             }
         }
 
-        // 2. Invisible Boundary Walls (Moved out to 100 meters)
+        // invisible boundary walls
         const wallMat = new THREE.MeshBasicMaterial({ visible: false });
-        const wallGeo = new THREE.BoxGeometry(300, 20, 2); // Walls are now 300m long
+        const wallGeo = new THREE.BoxGeometry(300, 20, 2); 
         
         const northWall = new THREE.Mesh(wallGeo, wallMat); northWall.position.set(0, 10, -150);
         const southWall = new THREE.Mesh(wallGeo, wallMat); southWall.position.set(0, 10, 150);
@@ -89,11 +78,11 @@ export class Level {
         this.scene.add(northWall, southWall, eastWall, westWall);
         this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
 
+        // background scenery
         const bgTextures = [
             textureLoader.load('assets/environment/bg_city.png'),
             textureLoader.load('assets/environment/bg_mountains.png'),
             textureLoader.load('assets/environment/bg_industrial.png')
-            // You can add as many as you want here!
         ];
 
         const bgMaterial = new THREE.MeshBasicMaterial({ 
@@ -101,14 +90,13 @@ export class Level {
             side: THREE.DoubleSide
         });
 
-        // We make the planes smaller (200 wide) instead of 800
+        
         const segmentWidth = 200;
         const bgGeo = new THREE.PlaneGeometry(segmentWidth, 150);
 
-        // This function now tiles multiple planes along either the X or Z axis
         const createSceneryWall = (axisToTile, constantAxisValue, y, rotationY) => {
-            const numSegments = 5; // 5 segments of 200 = 1000 total width to cover the corners
-            const startPos = -400; // Start far left to center the 1000 width at 0
+            const numSegments = 5; 
+            const startPos = -400; 
 
             for (let i = 0; i < numSegments; i++) {
                 const randomTex = bgTextures[Math.floor(Math.random() * bgTextures.length)];
@@ -117,11 +105,8 @@ export class Level {
                 mat.map = randomTex;
 
                 const wallSegment = new THREE.Mesh(bgGeo, mat);
-                
-                // Calculate where this specific tile should sit
                 const currentOffset = startPos + (i * segmentWidth);
                 
-                // Place it along the correct axis
                 if (axisToTile === 'x') {
                     wallSegment.position.set(currentOffset, y, constantAxisValue);
                 } else {
@@ -134,10 +119,10 @@ export class Level {
         };
 
         // Push these out to +/- 250
-        createSceneryWall('x', -250, 50, 0);               // North Skyline (Tiles along X)
-        createSceneryWall('x', 250, 50, Math.PI);          // South Skyline (Tiles along X)
-        createSceneryWall('z', 250, 50, -Math.PI / 2);     // East Skyline (Tiles along Z)
-        createSceneryWall('z', -250, 50, Math.PI / 2);     // West Skyline (Tiles along Z)
+        createSceneryWall('x', -250, 50, 0);               // North Skyline 
+        createSceneryWall('x', 250, 50, Math.PI);          // South Skyline 
+        createSceneryWall('z', 250, 50, -Math.PI / 2);     // East Skyline
+        createSceneryWall('z', -250, 50, Math.PI / 2);     // West Skyline
 
         const ktx2Loader = new KTX2Loader()
             .setTranscoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/basis/')
@@ -153,7 +138,6 @@ export class Level {
             .setDRACOLoader(dracoLoader)
             .setMeshoptDecoder(MeshoptDecoder);
         
-        // 👉 Update these paths to match your actual file names!
         const obstacleModels = [
             'assets/environment/obstacles/obstacle_1.glb',
             'assets/environment/obstacles/obstacle_2.glb',
@@ -162,7 +146,6 @@ export class Level {
             'assets/environment/obstacles/obstacle_5.glb'
         ];
 
-        // The invisible hitbox geometry (adjust size to roughly match your models)
         const hitboxGeo = new THREE.BoxGeometry(6, 8, 6);
         const hitboxMat = new THREE.MeshBasicMaterial({ visible: false });
 
@@ -176,7 +159,7 @@ export class Level {
         let blocksPlaced = 0;
         let attempts = 0;
 
-        while (blocksPlaced < 40 && attempts < 200) { // (Assuming you bumped this to 40 for the bigger map)
+        while (blocksPlaced < 40 && attempts < 200) { 
             attempts++;
             
             const randomX = (Math.random() - 0.5) * 320; 
@@ -193,27 +176,19 @@ export class Level {
             }
 
             if (isValidSpot) {
-                // 1. Place the solid physical hitbox for collisions
                 const obstacleHitbox = new THREE.Mesh(hitboxGeo, hitboxMat);
                 
-                // Assuming 4 is the vertical center of your 8-unit-tall hitbox
                 obstacleHitbox.position.set(randomX, 4, randomZ); 
                 
                 this.scene.add(obstacleHitbox);
                 this.physicsManager.addColliders([obstacleHitbox]);
                 
-                // 2. Pick a random model and load it visually
                 const randomPath = obstacleModels[Math.floor(Math.random() * obstacleModels.length)];
                 
                 gltfLoader.load(randomPath, (gltf) => {
                     const model = gltf.scene;
-                    
-                    // Match the model's position to the hitbox
                     model.position.copy(obstacleHitbox.position);
-                    
-                    // Optional: If your models load floating in the air, you may need to offset the Y position:
                     model.position.y -= 4; 
-
                     const scaleSize = 5;
 
                     if (randomPath.includes('obstacle_1')) {
@@ -226,7 +201,6 @@ export class Level {
                         model.scale.set(scaleSize, scaleSize, scaleSize);
                     }
                     
-                    // Give each obstacle a random rotation so they don't look repetitive
                     model.rotation.y = Math.random() * Math.PI * 2;
 
                     model.traverse((child) => {

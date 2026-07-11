@@ -2,16 +2,15 @@ import * as THREE from 'three';
 
 export class PhysicsManager {
     constructor() {
-        // This array holds the actual Three.js meshes that are solid
         this.colliders = [];
     }
 
-    // Call this when building the level to make walls solid
+    // Call this when building the level to make walls and objects solid
     addColliders(objects) {
         this.colliders.push(...objects);
     }
 
-    // Removes an object (useful if a wall gets destroyed or an enemy dies)
+    // Removes an object 
     removeCollider(object) {
         this.colliders = this.colliders.filter(c => c !== object);
     }
@@ -24,7 +23,6 @@ export class PhysicsManager {
                 continue;
             }
             
-            // Assuming your Level.js creates walls with userData.boundingBox
             if (collider.userData && collider.userData.boundingBox) {
                 if (targetBox.intersectsBox(collider.userData.boundingBox)) {
                     return true;
@@ -38,7 +36,7 @@ export class PhysicsManager {
         return false;
     }
 
-    // Helper for weapons: Returns the raw meshes for the Raycaster
+    // Returns the raw meshes, primarily used for raycasting weapons
     getSolidMeshes() {
         return this.colliders;
     }

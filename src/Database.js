@@ -47,12 +47,11 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
         ),
-        // Inside your ITEM_DATABASE.arms object:
         'torch_arm': new Prosthetic(
             'torch_arm',
             'Lumen-Tech Torch',
             'A heavy-duty exploration arm equipped with a high-lumen industrial floodlight. Press [R] to toggle.',
-            'LEFT_ARM', // Or RIGHT_ARM, depending on your setup!
+            'LEFT_ARM',
             'assets/arm_torch.glb',
             { strength: 0 }, 
             {
@@ -63,21 +62,6 @@ export const ITEM_DATABASE = {
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
             }
         )
-        
-        // ,
-        // 'saw_arm': new Prosthetic(
-        //     'saw_arm', 'Rotary Saw', 'Perfect for close combat and cutting through obstacles.', 'RIGHT_ARM',
-        //     'assets/saw_armv1.glb',
-        //     { strength: 0 },
-            
-        //     {
-        //         scale: 1,
-        //         position: { x: 1, y: -0.75, z: -1.25 },
-        //         rotation: { x: Math.PI/2, y: -Math.PI/2, z: Math.PI /2},
-        //         muzzleNode: 'mesh_0',
-        //         muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
-        //     }
-        // )
     },
     keys: {
         'vault_key': new Item(
@@ -94,9 +78,9 @@ export const ITEM_DATABASE = {
             'scrap_bolt', 
             'Scrap Bolt', 
             'Currency used for upgrading and buying gear.',
-            'CURRENCY',          // Type
-            'assets/bolt.glb',   // We will just use a cube if you don't have a bolt model yet!
-            { scale: 5 }       // Make them a bit smaller than the key
+            'CURRENCY',
+            'assets/bolt.glb',
+            { scale: 5 } 
         )
     },
     belts: {
@@ -105,10 +89,10 @@ export const ITEM_DATABASE = {
             name: 'Thruster Belt',
             description: 'Double-tap or press Shift to engage evasive thrusters.',
             slot: 'BELT',
-            modelPath: 'assets/belt.glb', // Make sure your file is named exactly this!
+            modelPath: 'assets/belt.glb',
             stats: { 
-                dashPower: 100, // How explosive the movement is
-                cooldown: 3.5  // Seconds between dashes
+                dashPower: 100,
+                cooldown: 3.5 
             }
         }
     }
