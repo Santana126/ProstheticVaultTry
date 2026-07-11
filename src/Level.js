@@ -89,7 +89,7 @@ export class Level {
         this.scene.add(northWall, southWall, eastWall, westWall);
         this.physicsManager.addColliders([northWall, southWall, eastWall, westWall]);
 
-const bgTextures = [
+        const bgTextures = [
             textureLoader.load('assets/environment/bg_city.png'),
             textureLoader.load('assets/environment/bg_mountains.png'),
             textureLoader.load('assets/environment/bg_industrial.png')
