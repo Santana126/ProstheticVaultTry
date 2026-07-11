@@ -7,6 +7,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="difficulty-blocker" style="position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: 'Courier New', Courier, monospace;">
+        <h1 style="font-size: 3rem; margin-bottom: 2rem; color: #ffaa00; text-transform: uppercase; letter-spacing: 2px;">Select Game Difficulty</h1>
+        <div style="display: flex; gap: 3rem;">
+            <button id="btn-easy" style="padding: 1rem 2rem; font-size: 1.5rem; background: #111; color: #00ff00; border: 2px solid #00ff00; cursor: pointer; transition: 0.2s;">EASY</button>
+            <button id="btn-normal" style="padding: 1rem 2rem; font-size: 1.5rem; background: #111; color: #ff0000; border: 2px solid #ff0000; cursor: pointer; transition: 0.2s;">NORMAL</button>
+        </div>
+    </div>
     <div id="blocker">
         <div id="instructions" class="menu-panel">
             <h1 class="game-title">PROSTHETIC VAULT</h1>

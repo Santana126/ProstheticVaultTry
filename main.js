@@ -208,6 +208,39 @@ let hasSeenBeltTutorial = false;
 
 const blocker = document.getElementById('blocker');
 blocker.addEventListener('click', () => player.controls.lock());
+const difficultyBlocker = document.getElementById('difficulty-blocker');
+const btnEasy = document.getElementById('btn-easy');
+const btnNormal = document.getElementById('btn-normal');
+blocker.style.display = 'none';
+// 2. Wire up the Easy Button
+btnEasy.addEventListener('click', () => {
+    waveManager.waves = [
+        { count: 3, isBossWave: false }, // Wave 1
+        { count: 5, isBossWave: false }, // Wave 2
+        { count: 4, isBossWave: true }   // Wave 3: 1 Boss + 3 Minions (4 total)
+    ];
+    
+    // Transition to the main menu blocker
+    difficultyBlocker.style.display = 'none';
+    blocker.style.display = 'flex';
+});
+
+// 3. Wire up the Normal Button
+btnNormal.addEventListener('click', () => {
+    waveManager.waves = [
+        { count: 5, isBossWave: false },  // Wave 1
+        { count: 7, isBossWave: false },  // Wave 2
+        { count: 10, isBossWave: false }, // Wave 3
+        { count: 8, isBossWave: true }    // Wave 4: 1 Boss + 7 Minions (8 total)
+    ];
+    
+    // Transition to the main menu blocker
+    difficultyBlocker.style.display = 'none';
+    blocker.style.display = 'flex';
+});
+
+// Standard play button logic
+blocker.addEventListener('click', () => player.controls.lock());
 
 player.controls.addEventListener('lock', () => {
     blocker.style.display = 'none';
