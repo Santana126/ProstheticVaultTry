@@ -392,14 +392,27 @@ document.addEventListener('useVendingMachine', (e) => {
     }
 });
 
+
+// 1. PRE-LOAD THE TEXTURE (Put this right above the event listener)
+const textureLoader = new THREE.TextureLoader();
+// Make sure you actually have an image here, like a fireball, noise map, or plasma swirl!
+const bossSpellTexture = textureLoader.load('assets/spell_texture.png'); 
+
+// 2. CREATE THE MATERIAL ONCE
+const bossSpellMaterial = new THREE.MeshBasicMaterial({ 
+    map: bossSpellTexture,
+    color: 0xffffff, // Keep it white to show the texture's true colors, or tint it red (0xff0000)!
+    transparent: true // Optional: Set to true if your texture has a transparent background
+});
+
+
 // Listen for the Boss casting a spell!
 document.addEventListener('bossSpellCast', (e) => {
     const { position, direction, damage } = e.detail;
     
     // Create a scary, glowing red orb!
     const geometry = new THREE.SphereGeometry(1.2, 16, 16);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const mesh = new THREE.Mesh(geometry, material);
+    const mesh = new THREE.Mesh(geometry, bossSpellMaterial);
     mesh.position.copy(position);
 
     // Build a hostile projectile object that perfectly matches what the Manager expects!
