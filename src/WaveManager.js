@@ -17,12 +17,7 @@ export class WaveManager {
         this.isWaveActive = false;
 
         // Define waves
-        this.waves = [
-            { count: 5, isBossWave: false }, // Wave 1: 5 Enemies
-            { count: 7, isBossWave: false }, // Wave 2: 7 Enemies
-            // { count: 10, isBossWave: false }, // Wave 3: 10 Enemies
-            { count: 4, isBossWave: true } // Wave 4: 1 Boss Enemy
-        ];
+        this.waves = [];
     }
 
     startNextWave() {
