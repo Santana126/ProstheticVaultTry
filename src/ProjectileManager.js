@@ -15,13 +15,8 @@ export class ProjectileManager {
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             let proj = this.projectiles[i];
             
-            // --- NEW: Proximity Detonation for Boss Spells ---
             if (proj.isEnemyProjectile) {
-                
-
-                // PROXIMITY FUSE
                 if (player && proj.mesh.position.distanceTo(player.camera.position) < 4.5) {
-                    console.log("BOOM! Spell hit the player!");
                     player.takeDamage(proj.damage);
                     
                     for(let s = 0; s < 20; s++) {
@@ -51,23 +46,17 @@ export class ProjectileManager {
                 if (hitObject && hitObject.userData && hitObject.userData.entity) {
                     const entity = hitObject.userData.entity;
 
-                    // Prevent the Boss from team-killing its minions
                     if (!proj.isEnemyProjectile) {
-                        
-                        // SAFE CHECK: Does this entity actually have health? (Enemies/Boss)
                         if (typeof entity.takeDamage === 'function') {
                             entity.takeDamage(proj.damage, hitPoint, normal, vfxManager);
                         } else {
-                            // It is an entity (like a Vending Machine), so treat it like a wall!
                             vfxManager.createBurnDecal(this.scene, hitPoint, normal);
                         }
                     }
-                }else {
-                    // It is an entity (like a Vending Machine), so treat it like a wall!
+                } else {
                     vfxManager.createBurnDecal(this.scene, hitPoint, normal);
                 }
                     
-
                 for(let s = 0; s < 5; s++) vfxManager.spawnSparks(hitPoint, normal);
 
                 this.scene.remove(proj.mesh);

@@ -13,14 +13,12 @@ export class HitscanArm extends Prosthetic {
         this.tickRate = weaponData.attackSpeed || 0.1; 
         this.beamColor = weaponData.color || 0x00ffff;
         
-        // --- NEW: OVERHEAT MECHANICS ---
         this.heat = 0;
         this.maxHeat = 100;
-        this.heatRate = 35; // Generates 35 heat per second (takes ~3s to overheat)
-        this.coolingRate = 20; // Cools down slower than it heats up
+        this.heatRate = 35; 
+        this.coolingRate = 20; 
         this.isOverheated = false;
         this.isFiring = false;
-        // -------------------------------
 
         this.raycaster = new THREE.Raycaster();
         this.centerScreen = new THREE.Vector2(0, 0);
@@ -30,13 +28,9 @@ export class HitscanArm extends Prosthetic {
     }
 
     attack(args) {
-        const { 
-            camera, muzzlePosition, scene, physicsManager, 
-            delta, vfxManager, projectileManager, bonusDmg 
-        } = args; // Destructure the variables by name
+        const { camera, muzzlePosition, scene, physicsManager, delta, vfxManager, bonusDmg } = args; 
         const finalDamage = this.damage + bonusDmg;
-        console.log("Bonus Dmg received:", bonusDmg);
-        // 1. If overheated, we cannot fire!
+
         if (this.isOverheated) {
             this.stopAttack(scene);
             return;
@@ -44,21 +38,15 @@ export class HitscanArm extends Prosthetic {
 
         this.isFiring = true;
 
-        // 2. Generate Heat
         this.heat += this.heatRate * delta;
         if (this.heat >= this.maxHeat) {
             this.heat = this.maxHeat;
             this.isOverheated = true;
-            console.log("LASER OVERHEATED! Venting system...");
-            
-            // Damage the player for 15 HP!
             document.dispatchEvent(new CustomEvent('overheatDamage', { detail: { amount: 15 } }));
-            
             this.stopAttack(scene);
             return;
         }
 
-        // --- Standard Firing Logic ---
         this.raycaster.setFromCamera(this.centerScreen, camera);
         const intersects = this.raycaster.intersectObjects(physicsManager.getSolidMeshes(), true);
 
@@ -81,7 +69,6 @@ export class HitscanArm extends Prosthetic {
             geometry.translate(0, 0.5, 0); 
             geometry.rotateX(Math.PI / 2);
             
-            // Change beam color to RED if we are getting close to overheating!
             const currentColor = this.heat > 75 ? 0xff0000 : this.beamColor;
             const material = new THREE.MeshBasicMaterial({ 
                 color: currentColor,
@@ -104,24 +91,17 @@ export class HitscanArm extends Prosthetic {
         this.beamMesh.lookAt(targetPoint);           
         this.beamMesh.scale.set(1, 1, this.currentBeamLength); 
 
-        // Apply Damage Tick
         if (targetNormal && this.currentBeamLength >= maxDistance) {
             this.tickTimer += delta;
             if (this.tickTimer >= this.tickRate) { 
                 if (hitObject && hitObject.userData && hitObject.userData.entity) {
                     const entity = hitObject.userData.entity;
-
-                    // SAFE CHECK: Does this entity actually take damage?
                     if (typeof entity.takeDamage === 'function') {
-                        // const finalDamage = this.damage + bonusDmg;
-                        console.log("Applying damage:", finalDamage);
                         entity.takeDamage(finalDamage, targetPoint, targetNormal, vfxManager);
                     } else {
-                        // It's a Vending Machine or interactive object, scorch it!
                         vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
                     }
                 } else {
-                    // It's a standard wall or floor
                     vfxManager.createBurnDecal(scene, targetPoint, targetNormal);
                 }
                 
@@ -132,7 +112,7 @@ export class HitscanArm extends Prosthetic {
     }
 
     stopAttack(scene) {
-        this.isFiring = false; // Flag that we stopped pulling the trigger
+        this.isFiring = false; 
         if (this.beamMesh) {
             scene.remove(this.beamMesh);
             this.beamMesh.geometry.dispose();
@@ -144,18 +124,12 @@ export class HitscanArm extends Prosthetic {
     }
 
     update(delta) {
-        // 3. Cool down the weapon when we aren't firing!
         if (!this.isFiring) {
             this.heat -= this.coolingRate * delta;
         }
-
-        // 4. Clamp heat and handle overheat recovery
         if (this.heat <= 0) {
             this.heat = 0;
-            if (this.isOverheated) {
-                console.log("Weapon cooled down. Ready to fire!");
-                this.isOverheated = false; // System vented, can fire again!
-            }
+            this.isOverheated = false; 
         }
     }
 }

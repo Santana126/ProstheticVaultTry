@@ -10,10 +10,8 @@ export class ProjectileArm extends Prosthetic {
         this.fireRate = weaponData.attackSpeed || 0.5; 
         this.projectileSpeed = weaponData.projectileSpeed || 40;
         
-        // --- NEW: AMMO MECHANICS ---
         this.maxAmmo = 20; 
         this.currentAmmo = this.maxAmmo;
-        // ---------------------------
 
         this.cooldownTimer = 0;
         this.centerScreen = new THREE.Vector2(0, 0);
@@ -21,24 +19,14 @@ export class ProjectileArm extends Prosthetic {
     }
 
     attack(args) {
-        const { 
-            camera, muzzlePosition, scene, physicsManager, 
-            delta, vfxManager, projectileManager, bonusDmg 
-        } = args; // Destructure the variables by name
-        
+        const { camera, muzzlePosition, physicsManager, projectileManager, bonusDmg } = args; 
         const finalDamage = this.damage + bonusDmg;
-        // 1. Check if we have ammo before firing!
-        if (this.currentAmmo <= 0) {
-            return; // Out of ammo! (Clicking empty)
-        }
+        
+        if (this.currentAmmo <= 0) return;
 
         if (this.cooldownTimer <= 0) {
-            
-            // 2. Consume ammo
             this.currentAmmo--;
-            console.log(`Plasma Ammo: ${this.currentAmmo} / ${this.maxAmmo}`);
 
-            // --- Standard Firing Logic ---
             this.raycaster.setFromCamera(this.centerScreen, camera);
             const intersects = this.raycaster.intersectObjects(physicsManager.getSolidMeshes(), true);
             
@@ -50,7 +38,6 @@ export class ProjectileArm extends Prosthetic {
             }
 
             const direction = new THREE.Vector3().subVectors(targetPoint, muzzlePosition).normalize();
-            // const finalDamage = this.damage + bonusDmg;
             const pBall = new PlasmaBall(muzzlePosition, direction, this.projectileSpeed, finalDamage);
             projectileManager.addProjectile(pBall);
 

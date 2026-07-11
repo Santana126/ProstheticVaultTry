@@ -6,10 +6,13 @@ export class Prosthetic extends Item {
         this.slot = slot;         
         this.modelPath = modelPath; 
         this.stats = stats;       
-        this.visualData = visualData; // Store it for the InventoryManager to read!
+        this.visualData = visualData;
     }
 
-    attack(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager, bonusDmg) {}
+    attack(args) {}
+    
     stopAttack(scene) {}
+    
     update(delta) {}
+
 }

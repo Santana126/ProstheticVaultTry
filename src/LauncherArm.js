@@ -7,7 +7,7 @@ export class LauncherArm extends Prosthetic {
         super(id, name, description, slot, modelPath, stats, visualData);
         
         this.damage = weaponData.damage || 40;
-        this.fireRate = weaponData.attackSpeed || 0.5; // Seconds between shots
+        this.fireRate = weaponData.attackSpeed || 0.5; 
         this.projectileSpeed = weaponData.projectileSpeed || 40;
         this.attackType = 'projectile';
         
@@ -16,11 +16,10 @@ export class LauncherArm extends Prosthetic {
         this.raycaster = new THREE.Raycaster();
     }
 
+    attack(args) {
+        const { camera, muzzlePosition, physicsManager, projectileManager } = args;
 
-    fireContinuous(camera, muzzlePosition, scene, physicsManager, delta, vfxManager, projectileManager) {
         if (this.cooldownTimer <= 0) {
-            
-            // 1. Find what the player is aiming at to get the flight trajectory
             this.raycaster.setFromCamera(this.centerScreen, camera);
             const intersects = this.raycaster.intersectObjects(physicsManager.getSolidMeshes(), true);
             
@@ -28,27 +27,20 @@ export class LauncherArm extends Prosthetic {
             if (intersects.length > 0) {
                 targetPoint.copy(intersects[0].point);
             } else {
-                this.raycaster.ray.at(100, targetPoint); // Aim far away
+                this.raycaster.ray.at(100, targetPoint); 
             }
 
-            // 2. Calculate direction from the gun to the target
             const direction = new THREE.Vector3().subVectors(targetPoint, muzzlePosition).normalize();
-
-            // 3. Spawn projectile
             const pBall = new PlasmaBall(muzzlePosition, direction, this.projectileSpeed, this.damage);
             projectileManager.addProjectile(pBall);
 
-            // 4. Reset cooldown
             this.cooldownTimer = this.fireRate;
         }
     }
 
-    stopFiring(scene) {
-        // Nothing to destroy when we release the trigger
-    }
+    stopAttack(scene) {}
 
     update(delta) {
-        // Cooldown timer keeps ticking down
         if (this.cooldownTimer > 0) {
             this.cooldownTimer -= delta;
         }
