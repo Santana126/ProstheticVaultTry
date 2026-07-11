@@ -296,6 +296,17 @@ player.controls.addEventListener('unlock', () => {
     }
 });
 
+window.addEventListener('resize', () => {
+    // 1. Update the camera's aspect ratio to match the new screen dimensions
+    camera.aspect = window.innerWidth / window.innerHeight;
+    
+    // 2. Recalculate the 3D math so objects don't look stretched or squished
+    camera.updateProjectionMatrix();
+    
+    // 3. Expand the actual canvas to fill the new window size
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
 
 document.addEventListener('transmissionStarted', () => { 
     gamePaused = true; 
