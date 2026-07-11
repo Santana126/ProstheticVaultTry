@@ -311,14 +311,13 @@ export class Player {
         // Update visual weapon bobbing
         const isMoving = moveForward || moveBackward || moveLeft || moveRight;
         
-        const activeModel = this.inventory.getActiveArmModel();
-        const activeItem = this.inventory.getActiveArm();
-
-        if (activeModel && activeItem && activeItem.visualData) {
-            // Hand the model, its database position, and the movement state to the Animator!
+        if (this.inventory.armGroup) {
+            // The group itself sits at exactly 0,0,0 relative to the camera
+            const groupBasePosition = new THREE.Vector3(0, 0, 0);
+            
             this.animationManager.updateWeaponBobbing(
-                activeModel, 
-                activeItem.visualData.position, 
+                this.inventory.armGroup, 
+                groupBasePosition, 
                 isMoving, 
                 delta
             );
