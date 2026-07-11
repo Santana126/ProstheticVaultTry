@@ -289,15 +289,37 @@ player.controls.addEventListener('unlock', () => {
     // Only show the main pause screen (blocker) if the inventory and shop are CLOSED
     if (
         (!invOverlay || invOverlay.style.display === 'none' || invOverlay.style.display === '') &&
-        (!shopOverlay || shopOverlay.style.display === 'none' || shopOverlay.style.display === '')
+        (!shopOverlay || shopOverlay.style.display === 'none' || shopOverlay.style.display === '') &&
+        (!window.isTransmissionActive)
     ) {
         blocker.style.display = 'flex';
     }
 });
 
 
-document.addEventListener('transmissionStarted', () => { gamePaused = true; });
-document.addEventListener('transmissionEnded', () => { gamePaused = false; });
+document.addEventListener('transmissionStarted', () => { 
+    gamePaused = true; 
+    
+    // 1. Forcefully unlock the mouse so the camera locks in place!
+    player.controls.unlock();
+    
+    // 2. Force weapons to stop firing so lasers don't get stuck in mid-air
+    const rightArm = player.inventory.getEquippedItem('RIGHT_ARM');
+    const leftArm = player.inventory.getEquippedItem('LEFT_ARM');
+    
+    if (rightArm) {
+        if (typeof rightArm.stopAttack === 'function') rightArm.stopAttack(scene);
+        if (typeof rightArm.stopFiring === 'function') rightArm.stopFiring(scene);
+    }
+    if (leftArm) {
+        if (typeof leftArm.stopAttack === 'function') leftArm.stopAttack(scene);
+        if (typeof leftArm.stopFiring === 'function') leftArm.stopFiring(scene);
+    }
+});
+document.addEventListener('transmissionEnded', () => { 
+    gamePaused = false;
+    player.controls.lock(); // Lock the mouse again so they can play!
+});
 
 // Keep 'E' for inventory in main.js, InputManager handles the rest!
 document.addEventListener('keydown', (e) => {
