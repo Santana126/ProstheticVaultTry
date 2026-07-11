@@ -23,14 +23,14 @@
 
             <div class="guide-grid">
                 <div class="guide-section">
-                    <h2>🎯 MISSION LOG</h2>
+                    <h2>MISSION LOG</h2>
                     <p>Survive the waves of enemies in the arena.</p>
                     <p>Defeat the Final Boss to obtain the <strong>Vault Key</strong>.</p>
                     <p>Unlock the Vault to claim your victory.</p>
                 </div>
 
                 <div class="guide-section">
-                    <h2>⌨️ CONTROLS</h2>
+                    <h2>CONTROLS</h2>
                     <ul>
                         <li><strong>W, A, S, D</strong> - Move</li>
                         <li><strong>Mouse</strong> - Look / Aim</li>
@@ -44,13 +44,13 @@
                 </div>
 
                 <div class="guide-section full-width">
-                    <h2>⚙️ SURVIVAL TIPS</h2>
+                    <h2>SURVIVAL TIPS</h2>
                     <p>Enemies drop bolts, the currency of this prosthetic world. Press <strong>E</strong> to open your inventory and equip new prosthetic arms or thruster belts to survive the harder waves!</p>
                 </div>
             </div>
 
             <div class="start-prompt">
-                <p>--- CLICK ANYWHERE TO INITIALIZE ---</p>
+                <p>--- CLICK ANYWHERE TO START ---</p>
             </div>
         </div>
     </div>
@@ -58,7 +58,7 @@
     <div id="wave-counter" style="display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #00d4ff; font-size: 1.5rem; font-weight: bold; text-shadow: 0 0 10px #00d4ff; z-index: 5;">WAVE 1</div>
 
     <div id="boss-ui" style="display: none; position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 50%; text-align: center; z-index: 5;">
-        <div style="color: #ff3333; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 10px red; margin-bottom: 5px;">VAULT GUARDIAN</div>
+        <div style="color: #ff3333; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 10px red; margin-bottom: 5px;">Romeo, The Circle</div>
         <div style="width: 100%; height: 15px; background: #222; border: 2px solid #ff3333; border-radius: 4px; overflow: hidden; box-shadow: 0 0 15px rgba(255, 51, 51, 0.5);">
             <div id="boss-hp-fill" style="width: 100%; height: 100%; background: red; transition: width 0.2s ease-out;"></div>
         </div>
@@ -99,7 +99,7 @@
 
             <div class="inv-content">
                 <div class="inv-left-panel">
-                    <div class="panel-label">Equipaggiamento</div>
+                    <div class="panel-label">Equipment</div>
                     <img src="assets/mech_preview.png" alt="Character Preview" class="character-preview">
                 </div>
 
@@ -109,37 +109,37 @@
                     </div>
                     
                     <div class="equip-slot right-arm-slot" id="equip-right-arm" data-slot="RIGHT_ARM">
-                        <span class="slot-label">Braccio Destro</span>
+                        <span class="slot-label">Right Arm</span>
                         <div class="slot-icon empty"></div>
                     </div>
                     
                     <div class="equip-slot left-arm-slot" data-slot="LEFT_ARM">
-                        <span class="slot-label">Braccio Sinistro</span><div class="slot-icon empty"></div>
+                        <span class="slot-label">Left Arm</span><div class="slot-icon empty"></div>
                     </div>
                     <div class="equip-slot" data-slot="BELT">
-                        <div class="slot-label">Cintura</div>
+                        <div class="slot-label">Belt</div>
                         <div class="slot-icon empty"></div>
                     </div>
                     <div class="equip-slot legs-slot" data-slot="LEGS">
-                        <span class="slot-label">Gambe</span><div class="slot-icon empty"></div>
+                        <span class="slot-label">Legs</span><div class="slot-icon empty"></div>
                     </div>
                     <div class="equip-slot module-slot" data-slot="MODULE">
-                        <span class="slot-label">Modulo</span><div class="slot-icon empty"></div>
+                        <span class="slot-label">Module</span><div class="slot-icon empty"></div>
                     </div>
                 </div>
             </div>
 
             <div class="inv-stash-area">
-                <h3 class="stash-title">Componenti Disponibili</h3>
+                <h3 class="stash-title">Available Items</h3>
                 <div class="stash-grid" id="stash-grid"></div>
             </div>
         </div>
 
         <div id="item-tooltip" class="tooltip-hidden">
-            <h3 id="tt-name">Nome</h3>
-            <p id="tt-type">Tipo</p>
+            <h3 id="tt-name">Name</h3>
+            <p id="tt-type">Type</p>
             <div class="tt-stats" id="tt-stats">Stats</div>
-            <p id="tt-desc">Descrizione</p>
+            <p id="tt-desc">Description</p>
         </div>
     </div>
     <div id="combat-hud" style="position: absolute; bottom: 20px; right: 20px; width: 200px; color: #fff; font-family: sans-serif; pointer-events: none;">
@@ -170,8 +170,6 @@
         }
     </script>
     <script type="module" src="main.js"></script>
-    <!-- NARRATOR / RADIO TRANSMISSION UI -->
-    <!-- Make sure to replace 'assets/sci_fi_banner.png' with your actual image name! -->
     <div id="narrator-ui" style="display: none; position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); 
         width: 85vw; height: 40vw; background-image: url('assets/sci_fi_banner.png'); background-size: 100% 100%; 
         background-repeat: no-repeat; color: white; font-family: 'Courier New', Courier, monospace; z-index: 100; pointer-events: none;">
