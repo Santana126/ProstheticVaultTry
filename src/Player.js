@@ -1,11 +1,8 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { GAME_CONFIG } from './Config.js';
 import { InputManager } from './InputManager.js';
 import { InventoryManager } from './InventoryManager.js';
-import { AnimationManager } from './AnimationManager.js';
-import { InteractionManager } from './InteractionManager.js';
 
 export class Player {
     constructor(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager, ktx2Loader) {
@@ -16,12 +13,12 @@ export class Player {
         this.projectileManager = projectileManager;
         this.animationManager = animationManager;
         this.interactionManager = interactionManager;
+        
         this.isAttacking = false;
         this.fireCooldown = 0;
 
-        this.camera.position.y = GAME_CONFIG.PLAYER.height; // Set initial eye level
+        this.camera.position.y = GAME_CONFIG.PLAYER.height; 
         
-        // Movement state
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
 
@@ -29,7 +26,7 @@ export class Player {
         this.input = new InputManager();
         this.inventory = new InventoryManager(this.camera, this.scene, ktx2Loader);
 
-        // --- PLAYER STATS ---
+        // PLAYER STATS
         this.maxHealth = 100;
         this.health = this.maxHealth;
         this.isDead = false;
@@ -39,41 +36,37 @@ export class Player {
         this.maxExp = 100; 
         this.bolts = 0;
 
-
-        // --- BASE STATS (For Shop Upgrades) ---
+        // Base stats for shop upgrades
         this.baseStats = {
-            speedMultiplier: 1.0, // 1.0 is 100% normal speed
-            damageBonus: 0,       // Flat extra damage added to weapons
-            maxHealthBonus: 0     // Extra HP on top of standard leveling
+            speedMultiplier: 1.0, 
+            damageBonus: 0,       
+            maxHealthBonus: 0     
         };
 
         this.dashCooldownTimer = 0;
         this.dashActiveTimer = 0;
 
-
+        // Screen Shake mechanics
         this.shakeTimer = 0;
-        this.maxShakeDuration = 0.3; // How long the earthquake lasts
-        this.baseShakeIntensity = 0.2; // How violently it shakes (in meters)
-        this.currentShakeOffset = new THREE.Vector3(0, 0, 0); // Stores the math to prevent drift
+        this.maxShakeDuration = 0.3; 
+        this.baseShakeIntensity = 0.2; 
+        this.currentShakeOffset = new THREE.Vector3(0, 0, 0); 
 
-        // --- TORCH (SPOTLIGHT) SETUP ---
-        this.torchLight = new THREE.SpotLight(0xffffff, 0); // Starts off (0 intensity)
-        this.torchLight.angle = Math.PI / 7; // Gives it a focused flashlight cone
-        this.torchLight.penumbra = 0.5; // Soft, realistic edges
-        this.torchLight.decay = 2; // Realistic light falloff
-        this.torchLight.distance = 150; // How far the light reaches
+        // TORCH SETUP 
+        this.torchLight = new THREE.SpotLight(0xffffff, 0); 
+        this.torchLight.angle = Math.PI / 7; 
+        this.torchLight.penumbra = 0.5; 
+        this.torchLight.decay = 2; 
+        this.torchLight.distance = 150; 
         this.torchLight.castShadow = true;
         this.torchLight.shadow.mapSize.width = 1024;
         this.torchLight.shadow.mapSize.height = 1024;
 
-        // Spotlights need a 'target' object to point at. We add both to the scene!
         this.scene.add(this.torchLight);
         this.scene.add(this.torchLight.target);
 
         this.isTorchOn = false;
         this.rKeyPressed = false;
-
-
 
         setTimeout(() => {
             if (this.interactionManager && this.interactionManager.uiManager) {
@@ -82,17 +75,13 @@ export class Player {
         }, 100);
     }
 
-
     takeDamage(amount){
         if (this.isDead) return;
 
         this.health -= amount;
-        console.log(`Player Health: ${this.health}`);
 
-        // This routes through the interactionManager to reach your UIManager!
         if (this.interactionManager && this.interactionManager.uiManager) {
             this.interactionManager.uiManager.updateHealthBar(this.health, this.maxHealth);
-
             this.interactionManager.uiManager.showDamageVignette();
         }
 
@@ -105,15 +94,11 @@ export class Player {
 
     die() {
         this.isDead = true;
-        console.log("Player has died!");
-        
-        // Announce death to the main game loop
         document.dispatchEvent(new Event('playerDied'));
     }
 
     gainExp(amount) {
         this.exp += amount;
-        console.log(`Gained ${amount} EXP! Total: ${this.exp}/${this.maxExp}`);
 
         if (this.exp >= this.maxExp) {
             this.exp -= this.maxExp;
@@ -122,7 +107,6 @@ export class Player {
             this.maxHealth += 20; 
             this.health = this.maxHealth; 
             
-            // Update the health bar because our max health increased!
             if (this.interactionManager && this.interactionManager.uiManager) {
                 this.interactionManager.uiManager.updateHealthBar(this.health, this.maxHealth);
             }
@@ -135,25 +119,20 @@ export class Player {
 
     gainBolts(amount) {
         this.bolts += amount;
-        console.log(`Picked up bolts! Total wealth: ${this.bolts}`);
         
         if (this.interactionManager && this.interactionManager.uiManager) {
             this.interactionManager.uiManager.updateEconomy(this.level, this.exp, this.maxExp, this.bolts);
         }
     }
 
-    //Refactored update method
     update(delta) {
         if (!this.controls.isLocked) return;
         this.interactionManager.update();
 
-        if (this.dashCooldownTimer > 0) {
-            this.dashCooldownTimer -= delta;
-        }
-        if (this.dashActiveTimer > 0) {
-            this.dashActiveTimer -= delta;
-        }
+        if (this.dashCooldownTimer > 0) this.dashCooldownTimer -= delta;
+        if (this.dashActiveTimer > 0) this.dashActiveTimer -= delta;
 
+        // Interaction
         if (this.input.isPressed('KeyF')) {
             if (!this.fKeyPressed) {
                 this.interactionManager.tryInteract(this.inventory);
@@ -163,18 +142,17 @@ export class Player {
             this.fKeyPressed = false;
         }
 
-        // 1. TOGGLE THE LIGHT WITH 'R'
+        // Torch Toggle
         if (this.input.isPressed('KeyR')) {
             if (!this.rKeyPressed) {
                 this.isTorchOn = !this.isTorchOn;
                 this.rKeyPressed = true;
-                console.log("R Key Pressed! Torch is now:", this.isTorchOn);
             }
         } else {
             this.rKeyPressed = false;
         }
 
-        // 2. POSITION AND UPDATE THE SPOTLIGHT
+        // Torch Positioning
         const leftArm = this.inventory.getEquippedItem('LEFT_ARM');
         const rightArm = this.inventory.getEquippedItem('RIGHT_ARM');
         
@@ -183,7 +161,6 @@ export class Player {
         else if (rightArm && rightArm.id === 'torch_arm') torchSlot = 'RIGHT_ARM';
         
         if (torchSlot && this.isTorchOn) {
-            
             this.torchLight.intensity = 5000; 
             this.torchLight.distance = 300;
             
@@ -191,7 +168,6 @@ export class Player {
             const torchMuzzle = this.inventory.muzzles ? this.inventory.muzzles[torchSlot] : null;
 
             if (torchMuzzle) {
-                // 👉 1. Grab the exact mathematical center of the 'Sphere' node
                 torchMuzzle.getWorldPosition(lightPos);
             } else {
                 lightPos.copy(this.camera.position);
@@ -200,51 +176,32 @@ export class Player {
             let lookDirection = new THREE.Vector3();
             this.camera.getWorldDirection(lookDirection);
 
-            // 👉 2. Snap the light EXACTLY to the Sphere (No extra offsets!)
             this.torchLight.position.copy(lightPos);
-            
-            // 👉 3. Point the target exactly forward from the Sphere
             this.torchLight.target.position.copy(lightPos).addScaledVector(lookDirection, 10);
             this.torchLight.target.updateMatrixWorld(); 
-            
         } else {
             this.torchLight.intensity = 0; 
         }
 
-        // --- 1. MOVEMENT ---
+        // MOVEMENT 
         this.velocity.x -= this.velocity.x * GAME_CONFIG.PLAYER.friction * delta;
         this.velocity.z -= this.velocity.z * GAME_CONFIG.PLAYER.friction * delta;
 
-        // Ask InputManager for the keys!
         const moveForward = this.input.isPressed('KeyW');
         const moveBackward = this.input.isPressed('KeyS');
         const moveLeft = this.input.isPressed('KeyA');
         const moveRight = this.input.isPressed('KeyD');
 
-        //  DASH MECHANIC
-        // Assuming your InputManager tracks Shift as 'ShiftLeft'
+        // Dash Mechanic
         if (this.input.isPressed('ShiftLeft') && this.dashCooldownTimer <= 0) {
-            console.log("Attempting to dash...");
-            
-            // Check if we actually own and have equipped a belt!
-            // (Check your specific InventoryManager code for the exact method name you use to get an equipped item)
             const equippedBelt = this.inventory.getEquippedItem ? this.inventory.getEquippedItem('BELT') : null;
-            
             if (equippedBelt) {
                 const dashForce = equippedBelt.stats.dashPower;
-                
-                // Only dash if we are actively holding a direction key
                 if (moveForward || moveBackward || moveLeft || moveRight) {
-                    console.log("Dashing with power:", dashForce);
-                    
-                    // 2. THE FIX: Multiply the force by the pre-calculated direction!
                     this.velocity.x -= this.direction.x * dashForce;
                     this.velocity.z -= this.direction.z * dashForce;
-
-                    // Put the dash on cooldown
                     this.dashCooldownTimer = equippedBelt.stats.cooldown;
                     this.dashActiveTimer = 0.3;
-                    console.log("WHOOSH! Dodged!");
                 }
             }
         }
@@ -257,7 +214,7 @@ export class Player {
         if (moveForward || moveBackward) this.velocity.z -= this.direction.z * currentMoveSpeed * delta;
         if (moveLeft || moveRight) this.velocity.x -= this.direction.x * currentMoveSpeed * delta;
 
-        // --- 2. COLLISION ---
+        // COLLISION 
         const nextX = -this.velocity.x * delta;
         this.controls.moveRight(nextX);
         if (this.checkCollision()){
@@ -272,16 +229,13 @@ export class Player {
             this.velocity.z = 0;
         }
 
-        // --- 3. WEAPON LOGIC ---
+        // WEAPON LOGIC 
         const equippedArm = this.inventory.getActiveArm();
-        
         let muzzlePosition = new THREE.Vector3();
         
-        // Grab the exact muzzle for the specific hand holding the primary weapon!
         if (equippedArm && this.inventory.muzzles && this.inventory.muzzles[equippedArm.slot]) {
             this.inventory.muzzles[equippedArm.slot].getWorldPosition(muzzlePosition);
         } else {
-            // Fallback: If no muzzle exists, push it slightly down and right so you can actually see it!
             muzzlePosition.copy(this.camera.position);
             muzzlePosition.x += 0.5; 
             muzzlePosition.y -= 0.5;
@@ -289,7 +243,6 @@ export class Player {
 
         if (equippedArm) {
             if (this.input.isAttacking) {
-                // const bonusDmg = this.baseStats.damageBonus;
                 equippedArm.attack({
                     camera: this.camera,
                     muzzlePosition: muzzlePosition,
@@ -298,7 +251,7 @@ export class Player {
                     delta: delta,
                     vfxManager: this.vfxManager,
                     projectileManager: this.projectileManager,
-                    bonusDmg: this.baseStats.damageBonus // Pass it by name!
+                    bonusDmg: this.baseStats.damageBonus 
                 });
             } else {
                 equippedArm.stopAttack(this.scene);
@@ -308,13 +261,10 @@ export class Player {
             }
         }
 
-        // Update visual weapon bobbing
+        // Weapon Bobbing
         const isMoving = moveForward || moveBackward || moveLeft || moveRight;
-        
         if (this.inventory.armGroup) {
-            // The group itself sits at exactly 0,0,0 relative to the camera
             const groupBasePosition = new THREE.Vector3(0, 0, 0);
-            
             this.animationManager.updateWeaponBobbing(
                 this.inventory.armGroup, 
                 groupBasePosition, 
@@ -323,33 +273,22 @@ export class Player {
             );
         }
 
-        // --- 4. SCREEN SHAKE ---
-        
-        // 1. Always remove the previous frame's offset so the camera doesn't drift permanently!
+        // SCREEN SHAKE 
         this.camera.position.sub(this.currentShakeOffset);
 
         if (this.shakeTimer > 0) {
             this.shakeTimer -= delta;
 
-            // Fade out the shake smoothly as the timer runs out
             const fadeMultiplier = Math.max(0, this.shakeTimer / this.maxShakeDuration);
             const intensity = this.baseShakeIntensity * fadeMultiplier;
-
-            // High-speed math for a violent jitter
-            // We use performance.now() to drive the sine waves extremely fast
             const time = performance.now() * 0.05; 
             
             const offsetX = Math.sin(time) * intensity;
-            // We multiply time by a weird decimal (1.2) for the Z axis so the shake feels chaotic, not perfectly circular
             const offsetZ = Math.cos(time * 1.2) * intensity; 
 
             this.currentShakeOffset.set(offsetX, 0, offsetZ);
-
-            // 2. Apply the new shake offset for this frame
             this.camera.position.add(this.currentShakeOffset);
-            
         } else {
-            // Timer is 0, ensure the offset is perfectly zeroed out
             this.currentShakeOffset.set(0, 0, 0);
         }
     }
@@ -362,8 +301,6 @@ export class Player {
         );
 
         const isDashing = this.dashActiveTimer > 0;
-
-        // We completely removed the `for` loop! Just ask the referee:
         return this.physicsManager.checkCollision(playerBox, isDashing);
     }
 }

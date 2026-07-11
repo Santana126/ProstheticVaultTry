@@ -10,19 +10,15 @@ export class Enemy {
         this.isBoss = isBoss;
         this.ktx2Loader = ktx2Loader;
         
-        // STATS 
-        // chance for a standard enemy to become a Sprinter!
         this.isSprinter = !this.isBoss && (Math.random() < 0.40); 
 
         this.maxHealth = this.isBoss ? 1000 : (this.isSprinter ? 30 : 60); 
         this.health = this.maxHealth;
         this.isDead = false;
         
-        // Base stats
         const baseSpeed = this.isBoss ? 8 : (this.isSprinter ? 20 : 10); 
         const baseAttackRate = 1.5;
 
-        // Randomize speed and attack rate slightly so they don't sync up perfectly
         const speedFactor = 0.8 + (Math.random() * 0.4);
         const attackFactor = 0.8 + (Math.random() * 0.4);
 
@@ -35,26 +31,24 @@ export class Enemy {
         this.damage = this.isBoss ? 20 : (this.isSprinter ? 5 : 10);
 
         this.attackCooldown = 0;
-        this.damageDelay = 0.6; // Perfect 0.6 seconds for our 3-stage punch!
+        this.damageDelay = 0.6; 
         this.currentSwingTimer = 0;
         this.isSwinging = false;
         this.hasDealtDamage = false;
 
-        // Boss Spell Mechanics
         this.spellCooldown = 3; 
         this.spellRate = 5;     
         
-        // The container for the 3D model and the hitbox
         this.mesh = new THREE.Group();
         this.mesh.position.set(x, y, z);
         
-        // 1. CREATE THE HITBOX (Invisible)
         const hitBoxGeometry = new THREE.CylinderGeometry(1, 1, 13, 16);
         const hitBoxMaterial = new THREE.MeshBasicMaterial({ 
             color: 0xff0000, 
             wireframe: true, 
             visible: false 
         });
+        
         this.hitBox = new THREE.Mesh(hitBoxGeometry, hitBoxMaterial);
         this.hitBox.position.y = 1.5;
         this.hitBox.userData = { isEnemy: true, entity: this };
@@ -63,19 +57,16 @@ export class Enemy {
         this.physicsManager.addColliders([this.hitBox]); 
         this.scene.add(this.mesh);
 
-        // --- ANIMATION VARIABLES ---
         this.mixer = null;
         this.actions = {};
         this.activeAction = null;
-        this.currentState = 'idle'; // 'walk', 'run', 'attack', 'dead'
+        this.currentState = 'idle'; 
 
-        // PROCEDURAL ANIMATION VARIABLES (Standard Aliens Only)
         this.bones = {};
         this.baseRotations = {}; 
         this.walkTime = 0;
         this.punchTimer = 0;
 
-        // Load the 3D Model!
         this.loadModel();
     }
 
@@ -91,9 +82,6 @@ export class Enemy {
         const scaleSize = this.isBoss ? 15 : 4;
 
         if (this.isBoss) {
-            // ==========================================
-            // BOSS LOADING LOGIC (Untouched GLB Mixers)
-            // ==========================================
             try {
                 const walkGltf = await gltfLoader.loadAsync('assets/RomeoTheCircle/RomeoWalking.glb');
                 const bossBase = walkGltf.scene;
@@ -147,14 +135,10 @@ export class Enemy {
                 this.activeAction = this.actions.walk;
 
             } catch (error) {
-                console.error("❌ Failed to load Boss GLB assets:", error);
+                console.error("Failed to load Boss GLB assets:", error);
             }
         } else {
-            // ==========================================
-            // PROCEDURAL ALIEN LOADING LOGIC 
-            // ==========================================
             try {
-                // Load the single T-Pose Model
                 const gltf = await gltfLoader.loadAsync('assets/EnemyBasic.glb');
                 this.models.main = gltf.scene;
                 this.models.main.scale.set(scaleSize, scaleSize, scaleSize);
@@ -171,7 +155,6 @@ export class Enemy {
                     }
                     if (node.isBone) {
                         this.bones[node.name] = node;
-                        // Map the exact T-Pose resting rotations
                         this.baseRotations[node.name] = node.rotation.clone();
                     }
                 });
@@ -180,13 +163,13 @@ export class Enemy {
                 this.currentState = 'walk';
 
             } catch (error) {
-                console.error("❌ Failed to load alien basic asset:", error);
+                console.error("Failed to load enemy basic asset:", error);
             }
         }
     }
 
     fadeToAction(name, duration) {
-        if (!this.isBoss) return; // Standard enemies don't use mixers anymore
+        if (!this.isBoss) return; 
 
         const newAction = this.actions[name];
         if (!newAction || this.activeAction === newAction) return;
@@ -226,19 +209,17 @@ export class Enemy {
     update(delta) {
         if (this.isDead) return;
 
-        // 1. Tick the Boss Mixer
         if (this.isBoss && this.mixers.walk) {
             this.mixers.walk.update(delta);
         }
 
-        // 2. Distance Math
         const dx = this.player.camera.position.x - this.mesh.position.x;
         const dz = this.player.camera.position.z - this.mesh.position.z;
         const distance = Math.sqrt(dx * dx + dz * dz);
         const targetAngle = Math.atan2(dx, dz);
         this.mesh.rotation.y = targetAngle;
 
-        // 3. Boss Spell Casting
+        // Boss Spell Casting
         if (this.isBoss && distance > this.attackRange) {
             this.spellCooldown -= delta;
             if (this.spellCooldown <= 0) {
@@ -254,7 +235,6 @@ export class Enemy {
             }
         }
 
-        // 4. THE STATE MACHINE (Movement & Attack Logic)
         if (distance > this.runRange) {
             if (this.currentState !== 'run') {
                 this.currentState = 'run';
@@ -280,7 +260,7 @@ export class Enemy {
                 if (this.isBoss) {
                     this.fadeToAction('attack', 0.2); 
                 } else {
-                    this.punchTimer = 0; // Reset procedural punch timer
+                    this.punchTimer = 0; 
                 }
                 
                 this.isSwinging = true;
@@ -300,7 +280,7 @@ export class Enemy {
                 if (this.isBoss && this.actions.attack) {
                     this.actions.attack.reset().play();
                 } else if (!this.isBoss) {
-                    this.punchTimer = 0; // Restart procedural punch
+                    this.punchTimer = 0; 
                 }
             }
 
@@ -312,26 +292,21 @@ export class Enemy {
                     }
                     this.hasDealtDamage = true;
                 }
-                // Keep ticking until 0 so the animation finishes smoothly
+                
                 if (this.currentSwingTimer <= 0) {
                     this.isSwinging = false; 
                 }
             }
         }
 
-        // ==========================================
-        // 5. PROCEDURAL ANIMATION RENDER (Standard Aliens Only)
-        // ==========================================
         if (!this.isBoss && this.bones['mixamorigRightUpLeg']) {
             
-            // Step 1: Safely restore the base T-Pose
             for (const name in this.bones) {
                 if (this.baseRotations[name]) {
                     this.bones[name].rotation.copy(this.baseRotations[name]);
                 }
             }
 
-            // Step 2: Apply the Calibrated Idle Posture
             const dropZ = 0.30;
             const pushX = 1.30;
             const baseElbow = 0.70;
@@ -351,11 +326,9 @@ export class Enemy {
             this.bones['mixamorigLeftForeArm'].rotation.z = idleL_Elb;
             this.bones['mixamorigRightForeArm'].rotation.z = idleR_Elb;
 
-            // Step 3: Apply the active State Math
             if (this.currentState === 'walk' || this.currentState === 'run') {
                 this.walkTime += delta;
                 
-                // Scale leg speed mathematically to movement speed
                 const currentSpeed = this.currentState === 'run' ? this.runSpeed : this.speed;
                 const animSpeed = currentSpeed * 1.2; 
                 
@@ -380,9 +353,8 @@ export class Enemy {
                 this.bones['mixamorigRightForeArm'].rotation.z -= Math.max(0, leftHipSwing) * flexAmp;
 
             } else if (this.currentState === 'attack' && this.isSwinging) {
-                // 3-Stage Procedural Punch
                 this.punchTimer += delta;
-                const punchDuration = this.damageDelay; // Scaled perfectly to 0.6s
+                const punchDuration = this.damageDelay; 
                 let t = this.punchTimer / punchDuration; 
                 if (t > 1.0) t = 1.0;
 

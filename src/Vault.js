@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import * as TWEEN from '@tweenjs/tween.js';
 
 export class Vault {
-    // --- NEW: We now pass the physicsManager in the constructor ---
     constructor(scene, physicsManager, position = new THREE.Vector3(0, 0, 0), scale = 1) {
         this.scene = scene;
         this.physicsManager = physicsManager; 
@@ -11,19 +10,19 @@ export class Vault {
         // Materials
         this.metalMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
         this.wheelMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 0.9, roughness: 0.3 });
-        this.wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.9 }); // Dark vault interior
+        this.wallMat = new THREE.MeshStandardMaterial({ color: 0x1a1a24, roughness: 0.9 }); 
         this.goldMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 1.0, roughness: 0.1, emissive: 0xaa6600, emissiveIntensity: 0.5 });
 
         this.group = new THREE.Group();
-        this.group.position.copy(position); // Move the whole group to the final location
+        this.group.position.copy(position); 
         this.group.scale.set(scale, scale, scale);
         
         this.buildModel();
-        this.buildRoom(); // Build the interior 
+        this.buildRoom(); 
 
         this.scene.add(this.group);
         
-        //  Calculate BOTH trigger zones 
+        // Calculate interaction zones
         this.group.updateMatrixWorld(true);
         this.openBox = new THREE.Box3().setFromObject(this.openTriggerMesh);
         this.winBox = new THREE.Box3().setFromObject(this.winTriggerMesh);
@@ -31,7 +30,7 @@ export class Vault {
 
     buildModel() {
         this.hinge = new THREE.Group();
-        this.group.add(this.hinge); // Hinge is at 0,0,0 relative to the group
+        this.group.add(this.hinge); 
 
         const doorGeometry = new THREE.BoxGeometry(4, 4, 0.5);
         this.door = new THREE.Mesh(doorGeometry, this.metalMat);
@@ -67,23 +66,23 @@ export class Vault {
     buildRoom() {
         const walls = [];
 
-        // Floor & Ceiling (Width: 6 to match the door + side walls)
+        // Floor & Ceiling 
         const floorGeo = new THREE.BoxGeometry(6, 1, 15);
         
         const floor = new THREE.Mesh(floorGeo, this.wallMat);
-        floor.position.set(2, -2.8, -7.5); // Top surface perfectly touches door bottom
+        floor.position.set(2, -2.8, -7.5); 
         
         const ceiling = new THREE.Mesh(floorGeo, this.wallMat);
-        ceiling.position.set(2, 2.5, -7.5); // Bottom surface perfectly touches door top
+        ceiling.position.set(2, 2.5, -7.5); 
         
         this.group.add(floor, ceiling);
         walls.push(floor, ceiling);
 
-        // Left & Right Walls (Height: 4 to match the door precisely)
+        // Left & Right Walls 
         const sideGeo = new THREE.BoxGeometry(1, 4, 15);
         
         const leftWall = new THREE.Mesh(sideGeo, this.wallMat);
-        leftWall.position.set(-0.5, 0, -7.5); // Placed so the door swings perfectly flush against it!
+        leftWall.position.set(-0.5, 0, -7.5); 
         
         const rightWall = new THREE.Mesh(sideGeo, this.wallMat);
         rightWall.position.set(4.5, 0, -7.5); 
@@ -98,38 +97,36 @@ export class Vault {
         this.group.add(backWall);
         walls.push(backWall);
 
-        // Tell PhysicsManager to make the walls solid!
         this.physicsManager.addColliders(walls);
 
-        // --- THE LOOT PEDESTAL ---
+        // Loot Pedestal
         const pedGeo = new THREE.CylinderGeometry(1, 1.5, 2, 16);
         const pedestal = new THREE.Mesh(pedGeo, this.metalMat);
-        pedestal.position.set(2, -1, -11); // Lifted slightly for the new floor
+        pedestal.position.set(2, -1, -11); 
         this.group.add(pedestal);
 
-        // Glowing core on the pedestal
+        // Glowing Core
         const coreGeo = new THREE.OctahedronGeometry(0.8);
         const core = new THREE.Mesh(coreGeo, this.goldMat);
         core.position.set(2, 1, -11);
         this.group.add(core);
 
-        // Light up the room!
         const vaultLight = new THREE.PointLight(0xffaa00, 2, 20);
         vaultLight.position.set(2, 1.5, -11);
         this.group.add(vaultLight);
 
-        // --- 1. OPEN TRIGGER (Outside the door) ---
+        // Outside Trigger Box
         const openGeo = new THREE.BoxGeometry(6, 6, 6);
         const triggerMat = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true, visible: false }); 
         
         this.openTriggerMesh = new THREE.Mesh(openGeo, triggerMat);
-        this.openTriggerMesh.position.set(2, 0, 3); // Placed 3 units IN FRONT of the closed door
+        this.openTriggerMesh.position.set(2, 0, 3); 
         this.group.add(this.openTriggerMesh);
 
-        // --- 2. WIN TRIGGER (Inside the vault, on the pedestal!) ---
+        // Inside Trigger Box (Win Condition)
         const winGeo = new THREE.BoxGeometry(4, 4, 4);
         this.winTriggerMesh = new THREE.Mesh(winGeo, triggerMat);
-        this.winTriggerMesh.position.set(2, 0, -11); // Placed deep inside on the loot
+        this.winTriggerMesh.position.set(2, 0, -11); 
         this.group.add(this.winTriggerMesh);
     }
 

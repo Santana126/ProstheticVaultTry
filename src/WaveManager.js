@@ -9,46 +9,37 @@ export class WaveManager {
         this.physicsManager = physicsManager;
         this.player = player;
         this.interactionManager = interactionManager;
-        this.activeWorldItems = activeWorldItems; // So enemies can drop loot!
+        this.activeWorldItems = activeWorldItems; 
         this.ktx2Loader = ktx2Loader;
 
         this.activeEnemies = [];
         this.currentWave = 0;
         this.isWaveActive = false;
-
-        // Define waves
         this.waves = [];
     }
 
     startNextWave() {
-        if (this.currentWave >= this.waves.length) {
-            console.log("All standard waves cleared! Boss time soon...");
-            return;
-        }
+        if (this.currentWave >= this.waves.length) return;
 
         const waveConfig = this.waves[this.currentWave];
         
-        // --- SCENARIO 6: BOSS INTRO ---
         if (waveConfig.isBossWave) {
             if (window.uiManager) {
                 window.uiManager.showTransmission(
                     'assets/narr_prost.png', '', 
                     'Critical warning: a massive spatial distortion and interdimensional energy spike is tearing right through the arena! Brace yourself, Hunter, because Romeo, The Circle, has finally breached our reality. Do not let this giant crush you!', 
                     () => {
-                        this.executeWaveSpawn(waveConfig); // Spawn AFTER they read the text!
+                        this.executeWaveSpawn(waveConfig); 
                     }
                 );
             }
-            return; // Halt the function so it doesn't spawn immediately!
+            return; 
         }
 
-        // For all normal waves, just spawn immediately
         this.executeWaveSpawn(waveConfig);
     }
 
     executeWaveSpawn(waveConfig) {
-        console.log(`Starting Wave ${this.currentWave + 1}! Spawning ${waveConfig.count} enemies.`);
-        
         const waveText = document.getElementById('wave-counter');
         waveText.style.display = 'block';
         waveText.innerText = waveConfig.isBossWave ? 'FINAL WAVE' : `WAVE ${this.currentWave + 1}`;
@@ -85,12 +76,9 @@ export class WaveManager {
                 const expReward = enemy.isBoss ? 150 : 25;
                 this.player.gainExp(expReward);
 
-
-                // Drop Logic
                 let itemToDrop;
                 if (enemy.isBoss) {
                     itemToDrop = ITEM_DATABASE.keys['vault_key'];
-                    console.log("THE BOSS HAS FALLEN! GRAB THE KEY!");
                 } else {
                     itemToDrop = ITEM_DATABASE.materials['scrap_bolt'];
                 }
@@ -110,20 +98,14 @@ export class WaveManager {
             }
         }
 
-        // Check if the wave is completely dead!
         if (this.activeEnemies.length === 0) {
             this.isWaveActive = false;
-            console.log("Wave Cleared!");
             
             setTimeout(() => {
-                // If there are more standard waves left, open the shop!
                 if (this.currentWave < this.waves.length) {
-                    // This announces to the whole game that the wave is done!
                     document.dispatchEvent(new Event('waveCleared'));
-                } else {
-                    console.log("Boss defeated! Go unlock the vault!");
                 }
-            }, 2000); // 2 second breather before the menu pops up
+            }, 2000); 
         }
     }
 }
