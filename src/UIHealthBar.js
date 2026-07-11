@@ -1,6 +1,5 @@
 export class UIHealthBar {
     constructor() {
-        // 1. Create the main container
         this.container = document.createElement('div');
         this.container.id = 'health-container';
         Object.assign(this.container.style, {
@@ -16,7 +15,6 @@ export class UIHealthBar {
             pointerEvents: 'none'
         });
 
-        // 2. Create the red fill bar
         this.fill = document.createElement('div');
         this.fill.id = 'health-fill';
         Object.assign(this.fill.style, {
@@ -26,7 +24,6 @@ export class UIHealthBar {
             transition: 'width 0.2s ease-out'
         });
 
-        // 3. Create the text overlay
         this.text = document.createElement('div');
         this.text.id = 'health-text';
         Object.assign(this.text.style, {
@@ -43,17 +40,14 @@ export class UIHealthBar {
             textShadow: '1px 1px 2px black'
         });
 
-        // 4. Assemble the pieces and add to the document body
         this.container.appendChild(this.fill);
         this.container.appendChild(this.text);
         document.body.appendChild(this.container);
 
-        // Initialize display
         this.update(100, 100);
     }
 
     update(currentHealth, maxHealth) {
-        // Prevent health from dropping below 0 visually
         const safeHealth = Math.max(0, currentHealth);
         const percentage = (safeHealth / maxHealth) * 100;
         

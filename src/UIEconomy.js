@@ -1,12 +1,11 @@
 export class UIEconomy {
     constructor() {
-        // --- 1. The Bolt Counter (Top Right) ---
         this.boltContainer = document.createElement('div');
         Object.assign(this.boltContainer.style, {
             position: 'absolute',
             top: '20px',
             right: '20px',
-            color: '#00d4ff', // Cyan/Blue
+            color: '#00d4ff', 
             fontFamily: 'monospace',
             fontSize: '24px',
             fontWeight: 'bold',
@@ -16,11 +15,10 @@ export class UIEconomy {
         this.boltContainer.innerText = '⚙️ Bolts: 0';
         document.body.appendChild(this.boltContainer);
 
-        // --- 2. The EXP Bar (Bottom Center) ---
         this.expWrapper = document.createElement('div');
         Object.assign(this.expWrapper.style, {
             position: 'absolute',
-            bottom: '20px', // Sits nicely at the bottom
+            bottom: '20px', 
             left: '50%',
             transform: 'translateX(-50%)',
             width: '400px',
@@ -36,16 +34,15 @@ export class UIEconomy {
         Object.assign(this.expFill.style, {
             width: '0%',
             height: '100%',
-            background: 'linear-gradient(90deg, #6a11cb 0%, #2575fc 100%)', // Nice purple/blue gradient
+            background: 'linear-gradient(90deg, #6a11cb 0%, #2575fc 100%)', 
             transition: 'width 0.3s ease-out'
         });
         this.expWrapper.appendChild(this.expFill);
         
-        // --- 3. The Level Text ---
         this.levelText = document.createElement('div');
         Object.assign(this.levelText.style, {
             position: 'absolute',
-            bottom: '45px', // Just above the EXP bar
+            bottom: '45px', 
             left: '50%',
             transform: 'translateX(-50%)',
             color: '#ffffff',
@@ -61,7 +58,6 @@ export class UIEconomy {
         document.body.appendChild(this.levelText);
     }
 
-    // Called whenever the player's stats change
     update(level, exp, maxExp, bolts) {
         this.boltContainer.innerText = `⚙️ Bolts: ${bolts}`;
         this.levelText.innerText = `Level ${level}`;

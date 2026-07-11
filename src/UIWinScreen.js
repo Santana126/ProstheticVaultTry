@@ -3,13 +3,13 @@ export class UIWinScreen {
         this.container = document.createElement('div');
         this.container.id = 'win-screen-overlay';
         Object.assign(this.container.style, {
-            display: 'none', // Hidden by default
+            display: 'none', 
             position: 'absolute',
             top: '0',
             left: '0',
             width: '100%',
             height: '100%',
-            background: 'rgba(212, 175, 55, 0.85)', // Gold tinted background!
+            background: 'rgba(212, 175, 55, 0.85)', 
             zIndex: '20',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -28,7 +28,7 @@ export class UIWinScreen {
         });
 
         const subtitle = document.createElement('p');
-        subtitle.innerText = 'VAULT PROSTETICO APERTO';
+        subtitle.innerText = 'PROSTHETIC ARTIFACTS SECURED';
         Object.assign(subtitle.style, {
             fontSize: '2rem',
             marginBottom: '30px',

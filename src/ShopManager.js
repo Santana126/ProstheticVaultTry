@@ -20,8 +20,7 @@ export class ShopManager {
             { id: 'upg_maxhp', name: 'Max Health +20', price: 50, type: 'upgrade' }
         ];
 
-        this.currentShopItems = []; // Holds the 3 random items for the current wave
-
+        this.currentShopItems = []; 
         this.initListeners();
     }
 
@@ -30,11 +29,10 @@ export class ShopManager {
             this.closeShop();
         });
 
-        let isFirstWave = true; // Track the first wave!
+        let isFirstWave = true;
 
         document.addEventListener('waveCleared', () => {
             setTimeout(() => {
-                // --- SCENARIO 4: THE ECONOMY ---
                 if (isFirstWave && window.uiManager) {
                     isFirstWave = false;
                     
@@ -61,51 +59,41 @@ export class ShopManager {
         return shuffled;
     }
 
-openShop() {
+    openShop() {
         this.shopOverlay.style.display = 'flex';
         this.player.controls.unlock();
         this.updateDisplay();
 
         const ownedItems = this.player.inventory.getOwnedItems();
 
-        // 1. Separate the master pool into two distinct decks
         const availableWeapons = this.masterShopPool.filter(item => 
             item.type === 'weapon' && !ownedItems.includes(item.id)
         );
         const availableUpgrades = this.masterShopPool.filter(item => 
-            item.type === 'upgrade' || item.type === 'consumable' // Included consumable just in case!
+            item.type === 'upgrade' || item.type === 'consumable' 
         );
 
-        // 2. Shuffle both decks to ensure randomness
         const shuffledWeapons = this.shuffleArray(availableWeapons);
         const shuffledUpgrades = this.shuffleArray(availableUpgrades);
 
         this.currentShopItems = [];
 
-        // 3. The Drafting Logic
         if (shuffledWeapons.length > 0) {
-            // We have at least one unowned weapon! Grab 1 weapon and 2 upgrades.
             this.currentShopItems.push(shuffledWeapons[0]);
-            
-            // Safely push up to 2 upgrades 
             if (shuffledUpgrades.length > 0) this.currentShopItems.push(shuffledUpgrades[0]);
             if (shuffledUpgrades.length > 1) this.currentShopItems.push(shuffledUpgrades[1]);
         } else {
-            // Player owns all weapons! Fill all 3 slots with upgrades.
             this.currentShopItems = shuffledUpgrades.slice(0, 3);
         }
 
-        // 4. Shuffle the final 3 items so the weapon isn't always sitting in the exact same left slot
         this.currentShopItems = this.shuffleArray(this.currentShopItems);
-
         this.renderItems();
     }
 
     closeShop() {
         this.shopOverlay.style.display = 'none';
-        this.player.controls.lock(); // Lock mouse & unpause game
+        this.player.controls.lock(); 
         
-        // Give the player a 2-second breather before enemies spawn
         setTimeout(() => {
             this.waveManager.startNextWave();
         }, 2000);
@@ -115,7 +103,6 @@ openShop() {
         this.shopBoltsDisplay.innerText = this.player.bolts;
     }
 
-    // A helper to search the database
     getItemData(itemId) {
         for (const category in ITEM_DATABASE) {
             if (ITEM_DATABASE[category] && ITEM_DATABASE[category][itemId]) {
@@ -154,7 +141,6 @@ openShop() {
         if (this.player.bolts < item.price) return;
         this.player.bolts -= item.price;
 
-        // Logic routing
         if (item.type === 'weapon') {
             this.player.inventory.unlockItem(item.id);
         } else if (item.type === 'consumable') {
@@ -176,7 +162,7 @@ openShop() {
             const arm = this.player.inventory.getActiveArm();
             if (arm) {
                 if (arm.maxAmmo) arm.currentAmmo = arm.maxAmmo;
-                if (arm.heat !== undefined) arm.heat = 0; // Cool down
+                if (arm.heat !== undefined) arm.heat = 0; 
             }
         }
     }

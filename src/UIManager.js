@@ -26,10 +26,8 @@ export class UIManager {
         this.gameOverOverlay = document.getElementById('game-over-overlay');
         this.winScreen = new UIWinScreen();
 
-        // Clean architecture: Call setup functions, don't run renderStash empty!
         this.setupEquipSlots();
         this.initListeners();
-
 
         // DAMAGE VIGNETTE 
         this.damageOverlay = document.createElement('div');
@@ -38,18 +36,14 @@ export class UIManager {
         this.damageOverlay.style.left = '0';
         this.damageOverlay.style.width = '100vw';
         this.damageOverlay.style.height = '100vh';
-        this.damageOverlay.style.pointerEvents = 'none'; // CRITICAL: Lets you shoot through it!
+        this.damageOverlay.style.pointerEvents = 'none'; 
         this.damageOverlay.style.zIndex = '50'; 
-        
-        // Start completely invisible
         this.damageOverlay.style.boxShadow = 'inset 0 0 0px rgba(255, 0, 0, 0)';
         document.body.appendChild(this.damageOverlay);
     }
 
     initListeners() {
-        // Listen for the custom event fired by InventoryManager
         document.addEventListener('inventoryUpdated', (e) => {
-            // Safety check: ensure the data actually exists before trying to render
             if (e.detail && e.detail.ownedItems) {
                 this.renderStash(e.detail.ownedItems);
             }
@@ -65,7 +59,6 @@ export class UIManager {
             const pct = Math.max(0, (e.detail.hp / e.detail.maxHp) * 100);
             document.getElementById('boss-hp-fill').style.width = pct + '%';
             
-            // Hide the bar a moment after the boss dies
             if (e.detail.hp <= 0) {
                 setTimeout(() => document.getElementById('boss-ui').style.display = 'none', 1500);
             }
@@ -76,7 +69,6 @@ export class UIManager {
         this.isInventoryOpen = !this.isInventoryOpen;
         this.invOverlay.style.display = this.isInventoryOpen ? 'flex' : 'none';
 
-        // Broadcast to the game that the inventory state changed
         document.dispatchEvent(new CustomEvent('inventoryToggled', {
             detail: { isOpen: this.isInventoryOpen }
         }));
@@ -103,7 +95,6 @@ export class UIManager {
     }
 
     getItemData(itemId) {
-        // Loops through arms, belts, materials, etc. to find the item!
         for (const category in ITEM_DATABASE) {
             if (ITEM_DATABASE[category] && ITEM_DATABASE[category][itemId]) {
                 return ITEM_DATABASE[category][itemId];
@@ -114,11 +105,9 @@ export class UIManager {
 
     renderStash(ownedItemIds) {
         this.stashGrid.innerHTML = ''; 
-
         if(!ownedItemIds) return;
 
         ownedItemIds.forEach(itemId => {
-            // THE FIX: Use our new universal search!
             const itemData = this.getItemData(itemId); 
             if (!itemData) return;
 
@@ -146,7 +135,6 @@ export class UIManager {
         this.mainEquipSlots.forEach(slotElement => {
             slotElement.addEventListener('mouseenter', () => {
                 const itemId = slotElement.getAttribute('data-item-id');
-                // THE FIX: Use the universal search here too!
                 if (itemId) {
                     const itemData = this.getItemData(itemId);
                     if (itemData) this.showTooltip(itemData);
@@ -175,29 +163,24 @@ export class UIManager {
     }
 
     performSwap(newItemId, itemData) {
-        // Update HTML Visuals
         this.currentlySelectedSlotElement.setAttribute('data-item-id', newItemId);
         this.currentlySelectedSlotElement.querySelector('.slot-icon').innerText = itemData.name;
         
-        // Clear selection state
         this.currentlySelectedSlotElement.classList.remove('selected');
         this.currentlySelectedSlot = null;
         this.currentlySelectedSlotElement = null;
 
         document.querySelectorAll('.stash-item').forEach(el => el.classList.remove('incompatible'));
 
-        // Broadcast to the game that an item needs to be equipped!
         document.dispatchEvent(new CustomEvent('equipItem', {
             detail: { slot: itemData.slot, itemId: newItemId, item: itemData }
         }));
     }
 
-    // --- Tooltip Helpers ---
     showTooltip(item) {
         this.ttName.innerText = item.name;
         this.ttType.innerText = `Tipo: ${item.slot === 'BELT' ? 'Equipaggiamento' : 'Protesi'}`;
         
-        // THE FIX: Dynamically build the stats text based on what stats the item actually has!
         let statsHtml = '';
         if (item.damage) statsHtml += `Danno: ${item.damage}<br>`;
         if (item.stats) {
@@ -222,7 +205,6 @@ export class UIManager {
         this.tooltip.style.display = 'none';
     }
 
-    // --- Interaction Prompt Helpers ---
     showInteractionPrompt(itemName) {
         document.getElementById('interact-name').innerText = itemName;
         document.getElementById('interaction-prompt').style.display = 'block';
@@ -236,16 +218,14 @@ export class UIManager {
         this.healthBar.update(currentHealth, maxHealth);
     }
     updateEconomy(level, exp, maxExp, bolts) {
-    this.economyUI.update(level, exp, maxExp, bolts);
+        this.economyUI.update(level, exp, maxExp, bolts);
     }
 
     showGameOver() {
         this.gameOverOverlay.style.display = 'flex';
-        // Hide crosshair and prompts so the screen looks clean
         document.getElementById('crosshair').style.display = 'none';
         this.hideInteractionPrompt(); 
     }
-
 
     showWinScreen() {
         this.winScreen.show();
@@ -254,14 +234,9 @@ export class UIManager {
     }
 
     showDamageVignette() {
-        // Instantly snap to a harsh red border without any smooth animation
         this.damageOverlay.style.transition = 'none';
         this.damageOverlay.style.boxShadow = 'inset 0 0 150px rgba(255, 0, 0, 0.8)';
-
-        // Force the browser to register the instant change before moving to the next line
         void this.damageOverlay.offsetWidth; 
-
-        // Smoothly fade back to invisible over 0.5 seconds
         this.damageOverlay.style.transition = 'box-shadow 0.5s ease-out';
         this.damageOverlay.style.boxShadow = 'inset 0 0 0px rgba(255, 0, 0, 0)';
     }
@@ -280,7 +255,7 @@ export class UIManager {
 
     updateDash(cooldown, maxCooldown) {
         const ui = document.getElementById('dash-ui');
-        ui.style.display = 'block'; // Make sure it's visible!
+        ui.style.display = 'block'; 
         
         const progress = Math.max(0, (1 - (cooldown / maxCooldown)) * 100);
         document.getElementById('dash-bar').style.width = `${progress}%`;
@@ -291,7 +266,6 @@ export class UIManager {
         if (ui) ui.style.display = 'none';
     }
 
-    // Hide HUD elements when no weapon is equipped
     hideCombatHUD() {
         document.getElementById('ammo-ui').style.display = 'none';
         document.getElementById('heat-ui').style.display = 'none';
@@ -308,13 +282,11 @@ export class UIManager {
         promptEl.style.display = 'none'; 
         ui.style.display = 'flex';
 
-        // 1. Tell the entire game to PAUSE
         window.isTransmissionActive = true;
         document.dispatchEvent(new Event('transmissionStarted'));
 
         if (this.typewriterInterval) clearInterval(this.typewriterInterval);
         
-        // Clean up old space listener if a transmission was interrupted
         if (this.spaceListener) {
             document.removeEventListener('keydown', this.spaceListener);
         }
@@ -325,29 +297,25 @@ export class UIManager {
             i++;
             if (i >= message.length) {
                 clearInterval(this.typewriterInterval);
-                promptEl.style.display = 'block'; // Show "> Press SPACE to start <"
+                promptEl.style.display = 'block'; 
 
-                // 2. Wait for the player to press Space
                 this.spaceListener = (e) => {
                     if (e.code === 'Space') {
                         document.removeEventListener('keydown', this.spaceListener);
                         this.spaceListener = null;
                         this.hideTransmission();
                         
-                        // 3. Tell the game to UNPAUSE
                         window.isTransmissionActive = false;
                         document.dispatchEvent(new Event('transmissionEnded'));
                         
-                        // 4. Trigger whatever happens next (e.g., spawn boss, open shop)
                         if (onComplete) onComplete();
                     }
                 };
                 document.addEventListener('keydown', this.spaceListener);
             }
-        }, 8); // Adjust this number to make the typing faster or slower!
+        }, 8); 
     }
 
-    //  Manually hide the UI 
     hideTransmission() {
         document.getElementById('narrator-ui').style.display = 'none';
         document.getElementById('narrator-prompt').style.display = 'none';
