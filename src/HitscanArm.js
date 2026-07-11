@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { Prosthetic } from './Prosthetic.js';
 
+const textureLoader = new THREE.TextureLoader();
+const laserTexture = textureLoader.load('assets/laser_beam.png');
+
 export class HitscanArm extends Prosthetic {
     constructor(id, name, description, slot, modelPath, stats, weaponData, visualData) {
         super(id, name, description, slot, modelPath, stats, visualData);
@@ -80,7 +83,14 @@ export class HitscanArm extends Prosthetic {
             
             // Change beam color to RED if we are getting close to overheating!
             const currentColor = this.heat > 75 ? 0xff0000 : this.beamColor;
-            const material = new THREE.MeshBasicMaterial({ color: currentColor, transparent: true, opacity: 0.8 });
+            const material = new THREE.MeshBasicMaterial({ 
+                color: currentColor,
+                map: laserTexture,
+                transparent: true, 
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                opacity: 0.8 
+            });
             
             this.beamMesh = new THREE.Mesh(geometry, material);
             scene.add(this.beamMesh);
