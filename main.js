@@ -93,7 +93,7 @@ const interactionManager = new InteractionManager(scene, camera, uiManager);
 
 // Add it as the 4th argument!
 // const player = new Player(scene, camera, level, vfxManager);
-const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager);
+const player = new Player(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager, ktx2Loader);
 
 
 let isGameOver = false;
@@ -114,9 +114,27 @@ document.addEventListener('overheatDamage', (e) => {
     player.takeDamage(e.detail.amount);
 });
 
+// // const steelArm = ITEM_DATABASE.arms['steel_arm'];
+// // player.inventory.equip('RIGHT_ARM', steelArm);
+// const torchArm = ITEM_DATABASE.arms['torch_arm'];
+// player.inventory.equip('RIGHT_ARM', torchArm);   
+// uiManager.renderStash(player.inventory.getOwnedItems());
+
+
+const torchArm = ITEM_DATABASE.arms['torch_arm'];
+
+// 👉 THE FIX: Give it to the player first!
+player.inventory.unlockItem('torch_arm'); 
+
+// Now they own it, so the security check will let them equip it!
+player.inventory.equip('LEFT_ARM', torchArm);
+
+// You can put the steel arm back in the right slot now too!
 const steelArm = ITEM_DATABASE.arms['steel_arm'];
 player.inventory.equip('RIGHT_ARM', steelArm);
+
 uiManager.renderStash(player.inventory.getOwnedItems());
+
 //Spawn a target dummy in the arena (X: 0, Y: 0, Z: -30)
 // const targetDummy = new Dummy(scene, physicsManager, 20, 0, -30);
 
@@ -502,7 +520,6 @@ function animate() {
         projectileManager.update(delta, physicsManager, vfxManager, player);
 
         groundLoot.update(delta);
-        // groundLoot2.update(delta);
         beltLoot.update(delta);
 
         waveManager.update(delta, vfxManager);

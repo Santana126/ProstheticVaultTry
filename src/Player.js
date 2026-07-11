@@ -8,7 +8,7 @@ import { AnimationManager } from './AnimationManager.js';
 import { InteractionManager } from './InteractionManager.js';
 
 export class Player {
-    constructor(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager) {
+    constructor(scene, camera, physicsManager, vfxManager, projectileManager, animationManager, interactionManager, ktx2Loader) {
         this.scene = scene;
         this.camera = camera;
         this.physicsManager = physicsManager;
@@ -27,7 +27,7 @@ export class Player {
 
         this.controls = new PointerLockControls(this.camera, document.body);
         this.input = new InputManager();
-        this.inventory = new InventoryManager(this.camera, this.scene);
+        this.inventory = new InventoryManager(this.camera, this.scene, ktx2Loader);
 
         // --- PLAYER STATS ---
         this.maxHealth = 100;
@@ -55,6 +55,23 @@ export class Player {
         this.maxShakeDuration = 0.3; // How long the earthquake lasts
         this.baseShakeIntensity = 0.2; // How violently it shakes (in meters)
         this.currentShakeOffset = new THREE.Vector3(0, 0, 0); // Stores the math to prevent drift
+
+        // --- TORCH (SPOTLIGHT) SETUP ---
+        this.torchLight = new THREE.SpotLight(0xffffff, 0); // Starts off (0 intensity)
+        this.torchLight.angle = Math.PI / 7; // Gives it a focused flashlight cone
+        this.torchLight.penumbra = 0.5; // Soft, realistic edges
+        this.torchLight.decay = 2; // Realistic light falloff
+        this.torchLight.distance = 150; // How far the light reaches
+        this.torchLight.castShadow = true;
+        this.torchLight.shadow.mapSize.width = 1024;
+        this.torchLight.shadow.mapSize.height = 1024;
+
+        // Spotlights need a 'target' object to point at. We add both to the scene!
+        this.scene.add(this.torchLight);
+        this.scene.add(this.torchLight.target);
+
+        this.isTorchOn = false;
+        this.rKeyPressed = false;
 
 
 
@@ -146,6 +163,54 @@ export class Player {
             this.fKeyPressed = false;
         }
 
+        // 1. TOGGLE THE LIGHT WITH 'R'
+        if (this.input.isPressed('KeyR')) {
+            if (!this.rKeyPressed) {
+                this.isTorchOn = !this.isTorchOn;
+                this.rKeyPressed = true;
+                console.log("R Key Pressed! Torch is now:", this.isTorchOn);
+            }
+        } else {
+            this.rKeyPressed = false;
+        }
+
+        // 2. POSITION AND UPDATE THE SPOTLIGHT
+        const leftArm = this.inventory.getEquippedItem('LEFT_ARM');
+        const rightArm = this.inventory.getEquippedItem('RIGHT_ARM');
+        
+        let torchSlot = null;
+        if (leftArm && leftArm.id === 'torch_arm') torchSlot = 'LEFT_ARM';
+        else if (rightArm && rightArm.id === 'torch_arm') torchSlot = 'RIGHT_ARM';
+        
+        if (torchSlot && this.isTorchOn) {
+            
+            this.torchLight.intensity = 5000; 
+            this.torchLight.distance = 300;
+            
+            let lightPos = new THREE.Vector3();
+            const torchMuzzle = this.inventory.muzzles ? this.inventory.muzzles[torchSlot] : null;
+
+            if (torchMuzzle) {
+                // 👉 1. Grab the exact mathematical center of the 'Sphere' node
+                torchMuzzle.getWorldPosition(lightPos);
+            } else {
+                lightPos.copy(this.camera.position);
+            }
+            
+            let lookDirection = new THREE.Vector3();
+            this.camera.getWorldDirection(lookDirection);
+
+            // 👉 2. Snap the light EXACTLY to the Sphere (No extra offsets!)
+            this.torchLight.position.copy(lightPos);
+            
+            // 👉 3. Point the target exactly forward from the Sphere
+            this.torchLight.target.position.copy(lightPos).addScaledVector(lookDirection, 10);
+            this.torchLight.target.updateMatrixWorld(); 
+            
+        } else {
+            this.torchLight.intensity = 0; 
+        }
+
         // --- 1. MOVEMENT ---
         this.velocity.x -= this.velocity.x * GAME_CONFIG.PLAYER.friction * delta;
         this.velocity.z -= this.velocity.z * GAME_CONFIG.PLAYER.friction * delta;
@@ -205,13 +270,16 @@ export class Player {
         const equippedArm = this.inventory.getActiveArm();
         
         let muzzlePosition = new THREE.Vector3();
-        if (this.inventory.muzzlePoint) {
-            this.inventory.muzzlePoint.getWorldPosition(muzzlePosition);
-        } else if (this.inventory.currentArmModel) {
-            this.inventory.currentArmModel.getWorldPosition(muzzlePosition);
+        
+        // Grab the exact muzzle for the specific hand holding the primary weapon!
+        if (equippedArm && this.inventory.muzzles && this.inventory.muzzles[equippedArm.slot]) {
+            this.inventory.muzzles[equippedArm.slot].getWorldPosition(muzzlePosition);
         } else {
+            // Fallback: If no muzzle exists, push it slightly down and right so you can actually see it!
             muzzlePosition.copy(this.camera.position);
-        }
+            muzzlePosition.x += 0.5; 
+            muzzlePosition.y -= 0.5;
+        }   
 
         if (equippedArm) {
             if (this.input.isAttacking) {

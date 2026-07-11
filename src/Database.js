@@ -25,7 +25,7 @@ export const ITEM_DATABASE = {
             'plasma_arm', 'Plasma Projector', 'Fires explosive plasma orbs.', 'RIGHT_ARM', 
             'assets/plasma_arm.glb', 
             { strength: 5 }, 
-            { damage: 40, attackSpeed: 0.2, projectileSpeed: 30 },
+            { damage: 30, attackSpeed: 0.4, projectileSpeed: 30 },
             {
                 scale: 1.5, 
                 position: { x: 0.75, y: -0.60, z: -0.85 }, 
@@ -46,7 +46,24 @@ export const ITEM_DATABASE = {
                 muzzleNode: 'Sphere', 
                 muzzleFallbackOffset: { x: 0, y: 0, z: -10 } 
             }
+        ),
+        // Inside your ITEM_DATABASE.arms object:
+        'torch_arm': new Prosthetic(
+            'torch_arm',
+            'Lumen-Tech Torch',
+            'A heavy-duty exploration arm equipped with a high-lumen industrial floodlight. Press [R] to toggle.',
+            'LEFT_ARM', // Or RIGHT_ARM, depending on your setup!
+            'assets/arm_torch.glb',
+            { strength: 0 }, 
+            {
+                scale: 1.5, 
+                position: { x: -0.9, y: -0.8, z: -0.75 }, 
+                rotation: { x: Math.PI/2, y: Math.PI/2 - Math.PI/4, z: -Math.PI /2 },
+                muzzleNode: 'mesh_0_1', 
+                muzzleFallbackOffset: { x: 0, y: 0, z: -10 }
+            }
         )
+        
         // ,
         // 'saw_arm': new Prosthetic(
         //     'saw_arm', 'Rotary Saw', 'Perfect for close combat and cutting through obstacles.', 'RIGHT_ARM',
