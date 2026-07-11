@@ -260,11 +260,17 @@ export class Player {
         // --- 2. COLLISION ---
         const nextX = -this.velocity.x * delta;
         this.controls.moveRight(nextX);
-        if (this.checkCollision()) this.controls.moveRight(-nextX);
+        if (this.checkCollision()){
+            this.controls.moveRight(-nextX);
+            this.velocity.x = 0; 
+        }
 
         const nextZ = -this.velocity.z * delta;
         this.controls.moveForward(nextZ);
-        if (this.checkCollision()) this.controls.moveForward(-nextZ);
+        if (this.checkCollision()) {
+            this.controls.moveForward(-nextZ);
+            this.velocity.z = 0;
+        }
 
         // --- 3. WEAPON LOGIC ---
         const equippedArm = this.inventory.getActiveArm();

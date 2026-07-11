@@ -344,7 +344,7 @@ export class UIManager {
                 };
                 document.addEventListener('keydown', this.spaceListener);
             }
-        }, 30); // Adjust this number to make the typing faster or slower!
+        }, 15); // Adjust this number to make the typing faster or slower!
     }
 
     //  Manually hide the UI 
